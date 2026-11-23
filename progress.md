@@ -36,9 +36,9 @@
 - Pengumuman dan detail pengumuman: `/pengumuman`, `/pengumuman/[slug]`.
 - Galeri dan detail album: `/galeri`, `/galeri/[slug]`.
 - Prestasi dan detail: `/prestasi`, `/prestasi/[slug]`.
-- Agenda mendatang dan detail: `/agenda`, `/agenda/[slug]`.
+- Agenda mendatang/berlangsung dan detail: `/agenda`, `/agenda/[slug]`.
 - Halaman daftar menyediakan empty state ketika belum ada konten publik.
-- Agenda publik hanya menampilkan kegiatan yang waktu mulainya belum lewat, statusnya published, dan waktu publikasinya sudah tiba. Waktu detail ditampilkan dalam zona Asia/Jakarta.
+- Agenda publik menampilkan kegiatan yang belum berakhir (akan datang atau sedang berlangsung), statusnya published, dan waktu publikasinya sudah tiba. Waktu detail ditampilkan dalam zona Asia/Jakarta.
 
 ### Fondasi konten database
 
