@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { BookOpen, GraduationCap } from "lucide-react";
 import { getPublicDepartments } from "@/features/content/public-queries";
 import { publicMediaUrl } from "@/lib/storage/media-url";
@@ -73,12 +72,6 @@ export default async function DepartmentsPage() {
                       Informasi program akan segera dilengkapi.
                     </p>
                   )}
-                  <Link
-                    href="/guru"
-                    className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-primary hover:underline"
-                  >
-                    Lihat tenaga pendidik <BookOpen className="size-4" aria-hidden />
-                  </Link>
                 </div>
               </article>
             );
