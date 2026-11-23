@@ -15,6 +15,7 @@ const dateFormat = new Intl.DateTimeFormat("id-ID", {
   year: "numeric",
 });
 const dateTimeFormat = new Intl.DateTimeFormat("id-ID", {
+  timeZone: "Asia/Jakarta",
   day: "numeric",
   month: "long",
   year: "numeric",
