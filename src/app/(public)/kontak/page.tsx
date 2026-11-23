@@ -26,7 +26,8 @@ export default async function ContactPage() {
   ]
     .filter(Boolean)
     .join(", ");
-  const whatsapp = school?.whatsapp?.replace(/[^\\d]/g, "");
+  const whatsappValue = school?.whatsapp;
+  const whatsapp = whatsappValue?.replace(/[^\\d]/g, "");
 
   const contacts = [
     school?.phone
@@ -38,8 +39,8 @@ export default async function ContactPage() {
     school?.website
       ? { label: "Website", value: school.website, href: school.website, icon: Globe }
       : null,
-    whatsapp
-      ? { label: "WhatsApp", value: school.whatsapp!, href: `https://wa.me/${whatsapp}`, icon: MessageCircle }
+    whatsapp && whatsappValue
+      ? { label: "WhatsApp", value: whatsappValue, href: `https://wa.me/${whatsapp}`, icon: MessageCircle }
       : null,
   ].filter((item): item is NonNullable<typeof item> => item !== null);
 
