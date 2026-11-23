@@ -116,3 +116,20 @@ Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis h
 - Build Cloudflare/OpenNext.
 - Pengujian browser untuk responsivitas, aksesibilitas, dan perilaku seluruh tautan navigasi.
 - Ketersediaan data konten produksi dan validasi alur publikasi dari panel admin.
+
+
+## 2026-11-24 — Tahap Admin CRUD dan Publikasi (modul pertama: Berita)
+
+- Pengguna mengonfirmasi seluruh pemeriksaan Agenda sebelumnya lolos.
+- Audit menemukan halaman admin yang tersedia masih terbatas dan sebagian besar tautan navigasi admin belum memiliki route.
+- Audit keamanan menemukan kebijakan RLS News dan Announcements lama belum mensyaratkan permission `:publish` saat status diubah menjadi `published`; kebijakan insert Galeri juga belum mensyaratkan permission publikasi.
+- Menambahkan migrasi `20261124150000_content_publication_guard.sql` untuk memperketat RLS News, Announcements, dan Galeri. Commit: `6acb18a`.
+- Menambahkan validasi berita (Zod), server actions create/update/delete, pemeriksaan permission pada server, pencatatan activity log, dan revalidasi route. Commit schema: `ff25c16`; actions: `881dcfe`.
+- Menambahkan editor berita dengan dukungan draft, publish, arsip, serta penjadwalan waktu Asia/Jakarta. Commit: `27fc102`.
+- Menambahkan halaman daftar berita, tambah berita, edit berita, dan kontrol hapus dengan konfirmasi. Commit: `aa335c4`, `0204365`, `4a6cf5d`, `1a2f6ff`.
+- Menambahkan penyaringan navigasi admin berdasarkan permission untuk menu yang sudah memiliki pemetaan. Commit: `2e99797`, `98e38ce`, `2dd1b04`.
+- Menambahkan unit test validasi schema berita. Commit: `ebfe419`.
+- Perbaikan import tak terpakai pada halaman daftar berita: `d13e3d9`.
+- Status pengujian perubahan CMS ini: belum dijalankan oleh asisten dan belum dikonfirmasi pengguna. Perlu jalankan typecheck, lint, test.
+- Status migrasi `20261124150000_content_publication_guard.sql`: belum dikonfirmasi diterapkan ke Supabase.
+- Tahap selanjutnya setelah modul Berita lolos: gunakan pola yang sama untuk Pengumuman, kemudian Galeri, Prestasi, Agenda, Guru, dan Jurusan. Jangan menambahkan menu admin baru sebelum route dan permission guard modul tersedia.
