@@ -1,132 +1,118 @@
 # Progress Pengembangan Website Sekolah
 
-> Dokumen serah terima kerja. Perbarui setiap kali ada perubahan kode, database, konfigurasi, keputusan arsitektur, atau hasil pengujian.
+> Dokumen serah terima kerja. Baca sebelum melanjutkan dan perbarui setiap kali ada perubahan kode, database, konfigurasi, keputusan arsitektur, atau hasil pengujian.
 
 ## Status saat ini
 
 - **Branch:** `main`
-- **Tahap:** Fase 4 — pengembangan website publik dan fondasi konten (Galeri dan Prestasi selesai diimplementasikan; verifikasi lokal serta penerapan migrasi masih perlu dikonfirmasi).
-- **Status terakhir yang diketahui:** halaman publik Guru, Jurusan, Berita, Pengumuman, Galeri, dan Prestasi sudah di-commit. Pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah perbaikan import Galeri. Penerapan migrasi konten ke Supabase belum dikonfirmasi.
-- **Pemeriksaan sebelumnya:** pengguna melaporkan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` tidak memiliki masalah setelah tahap Guru/Jurusan. Pemeriksaan itu mendahului perubahan Berita/Pengumuman.
-- **Aturan kerja:** baca dokumen ini sebelum melanjutkan; jangan menyatakan build/typecheck/test/migrasi berhasil tanpa menjalankannya.
+- **Tahap:** Fase 4 — halaman publik inti selesai sampai Agenda; berikutnya audit kesiapan database dan implementasi CRUD admin secara bertahap.
+- **Commit fitur terbaru:** `272e96d` — halaman detail Agenda.
+- **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi Prestasi. Pemeriksaan tersebut belum mencakup perubahan Agenda.
+- **Status Supabase:** penerapan migrasi konten publik, Galeri, Prestasi, dan Agenda ke proyek Supabase aktif belum dikonfirmasi. Jangan menganggap tabel-tabel ini sudah tersedia.
+- **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
 
 ## Ringkasan arsitektur
 
 - Next.js App Router + TypeScript + Tailwind CSS 4.
-- Supabase PostgreSQL/Auth/Storage dengan RLS dan RBAC.
-- Query publik memakai `createPublicClient()` (anon key), bukan service role.
-- Fitur dikelompokkan di `src/features/`; route publik berada di `src/app/(public)/`.
-- Migrasi database bersifat berurutan dan ditambahkan sebagai file baru.
+- Supabase PostgreSQL/Auth/Storage dengan Row Level Security (RLS) dan Role-Based Access Control (RBAC).
+- Query publik berada di `src/features/content/public-queries.ts` dan menggunakan `createPublicClient()` dengan anon key.
+- Route website publik berada di `src/app/(public)/`; route administrasi berada di `src/app/admin/`.
+- Fitur/domain berada di `src/features/`; integrasi Supabase, autentikasi, RBAC, dan storage berada di `src/lib/`.
+- Migrasi database ditambahkan sebagai file baru dan diterapkan berurutan. Jangan mengubah migrasi lama yang mungkin sudah diterapkan.
 
 ## Pekerjaan selesai
 
 ### Fondasi dan keamanan
 - Fondasi RBAC, role, permission, user profile, dan RLS tersedia melalui migrasi.
 - Storage buckets dan activity log tersedia melalui migrasi.
-- Identitas sekolah dan profil sekolah telah memiliki alur pengelolaan.
-- Pengujian fase 3D sebelumnya dilaporkan lulus: 6 skenario lolos, 0 gagal (anon read profile; anon ditolak saat mengubah profil/identitas; editor ditolak mengubah profil; admin sekolah dapat mengubah profil; batas panjang visi divalidasi DB).
-- Typecheck sebelumnya dilaporkan lulus setelah perbaikan nullable WhatsApp.
+- Identitas sekolah dan profil sekolah memiliki alur pengelolaan.
+- Pengujian fase 3D sebelumnya dilaporkan lulus: 6 skenario lolos, 0 gagal.
+- Prinsip keamanan: query publik menggunakan anon client; data tulis harus dilindungi RLS dan permission, bukan hanya disembunyikan di UI.
 
 ### Website publik
-- Beranda dinamis membaca pengaturan dan profil sekolah.
-- Nama kepala sekolah ditampilkan sebelum jenjang pendidikan pada sorotan informasi beranda.
-- Halaman profil dan kontak telah dibuat/diperbarui.
-- Metadata publik dan aturan robots telah ditambahkan.
-- Halaman `/guru` dan `/jurusan` mengambil data yang telah dipublikasikan.
-- Halaman `/berita` dan `/pengumuman` menampilkan konten publik, dengan halaman detail berbasis slug.
-- Halaman `/galeri` menampilkan album publik dan jumlah foto; `/galeri/[slug]` menampilkan foto album beserta caption dan teks alternatif.\n- Halaman `/prestasi` menampilkan daftar pencapaian yang dipublikasikan; `/prestasi/[slug]` menampilkan detail, tingkat prestasi, penerima, tanggal, dan gambar.
-- Detail berita menampilkan tanggal, kategori, gambar sampul, ringkasan, dan isi.
-- Detail pengumuman menampilkan masa berlaku dan tautan lampiran PDF bila tersedia.
-- Halaman daftar menampilkan empty state jika belum ada konten publik.
+- Beranda dinamis, profil sekolah, kontak, metadata publik, dan robots.
+- Halaman Guru dan Jurusan.
+- Berita dan detail berita: `/berita`, `/berita/[slug]`.
+- Pengumuman dan detail pengumuman: `/pengumuman`, `/pengumuman/[slug]`.
+- Galeri dan detail album: `/galeri`, `/galeri/[slug]`.
+- Prestasi dan detail: `/prestasi`, `/prestasi/[slug]`.
+- Agenda mendatang dan detail: `/agenda`, `/agenda/[slug]`.
+- Halaman daftar menyediakan empty state ketika belum ada konten publik.
+- Agenda publik hanya menampilkan kegiatan yang waktu mulainya belum lewat, statusnya published, dan waktu publikasinya sudah tiba. Waktu detail ditampilkan dalam zona Asia/Jakarta.
 
 ### Fondasi konten database
-Migrasi `20261124100000_public_content_foundation.sql` menambahkan:
-- `departments`
-- `teachers`
-- `news_categories`
-- `news`
-- `announcements`
 
-RLS mengizinkan publik membaca konten yang dipublikasikan sesuai waktu tayang; pengumuman kedaluwarsa tidak ditampilkan. Operasi tulis membutuhkan permission RBAC. Departemen dan guru menggunakan flag `is_published`.
+| Migrasi | Isi | Status penerapan |
+|---|---|---|
+| `20261124100000_public_content_foundation.sql` | departments, teachers, news_categories, news, announcements | Belum dikonfirmasi |
+| `20261124110000_default_teacher_unpublished.sql` | Default guru tidak langsung tampil | Belum dikonfirmasi |
+| `20261124120000_public_galleries.sql` | galleries, gallery_images | Belum dikonfirmasi |
+| `20261124130000_public_achievements.sql` | achievements + permission publish | Belum dikonfirmasi |
+| `20261124140000_public_events.sql` | events + permission events:publish | Belum dikonfirmasi |
 
-**Penting:** penerapan migrasi tersebut ke Supabase belum dikonfirmasi. Jangan menganggap tabel sudah tersedia di database aktif.
+Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis harus mengikuti permission RBAC masing-masing modul.
 
-## Perubahan sesi terbaru
+## Audit struktur proyek — 2026-11-24
 
-### 2026-11-24 — dokumentasi serah terima
-- Mengganti README template Next.js dengan panduan proyek, teknologi, perintah, konfigurasi, prinsip keamanan, dan alur serah terima.
-- Menambahkan dokumen progress ini agar status kerja dan langkah selanjutnya tercatat.
+- README dan progress diperiksa terhadap branch `main`, termasuk tree route, konfigurasi package, navigasi, query publik, dan migrasi.
+- Struktur domain dan pemisahan route publik/admin sudah terbentuk dan konsisten.
+- Temuan penting: `src/config/navigation.ts` sudah mencantumkan banyak tautan `adminNav`, tetapi route admin yang benar-benar ada masih hanya `/admin`, `/admin/identitas`, `/admin/profil`, dan `/admin/pengaturan`. Tautan admin untuk Guru, Jurusan, Berita, Pengumuman, Galeri, Prestasi, Agenda, dan modul lain belum memiliki halaman tujuan. Jangan menganggap CRUD modul-modul tersebut sudah tersedia.
+- `publicNav` mencantumkan Siswa dan PPDB/SPMB, sementara route publik untuk beberapa menu itu belum terlihat di tree saat audit.
+- README sebelumnya belum menyebut migrasi Galeri, Prestasi, dan Agenda; ringkasan database sudah diperbarui.
+- Catatan progress lama memuat langkah yang sudah kedaluwarsa dan baris literal `\\n`; dokumen ini menggantinya dengan status yang diselaraskan terhadap tree terbaru.
 
-### 2026-11-24 — halaman publik Guru dan Jurusan
-- Menambahkan query publik untuk daftar guru dan jurusan.
-- Menambahkan halaman `/guru` dan `/jurusan` dengan filter publikasi, tampilan kosong, dan URL foto/media.
-- Menambahkan migrasi lanjutan `20261124110000_default_teacher_unpublished.sql` untuk memastikan default `teachers.is_published` adalah `false`; migrasi lama tidak diubah.
-- Commit dokumentasi README: `d91c290`.
-- Commit progress awal: `f9c19ee`.
-- Query publik awal: `b91180c`; halaman Guru: `d900580`; halaman Jurusan: `2596efd`; migrasi default publikasi: `baa74fe`.
-- Perapian kartu jurusan: `d00f30b`.
+## Perubahan terbaru
 
-### 2026-11-24 — halaman publik Berita dan Pengumuman
-- Memperluas `src/features/content/public-queries.ts` dengan query daftar dan detail berita/pengumuman.
-- Query hanya mengambil status `published`, tanggal publikasi yang sudah tiba, dan pengumuman yang belum kedaluwarsa.
-- Menambahkan `/berita` dan `/berita/[slug]`.
-- Menambahkan `/pengumuman` dan `/pengumuman/[slug]`.
-- Berita menggunakan bucket `media`; lampiran pengumuman memakai bucket publik `public-docs`.
-- Tidak menambahkan migrasi baru karena struktur tabel dan RLS sudah disiapkan pada migrasi fondasi konten.
-- Commit query: `648f858`; daftar berita: `dd92fdf`; detail berita: `776e8bb`; daftar pengumuman: `673f491`; detail pengumuman: `eab72bb`.
-- Pemeriksaan lokal untuk perubahan Berita/Pengumuman belum dijalankan dalam sesi ini.
+### 2026-11-24 — Agenda Sekolah
+- Menambahkan migrasi `20261124140000_public_events.sql` untuk tabel `events`, indeks publikasi, trigger `updated_at`, validasi waktu mulai/selesai, URL pendaftaran HTTPS, serta RLS publik/staf.
+- Menambahkan permission `events:publish`; create/update/delete dan publikasi dilindungi permission RBAC.
+- Menambahkan tipe `PublicEvent`, `getPublicEvents`, dan `getPublicEventBySlug` di `src/features/content/public-queries.ts`.
+- Menambahkan `/agenda` untuk agenda mendatang dan `/agenda/[slug]` untuk detail kegiatan.
+- Detail agenda memuat waktu, lokasi, gambar, deskripsi, dan tautan pendaftaran bila tersedia.
+- Waktu detail diformat dengan zona `Asia/Jakarta`.
+- Commit migrasi: `16b4e96`; query: `071ebcb`; filter agenda mendatang: `dc62218`; daftar publik: `066a739`; detail: `272e96d`; format zona waktu: `3475d54`.
+- README diperbarui pada commit `1048ba7`.
+- Pengujian typecheck/lint/test setelah perubahan Agenda belum dijalankan atau dikonfirmasi. Migrasi Agenda belum dikonfirmasi diterapkan ke Supabase.
 
-### 2026-11-24 — Galeri sekolah
-- Menambahkan migrasi baru `20261124120000_public_galleries.sql` untuk tabel `galleries` dan `gallery_images`; migrasi lama tidak diubah.
-- Menambahkan indeks, trigger `updated_at`, validasi status/tanggal publikasi, serta RLS terpisah untuk anon dan authenticated.
-- Pembacaan publik hanya mengizinkan album berstatus `published` dengan `published_at <= now()`; staf dapat membaca draft sesuai permission `galleries:view`.
-- Perubahan album menggunakan permission `galleries:create/update/delete`; publikasi memerlukan `galleries:publish`. Pengelolaan foto menggunakan permission galeri yang sesuai.
-- File foto menggunakan bucket publik `media`, folder `galleries/` (folder tersebut sudah termasuk allowlist policy storage).
-- Menambahkan query `getPublicGalleries` dan `getPublicGalleryBySlug` pada `src/features/content/public-queries.ts`.
-- Menambahkan halaman daftar `/galeri` dan detail album `/galeri/[slug]`, termasuk empty state, cover fallback dari foto pertama, metadata, caption, dan alt text.
-- Commit migrasi: `260909f`; query: `a287b3f`; daftar galeri: `cd89db6`; detail album: `aa70729`.
-- Perubahan ini belum diuji lokal oleh asisten dan migrasi belum dikonfirmasi diterapkan ke Supabase.
+### 2026-11-24 — Prestasi Sekolah
+- Menambahkan migrasi `20261124130000_public_achievements.sql` untuk tabel `achievements`, indeks, trigger, validasi tingkat/status/tanggal, serta RLS.
+- Menambahkan permission `achievements:publish`; operasi tulis mengikuti permission RBAC.
+- Menambahkan query publik daftar dan detail prestasi.
+- Menambahkan `/prestasi` dan `/prestasi/[slug]`.
+- Commit migrasi: `8caa738`; query: `c409ca0`; daftar: `d379a61`; detail: `79f8fef`.
+- Pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah tahap ini.
 
-## Catatan migrasi dan operasional
+### 2026-11-24 — Perbaikan query Galeri
+- Menghapus blok import duplikat `server-only`, `cache`, dan `createPublicClient` pada `src/features/content/public-queries.ts`.
+- Commit perbaikan: `952f32e`; catatan dokumentasi sebelumnya: `42c6789`.
 
-1. Terapkan migrasi Supabase sesuai urutan timestamp.
-2. Setelah migrasi diterapkan, verifikasi RLS menggunakan sesi anon dan akun dengan permission terkait.
-3. Pastikan bucket `media` dan `public-docs` sesuai migrasi storage.
-4. Buat data guru/jurusan/berita/pengumuman dari modul admin setelah modul pengelolaannya tersedia.
-5. Publikasikan berita/pengumuman hanya setelah konten siap. Isikan `published_at`; untuk pengumuman, `expires_at` opsional tetapi harus lebih besar dari `published_at`.
-6. Konten artikel saat ini ditampilkan sebagai teks biasa dengan pemisah baris; jangan menyimpan HTML yang diharapkan dieksekusi.
+### 2026-11-24 — Galeri Sekolah
+- Menambahkan migrasi `20261124120000_public_galleries.sql` untuk `galleries` dan `gallery_images`, termasuk RLS dan permission.
+- Menambahkan query publik album dan detail album.
+- Menambahkan `/galeri` dan `/galeri/[slug]`.
+- Commit migrasi: `260909f`; query: `a287b3f`; daftar: `cd89db6`; detail: `aa70729`; catatan progress: `ff91217`.
 
-## Langkah berikutnya
+### 2026-11-24 — Berita dan Pengumuman
+- Menambahkan query publik dan halaman daftar/detail berita serta pengumuman.
+- Commit query: `648f858`; berita: `dd92fdf`, `776e8bb`; pengumuman: `673f491`, `eab72bb`.
 
-1. Pull branch `main`, lalu jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` untuk memeriksa implementasi Berita/Pengumuman.
-2. Verifikasi halaman `/berita`, `/berita/[slug]`, `/pengumuman`, dan `/pengumuman/[slug]` dengan data draft, published, jadwal masa depan, dan pengumuman kedaluwarsa.
-3. Konfirmasi migrasi konten publik telah diterapkan di Supabase.
-4. Pull branch `main`, lalu jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` untuk perubahan Galeri.
-5. Terapkan migrasi `20261124120000_public_galleries.sql` ke Supabase dan verifikasi akses anon/staf.
-6. Implementasikan Prestasi, lalu Agenda.
-7. Lanjutkan modul admin CRUD dan publikasi konten.
+### 2026-11-24 — Guru dan Jurusan
+- Menambahkan query publik dan halaman `/guru`, `/jurusan`.
+- Menambahkan migrasi default guru tidak dipublikasikan.
+- Commit query: `b91180c`; Guru: `d900580`; Jurusan: `2596efd`; migrasi default: `baa74fe`; perapian kartu: `d00f30b`.
+
+## Temuan dan tindak lanjut
+
+1. Jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah perubahan Agenda.
+2. Terapkan migrasi Supabase secara berurutan dan konfirmasi hasilnya. Verifikasi RLS menggunakan sesi anon dan akun dengan permission berbeda.
+3. Prioritaskan modul admin CRUD dan publikasi. Sebelum menambah tautan baru, pastikan route admin benar-benar dibuat dan dilindungi permission.
+4. Audit serta sinkronkan menu publik yang belum memiliki route (misalnya Siswa dan PPDB/SPMB) sebelum dianggap siap.
+5. Lakukan build Cloudflare/OpenNext dan pengujian browser responsif serta aksesibilitas setelah rangkaian halaman publik stabil.
 
 ## Catatan yang belum diverifikasi
 
-- Status penerapan migrasi konten publik, Galeri, dan Prestasi pada Supabase aktif.
-- Hasil typecheck/lint/test setelah perubahan Prestasi (pengguna sudah mengonfirmasi lulus untuk pemeriksaan setelah perbaikan Galeri, sebelum implementasi Prestasi).
-- Hasil build Cloudflare/OpenNext.
-- Pengujian browser responsif, aksesibilitas, dan tautan lampiran PDF.
-
-### Perbaikan setelah implementasi Galeri — 2026-11-24
-- Memperbaiki error TypeScript pada `src/features/content/public-queries.ts`: blok import `server-only`, `cache`, dan `createPublicClient` yang tidak sengaja terduplikasi saat penambahan query Galeri telah dihapus; import utama di bagian atas tetap digunakan.
-- Commit perbaikan: `952f32e` (`fix(content): remove duplicate gallery imports`).
-- Typecheck/lint/test setelah perbaikan ini belum dijalankan; minta pengembang menjalankan ulang ketiganya.
-
-
-### 2026-11-24 — Prestasi Sekolah
-- Pengguna mengonfirmasi pemeriksaan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah perbaikan import Galeri (konfirmasi pengguna; bukan hasil eksekusi asisten).
-- Menambahkan migrasi `20261124130000_public_achievements.sql` untuk tabel `achievements`, indeks, trigger `updated_at`, validasi tingkat/status/tanggal publikasi, serta RLS anon dan staf.
-- Menambahkan permission `achievements:publish`; pembuatan/perubahan/penghapusan mengikuti permission RBAC `achievements:create/update/delete`, dan publikasi memerlukan `achievements:publish`.
-- Kolom konten: judul, slug, deskripsi, penerima, tingkat prestasi (Sekolah/Kabupaten-Kota/Provinsi/Nasional/Internasional), tanggal, gambar, status, waktu publikasi, dan urutan.
-- Media prestasi memakai bucket publik `media` dengan folder `achievements/` yang sudah diizinkan oleh policy storage sebelumnya.
-- Menambahkan `getPublicAchievements` dan `getPublicAchievementBySlug` pada `src/features/content/public-queries.ts`.
-- Menambahkan halaman daftar `/prestasi` dan detail `/prestasi/[slug]`, termasuk metadata, empty state, dan fallback gambar.
-- Commit migrasi: `8caa738`; query: `c409ca0`; daftar: `d379a61`; detail: `79f8fef`.
-- Hasil pemeriksaan kode setelah implementasi Prestasi belum dikonfirmasi. Migrasi baru belum dikonfirmasi diterapkan ke Supabase.
-
+- Penerapan migrasi konten, Galeri, Prestasi, dan Agenda pada Supabase aktif.
+- Typecheck/lint/test setelah perubahan Agenda.
+- Build Cloudflare/OpenNext.
+- Pengujian browser untuk responsivitas, aksesibilitas, dan perilaku seluruh tautan navigasi.
+- Ketersediaan data konten produksi dan validasi alur publikasi dari panel admin.
