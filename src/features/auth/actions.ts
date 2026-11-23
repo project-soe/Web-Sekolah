@@ -19,16 +19,33 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  // Pesan sengaja generik agar tidak membocorkan apakah email terdaftar.
-  if (error) return { error: "Email atau password salah.", email: parsed.data.email };
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    // Pesan sengaja generik agar tidak membocorkan apakah email terdaftar.
+    if (error) {
+      return { error: "Email atau password salah.", email: parsed.data.email };
+    }
 
-  const access = await fetchAccess(supabase);
-  if (!access || access.roles.length === 0) {
-    await supabase.auth.signOut();
-    return { error: "Akun belum aktif atau belum memiliki akses.", email: parsed.data.email };
+    const access = await fetchAccess(supabase);
+    if (!access || access.roles.length === 0) {
+      await supabase.auth.signOut();
+      return {
+        error: "Akun belum aktif atau belum memiliki akses.",
+        email: parsed.data.email,
+      };
+    }
+  } catch (error) {
+    console.error(
+      "[auth:login] Unexpected error:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
+    return {
+      error: "Layanan login sedang bermasalah. Silakan coba beberapa saat lagi.",
+      email: parsed.data.email,
+    };
   }
+
   redirect("/admin");
 }
 
