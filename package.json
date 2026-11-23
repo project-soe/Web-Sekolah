@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "cf:build": "opennextjs-cloudflare build",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "node -e \"require(\u0027node:fs\u0027).rmSync(\u0027.next\u0027, { recursive: true, force: true })\" && next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
