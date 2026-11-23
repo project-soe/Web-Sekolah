@@ -1,15 +1,16 @@
 "use client";
 
-import { ExternalLink, Menu, X } from "lucide-react";
+import { ExternalLink, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { siteDefaults } from "@/config/site";
+import { logout } from "@/features/auth/actions";
 import { cn } from "@/utils/cn";
 import { AdminNav } from "./admin-nav";
 import { Breadcrumbs } from "./breadcrumbs";
 
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({ children, email }: { children: React.ReactNode; email: string }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -78,6 +79,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <ExternalLink className="size-4" aria-hidden />
             <span className="sr-only sm:hidden">Lihat situs</span>
           </Link>
+          <span className="hidden max-w-48 truncate text-xs text-muted-foreground md:inline">
+            {email}
+          </span>
+          <form action={logout}>
+            <Button type="submit" variant="outline" size="sm">
+              <LogOut className="size-4" aria-hidden />
+              Keluar
+            </Button>
+          </form>
         </header>
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
