@@ -64,7 +64,7 @@ Kredensial service role tidak boleh diekspos ke browser atau dimasukkan ke varia
 
 Migrasi berada di `supabase/migrations/` dan harus diterapkan berurutan ke proyek Supabase yang benar sebelum fitur yang bergantung padanya diuji secara integrasi.
 
-Fondasi konten publik terbaru menambahkan tabel `departments`, `teachers`, `news_categories`, `news`, dan `announcements`. Lihat `progress.md` untuk status penerapan dan tindak lanjutnya.
+Fondasi konten publik mencakup tabel `departments`, `teachers`, `news_categories`, `news`, `announcements`, `galleries`, `gallery_images`, `achievements`, dan `events`. Migrasi harus diterapkan berurutan sebelum pengujian integrasi. Lihat `progress.md` untuk daftar migrasi, status penerapan, dan tindak lanjutnya.
 
 ## Dokumentasi dan serah terima
 
