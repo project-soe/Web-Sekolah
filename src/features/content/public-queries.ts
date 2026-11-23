@@ -76,3 +76,74 @@ export const getPublicAnnouncementBySlug = cache(async (slug: string): Promise<P
   if (error) { console.error("public_announcement_detail_failed", error.code); return null; }
   return (data as PublicAnnouncement | null) ?? null;
 });
+
+import "server-only";
+import { cache } from "react";
+import { createPublicClient } from "@/lib/supabase/public";
+
+export type PublicGalleryImage = {
+  id: string;
+  image_path: string;
+  alt_text: string | null;
+  caption: string | null;
+  sort_order: number;
+};
+
+export type PublicGallery = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  cover_path: string | null;
+  published_at: string;
+  gallery_images: PublicGalleryImage[];
+};
+
+const gallerySelection =
+  "id, title, slug, description, cover_path, published_at, gallery_images(id, image_path, alt_text, caption, sort_order)";
+
+function sortImages(gallery: PublicGallery): PublicGallery {
+  return {
+    ...gallery,
+    gallery_images: [...(gallery.gallery_images ?? [])].sort(
+      (a, b) => a.sort_order - b.sort_order,
+    ),
+  };
+}
+
+export const getPublicGalleries = cache(async (): Promise<PublicGallery[]> => {
+  const { data, error } = await createPublicClient()
+    .from("galleries")
+    .select(gallerySelection)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("sort_order")
+    .order("published_at", { ascending: false })
+    .limit(48);
+
+  if (error) {
+    console.error("public_galleries_failed", error.code);
+    return [];
+  }
+
+  return ((data ?? []) as unknown as PublicGallery[]).map(sortImages);
+});
+
+export const getPublicGalleryBySlug = cache(
+  async (slug: string): Promise<PublicGallery | null> => {
+    const { data, error } = await createPublicClient()
+      .from("galleries")
+      .select(gallerySelection)
+      .eq("slug", slug)
+      .eq("status", "published")
+      .lte("published_at", new Date().toISOString())
+      .maybeSingle();
+
+    if (error) {
+      console.error("public_gallery_detail_failed", error.code);
+      return null;
+    }
+
+    return data ? sortImages(data as unknown as PublicGallery) : null;
+  },
+);
