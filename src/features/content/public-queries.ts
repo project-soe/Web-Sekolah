@@ -77,10 +77,6 @@ export const getPublicAnnouncementBySlug = cache(async (slug: string): Promise<P
   return (data as PublicAnnouncement | null) ?? null;
 });
 
-import "server-only";
-import { cache } from "react";
-import { createPublicClient } from "@/lib/supabase/public";
-
 export type PublicGalleryImage = {
   id: string;
   image_path: string;
