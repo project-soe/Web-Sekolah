@@ -5,9 +5,9 @@
 ## Status saat ini
 
 - **Branch:** `main`
-- **Tahap:** Fase 4 — halaman publik inti selesai sampai Agenda; berikutnya audit kesiapan database dan implementasi CRUD admin secara bertahap.
-- **Commit fitur terbaru:** `272e96d` — halaman detail Agenda.
-- **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi Prestasi. Pemeriksaan tersebut belum mencakup perubahan Agenda.
+- **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita pertama sudah dibuat dan menunggu pemeriksaan lokal.
+- **Commit terbaru:** `1972285` — sembunyikan tautan navigasi ke modul admin yang belum tersedia.
+- **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi Agenda. Pemeriksaan tersebut belum mencakup perubahan CMS Berita.
 - **Status Supabase:** penerapan migrasi konten publik, Galeri, Prestasi, dan Agenda ke proyek Supabase aktif belum dikonfirmasi. Jangan menganggap tabel-tabel ini sudah tersedia.
 - **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
 
@@ -49,6 +49,7 @@
 | `20261124120000_public_galleries.sql` | galleries, gallery_images | Belum dikonfirmasi |
 | `20261124130000_public_achievements.sql` | achievements + permission publish | Belum dikonfirmasi |
 | `20261124140000_public_events.sql` | events + permission events:publish | Belum dikonfirmasi |
+| `20261124150000_content_publication_guard.sql` | Penguatan RLS publish News, Announcements, dan Galleries | Belum dikonfirmasi |
 
 Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis harus mengikuti permission RBAC masing-masing modul.
 
@@ -56,7 +57,7 @@ Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis h
 
 - README dan progress diperiksa terhadap branch `main`, termasuk tree route, konfigurasi package, navigasi, query publik, dan migrasi.
 - Struktur domain dan pemisahan route publik/admin sudah terbentuk dan konsisten.
-- Temuan penting: `src/config/navigation.ts` sudah mencantumkan banyak tautan `adminNav`, tetapi route admin yang benar-benar ada masih hanya `/admin`, `/admin/identitas`, `/admin/profil`, dan `/admin/pengaturan`. Tautan admin untuk Guru, Jurusan, Berita, Pengumuman, Galeri, Prestasi, Agenda, dan modul lain belum memiliki halaman tujuan. Jangan menganggap CRUD modul-modul tersebut sudah tersedia.
+- Temuan awal: navigasi admin mencantumkan banyak modul yang belum memiliki route. Setelah tahap CMS Berita, route admin yang tersedia adalah `/admin`, `/admin/identitas`, `/admin/profil`, `/admin/pengaturan`, dan `/admin/berita`. Menu yang belum memiliki route kini disembunyikan dari sidebar.
 - `publicNav` mencantumkan Siswa dan PPDB/SPMB, sementara route publik untuk beberapa menu itu belum terlihat di tree saat audit.
 - README sebelumnya belum menyebut migrasi Galeri, Prestasi, dan Agenda; ringkasan database sudah diperbarui.
 - Catatan progress lama memuat langkah yang sudah kedaluwarsa dan baris literal `\\n`; dokumen ini menggantinya dengan status yang diselaraskan terhadap tree terbaru.
@@ -103,15 +104,15 @@ Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis h
 
 ## Temuan dan tindak lanjut
 
-1. Jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah perubahan Agenda.
+1. Jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah implementasi CMS Berita.
 2. Terapkan migrasi Supabase secara berurutan dan konfirmasi hasilnya. Verifikasi RLS menggunakan sesi anon dan akun dengan permission berbeda.
-3. Prioritaskan modul admin CRUD dan publikasi. Sebelum menambah tautan baru, pastikan route admin benar-benar dibuat dan dilindungi permission.
+3. Setelah CMS Berita lolos, implementasikan CMS Pengumuman, Galeri, Prestasi, Agenda, Guru, dan Jurusan secara bertahap.
 4. Audit serta sinkronkan menu publik yang belum memiliki route (misalnya Siswa dan PPDB/SPMB) sebelum dianggap siap.
-5. Lakukan build Cloudflare/OpenNext dan pengujian browser responsif serta aksesibilitas setelah rangkaian halaman publik stabil.
+5. Lakukan build Cloudflare/OpenNext dan pengujian browser responsif serta aksesibilitas setelah rangkaian halaman publik dan admin stabil.
 
 ## Catatan yang belum diverifikasi
 
-- Penerapan migrasi konten, Galeri, Prestasi, dan Agenda pada Supabase aktif.
+- Penerapan migrasi konten, Galeri, Prestasi, Agenda, dan penguatan RLS publikasi pada Supabase aktif.
 - Typecheck/lint/test setelah perubahan Agenda.
 - Build Cloudflare/OpenNext.
 - Pengujian browser untuk responsivitas, aksesibilitas, dan perilaku seluruh tautan navigasi.
