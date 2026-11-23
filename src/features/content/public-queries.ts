@@ -143,3 +143,56 @@ export const getPublicGalleryBySlug = cache(
     return data ? sortImages(data as unknown as PublicGallery) : null;
   },
 );
+
+
+export type PublicAchievement = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  recipient: string | null;
+  achievement_level: "Sekolah" | "Kabupaten/Kota" | "Provinsi" | "Nasional" | "Internasional";
+  achievement_date: string | null;
+  image_path: string | null;
+};
+
+const achievementSelection =
+  "id, title, slug, description, recipient, achievement_level, achievement_date, image_path";
+
+export const getPublicAchievements = cache(async (): Promise<PublicAchievement[]> => {
+  const { data, error } = await createPublicClient()
+    .from("achievements")
+    .select(achievementSelection)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("sort_order")
+    .order("achievement_date", { ascending: false, nullsFirst: false })
+    .order("published_at", { ascending: false })
+    .limit(48);
+
+  if (error) {
+    console.error("public_achievements_failed", error.code);
+    return [];
+  }
+
+  return (data ?? []) as PublicAchievement[];
+});
+
+export const getPublicAchievementBySlug = cache(
+  async (slug: string): Promise<PublicAchievement | null> => {
+    const { data, error } = await createPublicClient()
+      .from("achievements")
+      .select(achievementSelection)
+      .eq("slug", slug)
+      .eq("status", "published")
+      .lte("published_at", new Date().toISOString())
+      .maybeSingle();
+
+    if (error) {
+      console.error("public_achievement_detail_failed", error.code);
+      return null;
+    }
+
+    return (data as PublicAchievement | null) ?? null;
+  },
+);
