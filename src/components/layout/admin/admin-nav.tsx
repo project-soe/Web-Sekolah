@@ -5,6 +5,14 @@ import type { Access } from "@/lib/rbac/access";
 import { can } from "@/lib/rbac/access";
 import { NavLink } from "../nav-link";
 
+const implementedRoutes = new Set([
+  "/admin",
+  "/admin/identitas",
+  "/admin/profil",
+  "/admin/pengaturan",
+  "/admin/berita",
+]);
+
 const permissionByHref: Record<string, string> = {
   "/admin/identitas": "school:update",
   "/admin/profil": "school:update",
@@ -29,6 +37,7 @@ export function AdminNav({
     <nav aria-label="Menu admin" className="flex flex-col gap-5">
       {adminNav.map((group) => {
         const items = group.items.filter((item) => {
+          if (!implementedRoutes.has(item.href)) return false;
           const permission = permissionByHref[item.href];
           return !permission || can(access, permission);
         });
