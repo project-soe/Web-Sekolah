@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { siteDefaults } from "@/config/site";
 import { logout } from "@/features/auth/actions";
 import { cn } from "@/utils/cn";
+import type { Access } from "@/lib/rbac/access";
 import { AdminNav } from "./admin-nav";
 import { Breadcrumbs } from "./breadcrumbs";
 
-export function AdminShell({ children, email }: { children: React.ReactNode; email: string }) {
+export function AdminShell({ children, email, access }: { children: React.ReactNode; email: string; access: Access }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export function AdminShell({ children, email }: { children: React.ReactNode; ema
             <X className="size-4" aria-hidden />
           </Button>
         </div>
-        <AdminNav onNavigate={() => setOpen(false)} />
+        <AdminNav access={access} onNavigate={() => setOpen(false)} />
       </aside>
 
       <div className="flex min-w-0 flex-col">
