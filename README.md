@@ -1,38 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Website Sekolah
 
-## Getting Started
+Website resmi sekolah dan sistem informasi manajemen sekolah (SIMS), dibangun dengan Next.js App Router, TypeScript, Tailwind CSS, dan Supabase.
 
-First, run the development server:
+## Teknologi
+
+- **Framework:** Next.js 16.4.6 (App Router)
+- **UI:** React 19, Tailwind CSS 4, komponen UI proyek, Lucide
+- **Backend:** Supabase (PostgreSQL, Auth, Row Level Security, Storage)
+- **Deployment:** Cloudflare Workers melalui OpenNext
+- **Package manager:** pnpm 12
+
+## Menjalankan proyek
+
+Persyaratan: Node.js >= 20.9 dan pnpm sesuai versi pada `package.json`.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Perintah pemeriksaan
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+```
 
-## Learn More
+Jalankan pemeriksaan yang relevan setelah perubahan. Jangan menganggap pemeriksaan berhasil sebelum benar-benar dijalankan.
 
-To learn more about Next.js, take a look at the following resources:
+## Konfigurasi lingkungan
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Salin variabel yang dibutuhkan ke file lingkungan lokal (jangan commit secret):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-## Deploy on Vercel
+Kredensial service role tidak boleh diekspos ke browser atau dimasukkan ke variabel `NEXT_PUBLIC_*`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Arsitektur ringkas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/(public)/`: halaman website publik.
+- `src/app/admin/`: area administrasi.
+- `src/features/`: fitur berdasarkan domain, termasuk query, action, schema, dan komponen.
+- `src/lib/supabase/`: klien Supabase server/public.
+- `src/lib/storage/`: validasi dan URL media.
+- `supabase/migrations/`: perubahan skema database yang berurutan.
+- `docs/`: dokumentasi teknis tambahan.
+- `progress.md`: status pekerjaan, keputusan penting, pemeriksaan, dan langkah lanjutan.
 
-# Web-Sekolah
+### Prinsip keamanan data
+
+1. Akses database dibatasi dengan PostgreSQL RLS; menyembunyikan elemen UI bukan kontrol keamanan.
+2. Klien publik memakai anon key dan hanya membaca data yang diizinkan policy.
+3. Data konten baru tidak boleh otomatis tampil ke publik; publikasi harus eksplisit.
+4. Perubahan skema dibuat sebagai migrasi baru. Hindari mengedit migrasi yang mungkin sudah diterapkan.
+5. Jangan pernah menyimpan secret, password, token, atau data pribadi sensitif dalam dokumentasi.
+
+## Database
+
+Migrasi berada di `supabase/migrations/` dan harus diterapkan berurutan ke proyek Supabase yang benar sebelum fitur yang bergantung padanya diuji secara integrasi.
+
+Fondasi konten publik terbaru menambahkan tabel `departments`, `teachers`, `news_categories`, `news`, dan `announcements`. Lihat `progress.md` untuk status penerapan dan tindak lanjutnya.
+
+## Dokumentasi dan serah terima
+
+**Mulai dari `progress.md` sebelum mengerjakan tugas baru.** Dokumen itu mencatat commit terakhir, fitur yang selesai, status migrasi, hal yang belum diverifikasi, dan urutan pekerjaan berikutnya.
+
+Setiap perubahan kode, database, konfigurasi, atau keputusan arsitektur wajib memperbarui README dan/atau progress sesuai dampaknya. Untuk setiap sesi kerja, tambahkan catatan progress agar pengembang berikutnya tidak perlu menelusuri seluruh riwayat commit.
