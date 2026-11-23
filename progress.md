@@ -5,7 +5,7 @@
 ## Status saat ini
 
 - **Branch:** `main`
-- **Tahap:** Fase 4 — pengembangan website publik dan fondasi konten.
+- **Tahap:** Fase 4 — pengembangan website publik dan fondasi konten (Galeri selesai diimplementasikan; verifikasi lokal dan penerapan migrasi masih menunggu).
 - **Status terakhir yang diketahui:** implementasi halaman publik Guru, Jurusan, Berita, dan Pengumuman sudah di-commit. Migrasi konten terbaru ke Supabase dan pemeriksaan untuk commit terbaru belum dikonfirmasi.
 - **Pemeriksaan sebelumnya:** pengguna melaporkan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` tidak memiliki masalah setelah tahap Guru/Jurusan. Pemeriksaan itu mendahului perubahan Berita/Pengumuman.
 - **Aturan kerja:** baca dokumen ini sebelum melanjutkan; jangan menyatakan build/typecheck/test/migrasi berhasil tanpa menjalankannya.
@@ -34,6 +34,7 @@
 - Metadata publik dan aturan robots telah ditambahkan.
 - Halaman `/guru` dan `/jurusan` mengambil data yang telah dipublikasikan.
 - Halaman `/berita` dan `/pengumuman` menampilkan konten publik, dengan halaman detail berbasis slug.
+- Halaman `/galeri` menampilkan album publik dan jumlah foto; `/galeri/[slug]` menampilkan foto album beserta caption dan teks alternatif.
 - Detail berita menampilkan tanggal, kategori, gambar sampul, ringkasan, dan isi.
 - Detail pengumuman menampilkan masa berlaku dan tautan lampiran PDF bila tersedia.
 - Halaman daftar menampilkan empty state jika belum ada konten publik.
@@ -75,6 +76,17 @@ RLS mengizinkan publik membaca konten yang dipublikasikan sesuai waktu tayang; p
 - Commit query: `648f858`; daftar berita: `dd92fdf`; detail berita: `776e8bb`; daftar pengumuman: `673f491`; detail pengumuman: `eab72bb`.
 - Pemeriksaan lokal untuk perubahan Berita/Pengumuman belum dijalankan dalam sesi ini.
 
+### 2026-11-24 — Galeri sekolah
+- Menambahkan migrasi baru `20261124120000_public_galleries.sql` untuk tabel `galleries` dan `gallery_images`; migrasi lama tidak diubah.
+- Menambahkan indeks, trigger `updated_at`, validasi status/tanggal publikasi, serta RLS terpisah untuk anon dan authenticated.
+- Pembacaan publik hanya mengizinkan album berstatus `published` dengan `published_at <= now()`; staf dapat membaca draft sesuai permission `galleries:view`.
+- Perubahan album menggunakan permission `galleries:create/update/delete`; publikasi memerlukan `galleries:publish`. Pengelolaan foto menggunakan permission galeri yang sesuai.
+- File foto menggunakan bucket publik `media`, folder `galleries/` (folder tersebut sudah termasuk allowlist policy storage).
+- Menambahkan query `getPublicGalleries` dan `getPublicGalleryBySlug` pada `src/features/content/public-queries.ts`.
+- Menambahkan halaman daftar `/galeri` dan detail album `/galeri/[slug]`, termasuk empty state, cover fallback dari foto pertama, metadata, caption, dan alt text.
+- Commit migrasi: `260909f`; query: `a287b3f`; daftar galeri: `cd89db6`; detail album: `aa70729`.
+- Perubahan ini belum diuji lokal oleh asisten dan migrasi belum dikonfirmasi diterapkan ke Supabase.
+
 ## Catatan migrasi dan operasional
 
 1. Terapkan migrasi Supabase sesuai urutan timestamp.
@@ -89,12 +101,14 @@ RLS mengizinkan publik membaca konten yang dipublikasikan sesuai waktu tayang; p
 1. Pull branch `main`, lalu jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` untuk memeriksa implementasi Berita/Pengumuman.
 2. Verifikasi halaman `/berita`, `/berita/[slug]`, `/pengumuman`, dan `/pengumuman/[slug]` dengan data draft, published, jadwal masa depan, dan pengumuman kedaluwarsa.
 3. Konfirmasi migrasi konten publik telah diterapkan di Supabase.
-4. Implementasikan Galeri dan Prestasi.
-5. Lanjutkan Agenda, lalu modul admin CRUD dan publikasi konten.
+4. Pull branch `main`, lalu jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` untuk perubahan Galeri.
+5. Terapkan migrasi `20261124120000_public_galleries.sql` ke Supabase dan verifikasi akses anon/staf.
+6. Implementasikan Prestasi, lalu Agenda.
+7. Lanjutkan modul admin CRUD dan publikasi konten.
 
 ## Catatan yang belum diverifikasi
 
 - Status penerapan migrasi konten publik pada Supabase aktif.
-- Hasil typecheck/lint/test setelah perubahan Berita/Pengumuman.
+- Hasil typecheck/lint/test setelah perubahan Berita/Pengumuman dan Galeri.
 - Hasil build Cloudflare/OpenNext.
 - Pengujian browser responsif, aksesibilitas, dan tautan lampiran PDF.
