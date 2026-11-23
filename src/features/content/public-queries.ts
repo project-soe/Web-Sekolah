@@ -196,3 +196,57 @@ export const getPublicAchievementBySlug = cache(
     return (data as PublicAchievement | null) ?? null;
   },
 );
+
+
+export type PublicEvent = {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  description: string;
+  location: string | null;
+  starts_at: string;
+  ends_at: string | null;
+  image_path: string | null;
+  registration_url: string | null;
+};
+
+const eventSelection =
+  "id, title, slug, summary, description, location, starts_at, ends_at, image_path, registration_url";
+
+export const getPublicEvents = cache(async (): Promise<PublicEvent[]> => {
+  const { data, error } = await createPublicClient()
+    .from("events")
+    .select(eventSelection)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .order("sort_order")
+    .limit(48);
+
+  if (error) {
+    console.error("public_events_failed", error.code);
+    return [];
+  }
+
+  return (data ?? []) as PublicEvent[];
+});
+
+export const getPublicEventBySlug = cache(
+  async (slug: string): Promise<PublicEvent | null> => {
+    const { data, error } = await createPublicClient()
+      .from("events")
+      .select(eventSelection)
+      .eq("slug", slug)
+      .eq("status", "published")
+      .lte("published_at", new Date().toISOString())
+      .maybeSingle();
+
+    if (error) {
+      console.error("public_event_detail_failed", error.code);
+      return null;
+    }
+
+    return (data as PublicEvent | null) ?? null;
+  },
+);
