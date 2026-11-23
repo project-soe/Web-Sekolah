@@ -19,6 +19,9 @@ export default async function EditNewsPage({ params }: { params: Promise<{ id: s
     supabase.from("news_categories").select("id, name").order("name"),
   ]);
   if (error || !item) notFound();
+  if (item.status === "published" && !can(session.access, "news:publish")) {
+    redirect("/admin/berita?error=publikasi");
+  }
 
   return (
     <div className="flex flex-col gap-6">
