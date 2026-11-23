@@ -1,0 +1,101 @@
+import {
+  Award,
+  BarChart3,
+  BookOpen,
+  Building2,
+  CalendarDays,
+  ClipboardList,
+  DatabaseBackup,
+  DoorOpen,
+  FileText,
+  FolderOpen,
+  GraduationCap,
+  History,
+  Images,
+  Landmark,
+  LayoutDashboard,
+  Library,
+  Mail,
+  Megaphone,
+  Music,
+  Newspaper,
+  School,
+  Settings,
+  Share2,
+  ShieldCheck,
+  Tags,
+  Trophy,
+  UserCog,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+
+export type NavItem = { label: string; href: string };
+export type AdminNavItem = NavItem & { icon: LucideIcon };
+export type AdminNavGroup = { group: string; items: AdminNavItem[] };
+
+export const publicNav: NavItem[] = [
+  { label: "Beranda", href: "/" },
+  { label: "Profil Sekolah", href: "/profil" },
+  { label: "Guru dan Tendik", href: "/guru" },
+  { label: "Siswa", href: "/siswa" },
+  { label: "Jurusan", href: "/jurusan" },
+  { label: "Berita", href: "/berita" },
+  { label: "Pengumuman", href: "/pengumuman" },
+  { label: "PPDB/SPMB", href: "/ppdb" },
+  { label: "Galeri", href: "/galeri" },
+  { label: "Prestasi", href: "/prestasi" },
+  { label: "Agenda", href: "/agenda" },
+  { label: "Kontak", href: "/kontak" },
+];
+
+export const adminNav: AdminNavGroup[] = [
+  { group: "Ringkasan", items: [{ label: "Dashboard", href: "/admin", icon: LayoutDashboard }] },
+  {
+    group: "Sekolah",
+    items: [
+      { label: "Identitas Sekolah", href: "/admin/identitas", icon: School },
+      { label: "Profil Sekolah", href: "/admin/profil", icon: Building2 },
+      { label: "Fasilitas", href: "/admin/fasilitas", icon: Landmark },
+      { label: "Pengaturan", href: "/admin/pengaturan", icon: Settings },
+    ],
+  },
+  {
+    group: "Akademik",
+    items: [
+      { label: "Guru", href: "/admin/guru", icon: Users },
+      { label: "Siswa", href: "/admin/siswa", icon: GraduationCap },
+      { label: "Alumni", href: "/admin/alumni", icon: Award },
+      { label: "Jurusan", href: "/admin/jurusan", icon: BookOpen },
+      { label: "Kelas", href: "/admin/kelas", icon: DoorOpen },
+      { label: "Mata Pelajaran", href: "/admin/mata-pelajaran", icon: Library },
+    ],
+  },
+  {
+    group: "Konten",
+    items: [
+      { label: "Berita", href: "/admin/berita", icon: Newspaper },
+      { label: "Kategori Berita", href: "/admin/kategori-berita", icon: Tags },
+      { label: "Pengumuman", href: "/admin/pengumuman", icon: Megaphone },
+      { label: "Halaman Website", href: "/admin/halaman", icon: FileText },
+      { label: "Galeri", href: "/admin/galeri", icon: Images },
+      { label: "Prestasi", href: "/admin/prestasi", icon: Trophy },
+      { label: "Ekstrakurikuler", href: "/admin/ekstrakurikuler", icon: Music },
+      { label: "Agenda", href: "/admin/agenda", icon: CalendarDays },
+      { label: "Dokumen", href: "/admin/dokumen", icon: FolderOpen },
+      { label: "Media Sosial", href: "/admin/media-sosial", icon: Share2 },
+    ],
+  },
+  { group: "PPDB", items: [{ label: "PPDB", href: "/admin/ppdb", icon: ClipboardList }] },
+  { group: "Komunikasi", items: [{ label: "Pesan Masuk", href: "/admin/pesan", icon: Mail }] },
+  {
+    group: "Sistem",
+    items: [
+      { label: "Pengguna", href: "/admin/pengguna", icon: UserCog },
+      { label: "Role dan Permission", href: "/admin/role", icon: ShieldCheck },
+      { label: "Activity Logs", href: "/admin/activity-logs", icon: History },
+      { label: "Laporan", href: "/admin/laporan", icon: BarChart3 },
+      { label: "Backup dan Pemeliharaan", href: "/admin/backup", icon: DatabaseBackup },
+    ],
+  },
+];
