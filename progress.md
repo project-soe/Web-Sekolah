@@ -54,7 +54,11 @@ RLS mengizinkan publik membaca konten yang dipublikasikan sesuai waktu tayang; o
 ### 2026-11-24 — halaman publik Guru dan Jurusan
 - Menambahkan query publik untuk daftar guru dan jurusan.
 - Menambahkan halaman `/guru` dan `/jurusan` dengan filter publikasi, tampilan kosong, dan URL foto/media.
-- Menambahkan migrasi lanjutan untuk memastikan default `teachers.is_published` adalah `false`.
+- Menambahkan migrasi lanjutan `20261124110000_default_teacher_unpublished.sql` untuk memastikan default `teachers.is_published` adalah `false`; migrasi lama tidak diubah.
+- Commit dokumentasi README: `d91c290`.
+- Commit progress awal: `f9c19ee`.
+- Query publik: `b91180c`; halaman Guru: `d900580`; halaman Jurusan: `2596efd`; migrasi default publikasi: `baa74fe`.
+- Merapikan kartu jurusan agar tidak menampilkan tautan generik yang mengarah ke halaman guru: `d00f30b`.
 - Status pemeriksaan lokal belum dijalankan dalam sesi ini; minta pengembang menjalankan typecheck/lint/test setelah pull.
 
 ## Catatan migrasi dan operasional
