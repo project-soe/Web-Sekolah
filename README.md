@@ -71,3 +71,8 @@ Fondasi konten publik mencakup tabel `departments`, `teachers`, `news_categories
 **Mulai dari `progress.md` sebelum mengerjakan tugas baru.** Dokumen itu mencatat commit terakhir, fitur yang selesai, status migrasi, hal yang belum diverifikasi, dan urutan pekerjaan berikutnya.
 
 Setiap perubahan kode, database, konfigurasi, atau keputusan arsitektur wajib memperbarui README dan/atau progress sesuai dampaknya. Untuk setiap sesi kerja, tambahkan catatan progress agar pengembang berikutnya tidak perlu menelusuri seluruh riwayat commit.
+
+
+## Admin CMS
+
+Modul admin harus memeriksa permission pada server action dan dilindungi RLS di Supabase. Menyembunyikan tombol atau menu bukan kontrol keamanan. Alur konten mendukung draft, terbit, arsip, dan penjadwalan bila tabel menyediakan `published_at`. Catatan implementasi serta status migrasi dan pengujian berada di `progress.md`.
