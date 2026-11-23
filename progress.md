@@ -112,3 +112,8 @@ RLS mengizinkan publik membaca konten yang dipublikasikan sesuai waktu tayang; p
 - Hasil typecheck/lint/test setelah perubahan Berita/Pengumuman dan Galeri.
 - Hasil build Cloudflare/OpenNext.
 - Pengujian browser responsif, aksesibilitas, dan tautan lampiran PDF.
+
+### Perbaikan setelah implementasi Galeri — 2026-11-24
+- Memperbaiki error TypeScript pada `src/features/content/public-queries.ts`: blok import `server-only`, `cache`, dan `createPublicClient` yang tidak sengaja terduplikasi saat penambahan query Galeri telah dihapus; import utama di bagian atas tetap digunakan.
+- Commit perbaikan: `952f32e` (`fix(content): remove duplicate gallery imports`).
+- Typecheck/lint/test setelah perbaikan ini belum dijalankan; minta pengembang menjalankan ulang ketiganya.
