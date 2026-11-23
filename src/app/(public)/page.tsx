@@ -6,6 +6,7 @@ import {
   BookOpen,
   GraduationCap,
   MapPin,
+  UserRound,
   Phone,
   School,
   Target,
@@ -133,7 +134,16 @@ export default async function HomePage() {
       </section>
 
       <section aria-label="Informasi singkat sekolah" className="border-b border-border bg-background">
-        <div className="mx-auto grid max-w-7xl gap-5 px-4 py-7 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto grid max-w-7xl gap-5 px-4 py-7 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
+              <UserRound className="size-5" aria-hidden />
+            </span>
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Kepala sekolah</p>
+              <p className="mt-1 font-semibold">{school?.headmaster_name || "Informasi belum tersedia"}</p>
+            </div>
+          </div>
           <div className="flex items-start gap-3">
             <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
               <School className="size-5" aria-hidden />
