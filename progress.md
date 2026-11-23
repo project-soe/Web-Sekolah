@@ -127,7 +127,7 @@ Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis h
 - Menambahkan validasi berita (Zod), server actions create/update/delete, pemeriksaan permission pada server, pencatatan activity log, dan revalidasi route. Commit schema: `ff25c16`; actions: `881dcfe`.
 - Menambahkan editor berita dengan dukungan draft, publish, arsip, serta penjadwalan waktu Asia/Jakarta. Commit: `27fc102`.
 - Menambahkan halaman daftar berita, tambah berita, edit berita, dan kontrol hapus dengan konfirmasi. Commit: `aa335c4`, `0204365`, `4a6cf5d`, `1a2f6ff`.
-- Menambahkan penyaringan navigasi admin berdasarkan permission untuk menu yang sudah memiliki pemetaan. Commit: `2e99797`, `98e38ce`, `2dd1b04`.
+- Menambahkan penyaringan navigasi admin berdasarkan permission dan menyembunyikan modul yang belum memiliki route admin aktif agar tidak ada tautan mati. Commit: `2e99797`, `98e38ce`, `2dd1b04`, `884ecac`, `1972285`.
 - Menambahkan unit test validasi schema berita. Commit: `ebfe419`.
 - Perbaikan import tak terpakai pada halaman daftar berita: `d13e3d9`.
 - Status pengujian perubahan CMS ini: belum dijalankan oleh asisten dan belum dikonfirmasi pengguna. Perlu jalankan typecheck, lint, test.
