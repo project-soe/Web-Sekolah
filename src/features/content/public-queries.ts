@@ -220,6 +220,7 @@ export const getPublicEvents = cache(async (): Promise<PublicEvent[]> => {
     .select(eventSelection)
     .eq("status", "published")
     .lte("published_at", new Date().toISOString())
+    .gte("starts_at", new Date().toISOString())
     .order("starts_at", { ascending: true })
     .order("sort_order")
     .limit(48);
