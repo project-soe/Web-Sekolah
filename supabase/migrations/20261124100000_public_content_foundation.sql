@@ -8,7 +8,7 @@ create table public.departments (
   description text check (char_length(description) <= 5000),
   image_path text,
   sort_order integer not null default 0,
-  is_published boolean not null default true,
+  is_published boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
