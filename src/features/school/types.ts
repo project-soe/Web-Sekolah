@@ -20,3 +20,11 @@ export type SchoolSettings = {
   logo_path: string | null;
   hero_image_path: string | null;
 };
+
+export type SchoolProfile = {
+  vision: string | null;
+  mission: string | null;
+  history: string | null;
+  objectives: string | null;
+  headmaster_message: string | null;
+};

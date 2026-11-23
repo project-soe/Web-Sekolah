@@ -32,6 +32,6 @@ export async function requireAdmin() {
 
 export async function requirePermission(code: string) {
   const session = await requireAdmin();
-  if (!can(session.access, code)) redirect("/admin");
+  if (!can(session.access, code)) redirect("/admin?akses=ditolak");
   return session;
 }

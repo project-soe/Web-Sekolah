@@ -1,21 +1,39 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
-import { saveSchoolIdentity } from "./actions";
+import { FormActions } from "@/components/ui/form-actions";
+import { useFormBaseline } from "@/hooks/use-form-baseline";
+import { saveSchoolIdentity, type SchoolFormState } from "./actions";
 import { LEVELS, OWNERSHIP } from "./schema";
 import type { SchoolSettings } from "./types";
 
-type TextField = {
-  name: keyof SchoolSettings;
-  label: string;
-  hint?: string;
-  type?: string;
-  wide?: boolean;
-};
+const KEYS = [
+  "name",
+  "slogan",
+  "npsn",
+  "nss",
+  "ownership",
+  "education_level",
+  "accreditation",
+  "founded_year",
+  "headmaster_name",
+  "address",
+  "kecamatan",
+  "kabupaten_kota",
+  "provinsi",
+  "postal_code",
+  "phone",
+  "whatsapp",
+  "email",
+  "website",
+] as const;
+type Key = (typeof KEYS)[number];
+type Values = Record<Key, string>;
+
+type TextField = { name: Key; label: string; hint?: string; type?: string; wide?: boolean };
 
 const groups: { title: string; fields: TextField[] }[] = [
   {
@@ -51,81 +69,98 @@ const groups: { title: string; fields: TextField[] }[] = [
   },
 ];
 
+function toValues(s: SchoolSettings): Values {
+  return Object.fromEntries(KEYS.map((k) => [k, s[k] === null ? "" : String(s[k])])) as Values;
+}
+
 export function IdentityForm({ initial }: { initial: SchoolSettings }) {
-  const [state, action, pending] = useActionState(saveSchoolIdentity, {});
+  const { values, setField, dirty, reset, commit } = useFormBaseline<Values>(toValues(initial));
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
 
-  useEffect(() => {
-    if (state.ok) toast.success("Identitas sekolah berhasil disimpan");
-    else if (state.error) toast.error(state.error);
-  }, [state]);
-
-  const val = (name: keyof SchoolSettings) =>
-    state.values?.[name] ?? (initial[name] === null ? "" : String(initial[name]));
+  const [state, action, pending] = useActionState(
+    async (prev: SchoolFormState, formData: FormData): Promise<SchoolFormState> => {
+      const res = await saveSchoolIdentity(prev, formData);
+      if (res.ok) {
+        commit();
+        setSavedAt(new Date());
+        toast.success("Identitas sekolah berhasil disimpan");
+      } else if (res.error) {
+        toast.error(res.error);
+      }
+      return res;
+    },
+    {},
+  );
 
   return (
     <form action={action} className="flex max-w-3xl flex-col gap-6">
-      {groups.map((g) => (
-        <Card key={g.title}>
-          <CardHeader>
-            <CardTitle>{g.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            {g.title === "Identitas" && (
-              <>
-                <Field id="ownership" label="Status">
-                  <Select id="ownership" name="ownership" defaultValue={val("ownership")}>
-                    <option value="">Pilih status</option>
-                    {OWNERSHIP.map((o) => (
-                      <option key={o} value={o}>
-                        {o === "negeri" ? "Negeri" : "Swasta"}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field id="education_level" label="Jenjang">
-                  <Select
-                    id="education_level"
-                    name="education_level"
-                    defaultValue={val("education_level")}
-                  >
-                    <option value="">Pilih jenjang</option>
-                    {LEVELS.map((l) => (
-                      <option key={l} value={l}>
-                        {l}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-              </>
-            )}
-            {g.fields.map((f) => (
-              <div key={f.name} className={f.wide ? "sm:col-span-2" : undefined}>
-                <Field
-                  id={f.name}
-                  label={f.label}
-                  hint={f.hint}
-                  error={state.fieldErrors?.[f.name]}
-                  required={f.name === "name"}
-                >
-                  <Input
+      <fieldset disabled={pending} className="flex min-w-0 flex-col gap-6 border-0 p-0">
+        {groups.map((g) => (
+          <Card key={g.title}>
+            <CardHeader>
+              <CardTitle>{g.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              {g.title === "Identitas" && (
+                <>
+                  <Field id="ownership" label="Status">
+                    <Select
+                      id="ownership"
+                      name="ownership"
+                      value={values.ownership}
+                      onChange={(e) => setField("ownership", e.target.value)}
+                    >
+                      <option value="">Pilih status</option>
+                      {OWNERSHIP.map((o) => (
+                        <option key={o} value={o}>
+                          {o === "negeri" ? "Negeri" : "Swasta"}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field id="education_level" label="Jenjang">
+                    <Select
+                      id="education_level"
+                      name="education_level"
+                      value={values.education_level}
+                      onChange={(e) => setField("education_level", e.target.value)}
+                    >
+                      <option value="">Pilih jenjang</option>
+                      {LEVELS.map((l) => (
+                        <option key={l} value={l}>
+                          {l}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                </>
+              )}
+              {g.fields.map((f) => (
+                <div key={f.name} className={f.wide ? "sm:col-span-2" : undefined}>
+                  <Field
                     id={f.name}
-                    name={f.name}
-                    type={f.type ?? "text"}
-                    defaultValue={val(f.name)}
-                    invalid={!!state.fieldErrors?.[f.name]}
+                    label={f.label}
+                    hint={f.hint}
+                    error={state.fieldErrors?.[f.name]}
                     required={f.name === "name"}
-                  />
-                </Field>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      ))}
-      <div>
-        <Button type="submit" size="lg" loading={pending}>
-          Simpan perubahan
-        </Button>
-      </div>
+                  >
+                    <Input
+                      id={f.name}
+                      name={f.name}
+                      type={f.type ?? "text"}
+                      value={values[f.name]}
+                      onChange={(e) => setField(f.name, e.target.value)}
+                      invalid={!!state.fieldErrors?.[f.name]}
+                      required={f.name === "name"}
+                    />
+                  </Field>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </fieldset>
+      <FormActions dirty={dirty} pending={pending} savedAt={savedAt} onReset={reset} />
     </form>
   );
 }
