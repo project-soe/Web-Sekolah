@@ -5,8 +5,8 @@
 ## Status saat ini
 
 - **Branch:** `main`
-- **Tahap:** Fase 4 — pengembangan website publik dan fondasi konten (Galeri selesai diimplementasikan; verifikasi lokal dan penerapan migrasi masih menunggu).
-- **Status terakhir yang diketahui:** implementasi halaman publik Guru, Jurusan, Berita, dan Pengumuman sudah di-commit. Migrasi konten terbaru ke Supabase dan pemeriksaan untuk commit terbaru belum dikonfirmasi.
+- **Tahap:** Fase 4 — pengembangan website publik dan fondasi konten (Galeri dan Prestasi selesai diimplementasikan; verifikasi lokal serta penerapan migrasi masih perlu dikonfirmasi).
+- **Status terakhir yang diketahui:** halaman publik Guru, Jurusan, Berita, Pengumuman, Galeri, dan Prestasi sudah di-commit. Pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah perbaikan import Galeri. Penerapan migrasi konten ke Supabase belum dikonfirmasi.
 - **Pemeriksaan sebelumnya:** pengguna melaporkan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` tidak memiliki masalah setelah tahap Guru/Jurusan. Pemeriksaan itu mendahului perubahan Berita/Pengumuman.
 - **Aturan kerja:** baca dokumen ini sebelum melanjutkan; jangan menyatakan build/typecheck/test/migrasi berhasil tanpa menjalankannya.
 
@@ -34,7 +34,7 @@
 - Metadata publik dan aturan robots telah ditambahkan.
 - Halaman `/guru` dan `/jurusan` mengambil data yang telah dipublikasikan.
 - Halaman `/berita` dan `/pengumuman` menampilkan konten publik, dengan halaman detail berbasis slug.
-- Halaman `/galeri` menampilkan album publik dan jumlah foto; `/galeri/[slug]` menampilkan foto album beserta caption dan teks alternatif.
+- Halaman `/galeri` menampilkan album publik dan jumlah foto; `/galeri/[slug]` menampilkan foto album beserta caption dan teks alternatif.\n- Halaman `/prestasi` menampilkan daftar pencapaian yang dipublikasikan; `/prestasi/[slug]` menampilkan detail, tingkat prestasi, penerima, tanggal, dan gambar.
 - Detail berita menampilkan tanggal, kategori, gambar sampul, ringkasan, dan isi.
 - Detail pengumuman menampilkan masa berlaku dan tautan lampiran PDF bila tersedia.
 - Halaman daftar menampilkan empty state jika belum ada konten publik.
@@ -108,8 +108,8 @@ RLS mengizinkan publik membaca konten yang dipublikasikan sesuai waktu tayang; p
 
 ## Catatan yang belum diverifikasi
 
-- Status penerapan migrasi konten publik pada Supabase aktif.
-- Hasil typecheck/lint/test setelah perubahan Berita/Pengumuman dan Galeri.
+- Status penerapan migrasi konten publik, Galeri, dan Prestasi pada Supabase aktif.
+- Hasil typecheck/lint/test setelah perubahan Prestasi (pengguna sudah mengonfirmasi lulus untuk pemeriksaan setelah perbaikan Galeri, sebelum implementasi Prestasi).
 - Hasil build Cloudflare/OpenNext.
 - Pengujian browser responsif, aksesibilitas, dan tautan lampiran PDF.
 
@@ -117,3 +117,16 @@ RLS mengizinkan publik membaca konten yang dipublikasikan sesuai waktu tayang; p
 - Memperbaiki error TypeScript pada `src/features/content/public-queries.ts`: blok import `server-only`, `cache`, dan `createPublicClient` yang tidak sengaja terduplikasi saat penambahan query Galeri telah dihapus; import utama di bagian atas tetap digunakan.
 - Commit perbaikan: `952f32e` (`fix(content): remove duplicate gallery imports`).
 - Typecheck/lint/test setelah perbaikan ini belum dijalankan; minta pengembang menjalankan ulang ketiganya.
+
+
+### 2026-11-24 — Prestasi Sekolah
+- Pengguna mengonfirmasi pemeriksaan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah perbaikan import Galeri (konfirmasi pengguna; bukan hasil eksekusi asisten).
+- Menambahkan migrasi `20261124130000_public_achievements.sql` untuk tabel `achievements`, indeks, trigger `updated_at`, validasi tingkat/status/tanggal publikasi, serta RLS anon dan staf.
+- Menambahkan permission `achievements:publish`; pembuatan/perubahan/penghapusan mengikuti permission RBAC `achievements:create/update/delete`, dan publikasi memerlukan `achievements:publish`.
+- Kolom konten: judul, slug, deskripsi, penerima, tingkat prestasi (Sekolah/Kabupaten-Kota/Provinsi/Nasional/Internasional), tanggal, gambar, status, waktu publikasi, dan urutan.
+- Media prestasi memakai bucket publik `media` dengan folder `achievements/` yang sudah diizinkan oleh policy storage sebelumnya.
+- Menambahkan `getPublicAchievements` dan `getPublicAchievementBySlug` pada `src/features/content/public-queries.ts`.
+- Menambahkan halaman daftar `/prestasi` dan detail `/prestasi/[slug]`, termasuk metadata, empty state, dan fallback gambar.
+- Commit migrasi: `8caa738`; query: `c409ca0`; daftar: `d379a61`; detail: `79f8fef`.
+- Hasil pemeriksaan kode setelah implementasi Prestasi belum dikonfirmasi. Migrasi baru belum dikonfirmasi diterapkan ke Supabase.
+
