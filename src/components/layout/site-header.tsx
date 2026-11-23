@@ -1,28 +1,45 @@
 import { GraduationCap } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { publicNav } from "@/config/navigation";
-import { getSchoolName } from "@/features/school/queries";
+import { siteDefaults } from "@/config/site";
+import { getSchoolSettings } from "@/features/school/queries";
+import { publicMediaUrl } from "@/lib/storage/media-url";
 import { MobileMenu } from "./mobile-menu";
-import { SearchToggle } from "./search-toggle";
 import { NavDropdown } from "./nav-dropdown";
 import { NavLink } from "./nav-link";
+import { SearchToggle } from "./search-toggle";
 
 const primary = publicNav.slice(0, 6);
 const more = publicNav.slice(6).filter((i) => i.href !== "/ppdb");
 
 export async function SiteHeader() {
-  const name = await getSchoolName();
+  const settings = await getSchoolSettings();
+  const name = settings?.name ?? siteDefaults.name;
+  const logo = publicMediaUrl(settings?.logo_path);
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
         <Link href="/" className="flex min-w-0 items-center gap-2 font-bold text-primary">
-          <span
-            aria-hidden
-            className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground"
-          >
-            <GraduationCap className="size-5" />
-          </span>
+          {logo ? (
+            <Image
+              src={logo}
+              alt=""
+              width={36}
+              height={36}
+              unoptimized
+              className="size-9 shrink-0 object-contain"
+            />
+          ) : (
+            <span
+              aria-hidden
+              className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground"
+            >
+              <GraduationCap className="size-5" />
+            </span>
+          )}
           <span className="truncate">{name}</span>
         </Link>
 
