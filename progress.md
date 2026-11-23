@@ -6,9 +6,10 @@
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita pertama sudah dibuat dan menunggu pemeriksaan lokal.
-- **Commit terbaru:** `1972285` — sembunyikan tautan navigasi ke modul admin yang belum tersedia.
+- **Commit dokumentasi terbaru:** `e5b3a83` — sinkronisasi status CMS.
+- **Commit perubahan kode terbaru:** `1972285` — sembunyikan tautan navigasi ke modul admin yang belum tersedia.
 - **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi Agenda. Pemeriksaan tersebut belum mencakup perubahan CMS Berita.
-- **Status Supabase:** penerapan migrasi konten publik, Galeri, Prestasi, dan Agenda ke proyek Supabase aktif belum dikonfirmasi. Jangan menganggap tabel-tabel ini sudah tersedia.
+- **Status Supabase:** penerapan migrasi konten publik, Galeri, Prestasi, Agenda, dan penguatan RLS publikasi ke proyek Supabase aktif belum dikonfirmasi. Jangan menganggap tabel-tabel ini sudah tersedia.
 - **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
 
 ## Ringkasan arsitektur
