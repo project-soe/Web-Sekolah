@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { logActivity } from "@/lib/activity/log";
 import { fetchAccess } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema } from "./schema";
@@ -30,15 +31,13 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     const access = await fetchAccess(supabase);
     if (!access || access.roles.length === 0) {
       await supabase.auth.signOut();
-      return {
-        error: "Akun belum aktif atau belum memiliki akses.",
-        email: parsed.data.email,
-      };
+      return { error: "Akun belum aktif atau belum memiliki akses.", email: parsed.data.email };
     }
+    await logActivity(supabase, { action: "login", module: "auth", summary: "Login berhasil" });
   } catch (error) {
     console.error(
       "[auth:login] Unexpected error:",
-      error instanceof Error ? error.message : "Unknown error",
+      error instanceof Error ? error.message : "Unknown",
     );
     return {
       error: "Layanan login sedang bermasalah. Silakan coba beberapa saat lagi.",
@@ -51,6 +50,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
 
 export async function logout() {
   const supabase = await createClient();
+  await logActivity(supabase, { action: "logout", module: "auth", summary: "Logout" });
   await supabase.auth.signOut();
   redirect("/login");
 }

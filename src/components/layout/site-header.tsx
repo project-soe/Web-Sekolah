@@ -2,7 +2,7 @@ import { GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { publicNav } from "@/config/navigation";
-import { siteDefaults } from "@/config/site";
+import { getSchoolName } from "@/features/school/queries";
 import { MobileMenu } from "./mobile-menu";
 import { SearchToggle } from "./search-toggle";
 import { NavDropdown } from "./nav-dropdown";
@@ -11,7 +11,8 @@ import { NavLink } from "./nav-link";
 const primary = publicNav.slice(0, 6);
 const more = publicNav.slice(6).filter((i) => i.href !== "/ppdb");
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const name = await getSchoolName();
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
@@ -22,7 +23,7 @@ export function SiteHeader() {
           >
             <GraduationCap className="size-5" />
           </span>
-          <span className="truncate">{siteDefaults.name}</span>
+          <span className="truncate">{name}</span>
         </Link>
 
         <nav aria-label="Menu utama" className="ml-auto hidden items-center gap-1 lg:flex">

@@ -73,3 +73,20 @@ export function Field({
     </div>
   );
 }
+
+export function Select({
+  className,
+  invalid,
+  children,
+  ...props
+}: React.ComponentProps<"select"> & { invalid?: boolean }) {
+  return (
+    <select
+      aria-invalid={invalid || undefined}
+      className={cn(control, invalid ? "border-danger" : "border-border", className)}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+}
