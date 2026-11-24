@@ -122,12 +122,7 @@ stable
 security definer
 set search_path to ''
 as $function$
-  select
-    (
-      public.has_permission('galleries:update')
-      or public.has_permission('galleries:delete')
-    )
-    and exists (
+  select exists (
       select 1
       from public.galleries g
       where g.id = target_gallery_id
@@ -152,13 +147,25 @@ create policy gallery_images_insert on public.gallery_images
 drop policy if exists gallery_images_update on public.gallery_images;
 create policy gallery_images_update on public.gallery_images
   for update to authenticated
-  using (public.can_manage_gallery_images(gallery_id))
-  with check (public.can_manage_gallery_images(gallery_id));
+  using (
+    public.has_permission('galleries:update')
+    and public.can_manage_gallery_images(gallery_id)
+  )
+  with check (
+    public.has_permission('galleries:update')
+    and public.can_manage_gallery_images(gallery_id)
+  );
 
 drop policy if exists gallery_images_delete on public.gallery_images;
 create policy gallery_images_delete on public.gallery_images
   for delete to authenticated
-  using (public.can_manage_gallery_images(gallery_id));
+  using (
+    (
+      public.has_permission('galleries:update')
+      or public.has_permission('galleries:delete')
+    )
+    and public.can_manage_gallery_images(gallery_id)
+  );
 
 -- Replace the cross-module media permission union with folder-aware checks.
 create or replace function public.can_manage_media_folder(folder_name text)
