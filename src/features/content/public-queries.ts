@@ -251,3 +251,31 @@ export const getPublicEventBySlug = cache(
     return (data as PublicEvent | null) ?? null;
   },
 );
+
+
+export type PublicFacility = {
+  id: string;
+  name: string;
+  slug: string;
+  facility_type: "gedung" | "ruang" | "laboratorium" | "olahraga" | "ibadah" | "lainnya";
+  description: string | null;
+  location: string | null;
+  capacity: number | null;
+  image_path: string | null;
+};
+
+export const getPublicFacilities = cache(async (): Promise<PublicFacility[]> => {
+  const { data, error } = await createPublicClient()
+    .from("facilities")
+    .select("id, name, slug, facility_type, description, location, capacity, image_path")
+    .eq("is_published", true)
+    .order("sort_order")
+    .order("name")
+    .limit(120);
+
+  if (error) {
+    console.error("public_facilities_failed", error.code);
+    return [];
+  }
+  return (data ?? []) as PublicFacility[];
+});
