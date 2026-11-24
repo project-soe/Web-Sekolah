@@ -207,3 +207,9 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Rencana backup gratis menggunakan PostgreSQL pg_dump dari lingkungan Linux tersebut; belum ada perintah backup dijalankan dan belum ada file dump terverifikasi.
 - Langkah pemeriksaan awal: command -v pg_dump dan pg_dump --version. Setelah hasil diketahui, tentukan apakah perlu memasang client PostgreSQL yang sesuai sebelum koneksi ke Supabase.
 - Jangan meminta atau mencatat database password/connection string rahasia di chat maupun repository.
+
+### Pemeriksaan pg_dump — 2026-11-24
+
+- Pengguna menjalankan command -v pg_dump dan pg_dump --version pada Kali Linux ARM64; executable tersedia di /usr/bin/pg_dump, versi PostgreSQL 18.6 (Debian 18.6-3).
+- Tidak perlu memasang PostgreSQL client tambahan pada tahap ini. Belum ada koneksi database atau backup yang dijalankan.
+- Langkah berikutnya: ambil URI koneksi database dari Supabase Dashboard secara lokal, simpan secara aman sebagai environment variable tanpa menempelkannya ke chat/repository, lalu uji koneksi dan jalankan dump custom-format schema + data. Pastikan host/port sesuai mode koneksi Supabase dan jaringan IPv4/IPv6 lingkungan pengguna.
