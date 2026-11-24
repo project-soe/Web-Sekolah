@@ -106,7 +106,7 @@ $$;
 \echo '6. Verify enrollment guards, trusted actor metadata, and class history'
 do $$
 declare
-  enrollment_id uuid;
+  v_enrollment_id uuid;
   actor_id uuid := '50000000-0000-4000-8000-000000000001';
   spoofed_actor uuid := '50000000-0000-4000-8000-000000000002';
   history_count integer;
@@ -119,10 +119,10 @@ begin
     '10000000-0000-4000-8000-000000000001',
     '20000000-0000-4000-8000-000000000001',
     spoofed_actor
-  ) returning id into enrollment_id;
+  ) returning id into v_enrollment_id;
 
   select assigned_by into actual_actor
-  from public.student_class_enrollments where id = enrollment_id;
+  from public.student_class_enrollments where id = v_enrollment_id;
   if actual_actor is distinct from actor_id then
     raise exception 'assigned_by was not replaced with auth.uid()';
   end if;
@@ -133,7 +133,7 @@ begin
 
   select count(*) into history_count
   from public.student_class_history
-  where enrollment_id = enrollment_id;
+  where student_class_history.enrollment_id = v_enrollment_id;
   if history_count <> 2 then
     raise exception 'Expected insert and transfer history rows, got %', history_count;
   end if;
