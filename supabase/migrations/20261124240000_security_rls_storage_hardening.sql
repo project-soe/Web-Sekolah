@@ -204,9 +204,6 @@ as $function$
     when 'events' then public.has_any_permission(array[
       'events:create','events:update','events:delete'
     ])
-    when 'announcements' then public.has_any_permission(array[
-      'announcements:create','announcements:update','announcements:delete'
-    ])
     when 'homepage' then public.has_permission('homepage:update')
     when 'users' then public.has_permission('users:update')
     else false
