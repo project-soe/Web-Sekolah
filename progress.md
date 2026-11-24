@@ -515,3 +515,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Backup production terbaru masih wajib dibuat sebelum `db push`; backup yang tersedia dibuat sebelum migration Fasilitas dan tidak mencakup keadaan database terkini.
 - Setelah backup terverifikasi dan dry-run ulang hanya menampilkan migration hardening yang diharapkan, pengguna dapat menjalankan `pnpm dlx supabase db push --remote`, lalu memverifikasi `pnpm dlx supabase migration list --remote`.
 - Pengujian RLS/Storage dengan anon, editor tanpa publish, publisher, serta pemegang permission lintas folder tetap menjadi tindak lanjut wajib. Belum ada klaim migration production diterapkan atau tes regresi lulus.
+
+
+## 2026-11-24 — Verifikasi penerapan hardening RLS/Storage production
+
+- Pengguna mengonfirmasi hasil `pnpm dlx supabase migration list --remote`: migration `20261124240000` tercatat sama pada Local dan Remote; dry-run dilaporkan aman. Ini menunjukkan migration sudah tercatat diterapkan pada project production `nofznzznzjsvnkrmzpwx`.
+- Backup sebelum hardening dibuat di `/home/kali/db-backups/web-sekolah-20261124-before-security-hardening.dump`, ukuran 471 KB, format CUSTOM, 665 TOC entries. `pg_restore --list` berhasil membaca arsip. SHA-256: `b901c58673f1da87f0c158ba2a17d756e3bfd918b85a88ead65d2bdee4200422`.
+- Pengguna mengirim verifikasi `pg_policies`: policy SELECT publik/staf terpisah pada News, kategori berita, Guru, Jurusan, Fasilitas, Pengumuman, Galeri, dan gambar galeri; policy update/insert/delete tetap ada. Policy Storage `media_insert/select/update/delete` kini memanggil `can_manage_media_folder((storage.foldername(name))[1])`.
+- Pengguna mengonfirmasi kedua helper `can_manage_gallery_images(uuid)` dan `can_manage_media_folder(text)` tersedia sebagai SECURITY DEFINER dengan `search_path` kosong; EXECUTE tidak diberikan kepada anon dan tersedia untuk authenticated.
+- **Batas verifikasi:** hasil `pg_policies` yang dikirim baru memuat nama, command, dan role untuk tabel publik; ekspresi `qual`/`with_check` policy tabel belum dikirim. Belum ada uji sesi anon/editor/publisher atau uji akses folder Storage lintas modul. Jangan menyatakan seluruh skenario RLS sudah lolos sebelum pengujian tersebut.
+- Tindak lanjut: periksa ekspresi policy UPDATE/INSERT untuk News, Pengumuman, Galeri, dan gallery_images; lalu uji dengan JWT role/akun terpisah bahwa anon hanya membaca konten terbit, editor tanpa permission publish tidak dapat mengubah/unpublish konten terbit atau album terbit, publisher dapat melakukan aksi yang diizinkan, serta permission fasilitas tidak dapat mengelola folder media modul lain.
