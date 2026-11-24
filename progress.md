@@ -282,3 +282,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Status migrasi `20261124160000` tetap **Pending** sampai `pnpm dlx supabase db push --remote` berhasil dan `pnpm dlx supabase migration list --remote` menunjukkan versi tersebut tercatat di Remote.
 - Backup production yang telah diverifikasi sebelumnya: `/home/kali/db-backups/web-sekolah-20261124-003809.dump`; SHA-256 `c4eeda6de6efb3aeb853a0e401d8dfb2cb0cb5fd9f7cf4e71901459948ae8fd2`. Ini adalah validasi arsip dengan `pg_restore --list`, bukan uji restore penuh.
 - Langkah berikutnya: terapkan migrasi tersebut ke project ref `nofznzznzjsvnkrmzpwx`, lalu verifikasi riwayat migrasi remote. Jangan tandai selesai sebelum hasil terminal dikonfirmasi.
+
+
+## 2026-11-24 — Migrasi permission Pengumuman production berhasil diverifikasi
+- Pengguna mengonfirmasi `pnpm dlx supabase db push --remote` selesai tanpa error.
+- Output `pnpm dlx supabase migration list --remote` yang dibagikan pengguna menunjukkan migrasi `20261124160000` tercatat sama pada kolom Local dan Remote dengan waktu UTC `2026-11-24 16:00:00`.
+- Dengan demikian seluruh migrasi sampai `20261124160000_announcement_publish_permission.sql` sudah tercatat diterapkan pada Supabase production project `nofznzznzjsvnkrmzpwx`.
+- Catatan CLI: pesan pnpm tentang native binary/build scripts dan notifikasi versi Supabase CLI lebih baru muncul sebagai peringatan/informasi; tidak menghalangi push maupun pembacaan daftar migrasi pada sesi ini.
+- Langkah berikutnya: lanjutkan validasi aplikasi CMS Pengumuman di lokal (typecheck, lint, unit test), kemudian uji permission/RLS dengan akun yang memiliki dan tidak memiliki `announcements:publish`. Jangan menganggap pengujian aplikasi sudah lulus sebelum hasilnya dikonfirmasi.
