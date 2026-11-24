@@ -749,3 +749,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pengujian PostgreSQL lokal/staging masih belum dilakukan: migrasi 2700 dan 2800, RLS, trigger audit penempatan, rollback RPC, penolakan permission, serta aktivasi bersamaan.
 - Production tidak disentuh pada sesi ini. Jangan jalankan `db push --remote` atau SQL Editor production.
 - Langkah berikutnya: pastikan Supabase local berjalan pada database terisolasi, lalu periksa `migration list --local` dan jalankan tes integrasi/negatif. Jika local stack tidak tersedia di perangkat, gunakan proyek staging Supabase terpisah (bukan project production).
+
+
+## 2026-11-25 — Lingkungan Supabase lokal tidak tersedia
+
+- Pengguna menjalankan pemeriksaan Docker dan `pnpm dlx supabase status` dari lingkungan Kali/Termux.
+- Docker tidak tersedia; Podman juga tidak ditemukan. Supabase CLI melaporkan tidak dapat memeriksa container health karena runtime container tidak ada.
+- CLI menunjukkan repository masih linked ke project `Web-Sekolah` dengan ref `nofznzznzjsvnkrmzpwx`, yaitu project production. Perintah status tersebut tidak menjalankan migrasi atau SQL dan tidak mengubah database.
+- Karena local Supabase tidak dapat dijalankan pada lingkungan ini, rencana pengujian database dialihkan ke proyek Supabase staging terpisah. Jangan menjalankan `db push`, SQL Editor, atau tes tulis terhadap project production.
+- Langkah berikutnya: buat project staging baru pada organisasi yang sesuai, jangan menyalin data pribadi production, lalu link CLI ke project ref staging sebelum memeriksa migration list atau menerapkan migrasi uji.
