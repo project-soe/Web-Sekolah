@@ -4,7 +4,7 @@
 
 ## Status saat ini
 
-- **Tahap terbaru:** Implementasi awal CMS Agenda Sekolah ditambahkan ke branch `main`; menunggu pemeriksaan lokal pengguna dan penerapan migrasi guard `20261124200000`.
+- **Tahap terbaru:** Implementasi awal CMS Agenda Sekolah tersedia di branch `main`; migrasi guard `20261124200000` sudah diterapkan dan tercatat sinkron pada Supabase production. Pemeriksaan kode lokal setelah implementasi Agenda masih menunggu konfirmasi pengguna.
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
@@ -396,3 +396,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - **Status pemeriksaan:** belum dijalankan setelah implementasi Agenda. Jangan menganggap typecheck, lint, unit test, build, atau uji browser berhasil sebelum pengguna mengonfirmasi hasilnya.
 - **Status migrasi:** `20261124200000_event_publication_storage_guard.sql` baru ditambahkan dan belum dikonfirmasi diterapkan ke Supabase production. Lakukan dry-run, tinjau bahwa hanya migrasi ini yang pending (atau tinjau semua yang tampil), lalu push dan verifikasi `supabase migration list --remote`.
 - Tindak lanjut: jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`; perbaiki error bila ada. Setelah lolos, uji create/edit/delete agenda, upload gambar, jadwal publikasi, halaman publik `/agenda` dan detail, serta akun tanpa `events:publish` yang mencoba mengubah agenda terbit melalui UI dan pemanggilan Server Action langsung.
+
+
+## 2026-11-24 — Migrasi guard CMS Agenda diterapkan ke production
+- Pengguna mengonfirmasi menjalankan `pnpm dlx supabase db push --remote` pada project production `Web-Sekolah` (project ref `nofznzznzjsvnkrmzpwx`). CLI menerapkan tepat satu migrasi: `20261124200000_event_publication_storage_guard.sql`; output berakhir dengan `Finished supabase db push.`
+- Pengguna kemudian menjalankan `pnpm dlx supabase migration list --remote`. Versi `20261124200000` tercatat sama pada kolom Local dan Remote dengan waktu UTC `2026-11-24 20:00:00`. Ini mengonfirmasi migrasi guard publikasi Agenda dan permission penghapusan media Agenda sudah tercatat diterapkan pada production.
+- Tidak ada migrasi lain yang tertunda pada daftar yang dibagikan: semua versi dari `20261123091127` sampai `20261124200000` tercatat sinkron Local/Remote.
+- Peringatan pnpm tentang native binary/build scripts, pesan melewati `.gitkeep`, dan notifikasi Supabase CLI versi baru tidak menghalangi operasi; push dan pembacaan daftar migrasi selesai tanpa error.
+- Konfirmasi ini hanya membuktikan penerapan dan pencatatan migrasi. Pemeriksaan `pnpm typecheck`, `pnpm lint`, `pnpm test` setelah implementasi CMS Agenda serta uji fungsional/RLS masih belum dikonfirmasi.
+- Langkah berikutnya: pengguna menjalankan typecheck, lint, dan unit test; setelah lolos, uji CRUD Agenda, upload gambar, penjadwalan, halaman publik, dan pembatasan perubahan Agenda terbit untuk akun tanpa `events:publish`.
