@@ -129,7 +129,7 @@ begin
 
   update public.student_class_enrollments
   set class_group_id = '20000000-0000-4000-8000-000000000002'
-  where id = enrollment_id;
+  where id = v_enrollment_id;
 
   select count(*) into history_count
   from public.student_class_history
@@ -141,7 +141,7 @@ begin
   begin
     update public.student_class_enrollments
     set student_id = '60000000-0000-4000-8000-000000000003'
-    where id = enrollment_id;
+    where id = v_enrollment_id;
     raise exception 'Expected immutable enrollment identity guard to reject update';
   exception when insufficient_privilege then
     null;
@@ -150,7 +150,7 @@ begin
   begin
     update public.student_class_enrollments
     set assigned_by = spoofed_actor
-    where id = enrollment_id;
+    where id = v_enrollment_id;
     raise exception 'Expected immutable assigned_by guard to reject update';
   exception when insufficient_privilege then
     null;
