@@ -259,3 +259,16 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Catatan evidensi: output terminal lengkap tidak ditempel ulang pada percakapan ini; status dicatat sebagai konfirmasi langsung pengguna, bukan verifikasi independen oleh asisten.
 - Dampak skema yang diharapkan: fondasi tabel konten/akademik, Galeri, Prestasi, Agenda, default guru unpublished, permission publikasi, dan penguatan policy RLS publikasi.
 - Langkah berikutnya: audit implementasi CMS Pengumuman dan pola CMS Berita terkini pada branch `main`, lalu implementasikan Pengumuman dengan validasi, server-side permission checks, activity log, RLS, UI draft/publish/archive/scheduling, test, dan pembaruan progress.
+
+
+## 2026-11-24 — Implementasi CMS Pengumuman (kode awal)
+- Menambahkan schema validasi Zod untuk judul, slug, ringkasan, isi, status, waktu publikasi, masa berlaku, dan path lampiran: `src/features/content/announcement-schema.ts`.
+- Menambahkan server actions create/update/delete di `src/features/content/announcement-actions.ts`. Semua operasi memeriksa sesi dan permission di server; publikasi memerlukan `announcements:publish`; perubahan dicatat melalui activity log; route publik dan admin direvalidasi.
+- Waktu input `datetime-local` dikonversi secara eksplisit dari Asia/Jakarta (UTC+7), termasuk validasi kalender; tanggal kedaluwarsa wajib setelah waktu publikasi.
+- Menambahkan editor, daftar admin, halaman tambah/edit, konfirmasi hapus, dan unit test schema.
+- Mengaktifkan tautan `/admin/pengumuman` pada navigasi admin dengan permission `announcements:view`. Route lain yang belum diimplementasikan tetap disembunyikan.
+- Lampiran saat ini menerima path objek Storage pada bucket `public-docs`; unggah file langsung dari editor belum diimplementasikan dan perlu tahap terpisah.
+- Audit menemukan policy RLS pada migrasi `20261124150000_content_publication_guard.sql` sudah memeriksa `announcements:publish`, tetapi permission tersebut belum didaftarkan oleh migrasi sebelumnya. Menambahkan migrasi baru `20261124160000_announcement_publish_permission.sql` untuk mendaftarkan permission tersebut. Migrasi baru ini **belum diterapkan** ke Supabase production.
+- Commit implementasi: schema `5d4d0c2`; actions `2da25f9`; editor `e21ef7b`; delete form `66011fa`; daftar admin `fee57e2`; halaman tambah `5c206a4`; halaman edit `f048c3c`; unit test `a21cb9e`; migrasi permission `ec876e5`; navigasi `4c8caa1`; validasi kalender `ed5ff8b`.
+- **Status pengujian:** belum dijalankan oleh asisten (tidak tersedia checkout lokal repository). Pengguna perlu menarik commit terbaru lalu menjalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`. Jangan anggap CMS siap produksi sebelum hasil pemeriksaan dikonfirmasi.
+- **Langkah berikutnya:** review diff lengkap, jalankan pemeriksaan lokal, perbaiki semua error, preview migrasi `20261124160000`, terapkan ke production setelah konfirmasi, lalu uji alur draft/publish/schedule/expiry dan RLS dengan akun berpermission berbeda.
