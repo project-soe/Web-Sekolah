@@ -587,3 +587,43 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Ini bukan kegagalan runtime Preview berdasarkan laporan yang tersedia. Audit struktur sebelumnya memang mencatat navigasi publik Siswa dan PPDB/SPMB belum memiliki route/implementasi halaman.
 - **Status QA:** smoke test browser untuk halaman publik yang sudah diimplementasikan dilaporkan aman oleh pengguna. Route PPDB/SPMB dan Siswa belum lulus QA karena belum dibuat. Tidak ada klaim pengujian admin, form, upload, atau operasi tulis.
 - **Tindak lanjut:** rancang dan implementasikan modul Siswa serta PPDB/SPMB secara terpisah; tentukan terlebih dahulu kebutuhan data, alur pendaftaran, akses orang tua/calon siswa, role/permission, dan kebijakan privasi sebelum menambah tabel, route, atau form. Setelah implementasi, jalankan typecheck/lint/test/build dan QA pada environment staging yang aman.
+
+
+## 2026-11-24 — Awal implementasi Modul Siswa
+
+### Keputusan arsitektur
+- Modul Siswa adalah sistem internal sekolah; data induk dan data pribadi siswa tidak ditampilkan di website publik.
+- Rencana bertahap: database dan keamanan → Admin Siswa (CRUD/pencarian) → pengelolaan kelas/tahun ajaran → Portal Siswa → integrasi PPDB/SPMB.
+- Calon siswa PPDB tetap berada pada domain pendaftaran; hanya pendaftar yang diterima dan menyelesaikan daftar ulang yang dikonversi menjadi data induk siswa.
+- Penghapusan bukan alur operasional utama. Status `graduated`, `transferred`, dan `withdrawn` dipakai untuk mempertahankan riwayat.
+
+### Perubahan yang sudah di-commit
+- `supabase/migrations/20261124250000_students_foundation.sql` (commit `89cb2278bae75187ad3d02d05751b91761924080`):
+  - Membuat tabel privat `students` dengan NIS, NISN opsional, nama, jenis kelamin, tempat/tanggal lahir, alamat, wali, kontak wali, jurusan, tahun masuk, status, tanggal lulus, dan catatan.
+  - Menambahkan indeks pencarian nama, status, jurusan, dan tahun masuk.
+  - Membuat `student_status_history`; trigger otomatis mencatat status awal dan setiap perubahan status, termasuk user yang melakukan perubahan.
+  - Mengaktifkan RLS. Tidak ada policy untuk `anon`; akses authenticated mensyaratkan permission `students:view/create/update/delete`.
+  - Permission dasar `students:* ` sudah didefinisikan oleh migrasi RBAC fondasi; role `admin_sekolah` sudah mendapat permission modul students.
+- `src/app/admin/siswa/page.tsx` (commit `9d9c9b0047ec0ebdb3c616b3b7c781b4e7220620`):
+  - Menambahkan halaman daftar siswa yang memanggil `requirePermission("students:view")`.
+  - Menampilkan data minimum yang dibutuhkan pada daftar; tidak menampilkan alamat, tanggal lahir, atau kontak wali.
+  - Menyediakan empty/error state. Form tambah/edit dan pencarian belum dibuat.
+- `src/components/layout/admin/admin-nav.tsx` (commit `b4eaa9e8ac2d6e27843005e488599206a3fcb3ca`):
+  - Mengaktifkan menu Siswa hanya untuk route yang sudah tersedia dan akun dengan permission `students:view`.
+
+### Status dan batas verifikasi
+- Ketiga perubahan di atas sudah tersimpan di branch `main`.
+- Migrasi `20261124250000_students_foundation.sql` **belum diterapkan ke Supabase**. Jangan menganggap route daftar sudah dapat membaca tabel sebelum migrasi diterapkan.
+- Typecheck, lint, test, build, dan pengujian RLS khusus Modul Siswa belum dijalankan/dikonfirmasi setelah perubahan ini.
+- Belum ada formulir CRUD, pencarian/filter, halaman detail/riwayat, atau integrasi kelas/tahun ajaran.
+- Data siswa tidak ditambahkan ke `publicNav` dan tidak dibuat route publik.
+
+### Langkah berikutnya
+1. Tinjau dan terapkan migrasi siswa pada target Supabase yang benar setelah backup dan pemeriksaan migration list.
+2. Jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`; perbaiki semua error.
+3. Implementasikan schema Zod, server actions dengan pemeriksaan permission, create/edit form, detail siswa, pencarian/filter, serta activity log.
+4. Uji RLS menggunakan anon dan akun dengan permission berbeda; pastikan anon tidak dapat membaca atau menulis data siswa.
+5. Setelah Admin Siswa stabil, lanjutkan Portal Siswa dan integrasi PPDB/SPMB.
+
+### Catatan konsistensi dokumentasi
+- Bagian status lama di atas masih memuat sejumlah catatan migrasi dan tahapan yang sudah kedaluwarsa/bertentangan dengan perkembangan berikutnya. Untuk pekerjaan Modul Siswa, gunakan catatan bertanggal terbaru dan verifikasi commit/migration list aktual sebelum menyimpulkan status production.
