@@ -504,3 +504,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - **Status pengujian:** belum ada typecheck/lint/test/build atau pengujian RLS/Storage setelah perubahan ini. Uji wajib mencakup anon, staf tanpa permission publish, publisher, serta akun dengan permission hanya satu modul untuk memastikan tidak dapat mengelola folder media modul lain.
 - **Catatan risiko tersisa:** bucket `media` tetap public. Pada Supabase public bucket, objek dapat diunduh oleh siapa pun yang mengetahui URL; policy SELECT Storage bukan kontrol kerahasiaan untuk objek public. Jangan simpan dokumen sensitif atau file draft yang harus benar-benar privat di bucket ini.
 - Langkah berikutnya: tinjau SQL dan dry-run migration; verifikasi permission code yang benar-benar terdaftar (terutama `news:delete` dan `announcements:delete`); pastikan backup production terbaru tersedia; baru rencanakan penerapan dan tes regresi.
+
+
+## 2026-11-24 — Verifikasi akhir sebelum penerapan hardening RLS/Storage
+
+- Pengguna mengonfirmasi hasil query permission menunjukkan `news:delete`, `announcements:delete`, dan `galleries:publish` tersedia; dry-run Supabase dilaporkan aman.
+- Pemeriksaan kode upload fasilitas memastikan object path menggunakan folder `facilities/`. Pemeriksaan migration sebelumnya menunjukkan policy insert media yang ada memakai allowlist folder tetap dan tidak mencantumkan `announcements`; untuk menghindari perluasan hak akses yang tidak diminta, cabang folder `announcements` dihapus dari helper `can_manage_media_folder(text)`. Folder lain tetap mengikuti allowlist lama.
+- Migration `20261124240000_security_rls_storage_hardening.sql` diperbarui sebelum penerapan; commit penyesuaian tercatat pada GitHub setelah pemeriksaan akhir.
+- **Status:** migration tetap belum diterapkan. Dry-run yang dilaporkan pengguna dilakukan sebelum penyesuaian kecil ini, sehingga wajib jalankan ulang `git pull origin main`, `pnpm dlx supabase migration list --remote`, dan `pnpm dlx supabase db push --remote --dry-run`.
+- Backup production terbaru masih wajib dibuat sebelum `db push`; backup yang tersedia dibuat sebelum migration Fasilitas dan tidak mencakup keadaan database terkini.
+- Setelah backup terverifikasi dan dry-run ulang hanya menampilkan migration hardening yang diharapkan, pengguna dapat menjalankan `pnpm dlx supabase db push --remote`, lalu memverifikasi `pnpm dlx supabase migration list --remote`.
+- Pengujian RLS/Storage dengan anon, editor tanpa publish, publisher, serta pemegang permission lintas folder tetap menjadi tindak lanjut wajib. Belum ada klaim migration production diterapkan atau tes regresi lulus.
