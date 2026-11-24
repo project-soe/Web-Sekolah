@@ -368,3 +368,15 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pesan CLI tentang pnpm native binary, file `.gitkeep`, dan versi Supabase CLI baru merupakan peringatan/informasi; tidak menghalangi daftar migrasi.
 - Status: pemeriksaan otomatis kode dan riwayat migrasi production terkonfirmasi oleh pengguna. Asisten tidak menjalankan tes atau mengakses database secara independen.
 - Berikutnya: uji fungsional CMS Prestasi dan otorisasi menggunakan akun berbeda: create/edit draft, upload gambar valid/invalid, penjadwalan publikasi, pembatasan perubahan konten published untuk akun tanpa `achievements:publish`, penghapusan prestasi, dan verifikasi objek Storage benar-benar terhapus. Periksa juga halaman publik `/prestasi` dan detailnya.
+
+
+## 2026-11-24 — Kompresi gambar otomatis CMS Prestasi
+- Menambahkan komponen client-side `src/features/content/compressed-image-input.tsx` dan mengintegrasikannya ke editor CMS Prestasi.
+- Sebelum form dikirim, gambar diproses di browser: orientasi mengikuti decoder browser, dimensi maksimum 1920 px, metadata gambar tidak ikut disalin oleh proses canvas, dan hasil dikodekan ulang ke WebP (fallback JPEG).
+- Kompresi mencoba beberapa tingkat kualitas dan pengurangan dimensi hingga target sekitar 2,7 MB; batas hasil akhir tetap 3 MB sesuai kebijakan bucket `media`.
+- Ukuran sumber dibatasi 25 MB dan jumlah piksel dibatasi 40 juta untuk mengurangi risiko konsumsi memori berlebihan pada perangkat pengguna. Jika pemrosesan gagal, input dikosongkan dan pengguna mendapat pesan; file asli tidak otomatis dikirim.
+- Keamanan server tidak dilonggarkan: `achievement-actions.ts` tetap menjalankan `validateUpload` terhadap ukuran, signature byte, MIME aktual, serta MIME yang dideklarasikan, dan tetap menggunakan object path acak. Kompresi browser bukan pengganti validasi server dan dapat dilewati oleh pemanggil yang memanipulasi request.
+- Tidak ada migrasi database atau perubahan policy Storage pada pekerjaan ini.
+- Commit komponen: `589aa90`; integrasi editor: `a5ab64c`; perapian tipe event: `da846fa`.
+- Status: perubahan sudah di-commit ke `main`; pemeriksaan typecheck/lint/test belum dijalankan setelah perubahan. Pengguna perlu `git pull` lalu menjalankan seluruh pemeriksaan.
+- Catatan diagnosis: kegagalan unggah sebelumnya belum dapat dipastikan hanya karena ukuran. Jika kompresi berhasil tetapi upload tetap gagal, catat pesan error di UI dan kode/detail server log `admin_achievement_upload_failed`; penyebab lain dapat berupa sesi/permission, policy Storage, jaringan, atau batas request.
