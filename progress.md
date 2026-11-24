@@ -242,3 +242,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Backup connection parameters to use: port `5432`, database `postgres`, Session Pooler host and username above.
 - `pg_dump` has not yet been executed; no backup file or checksum has been verified. Do not run pending production migrations until a backup archive is created and validated.
 - Keep the backup outside the Git repository in `$HOME/db-backups` with directory permissions `700`; prompt for the database password interactively rather than placing it in shell history or sharing it in chat.
+
+
+## 2026-11-24 — Production database backup created and archive validated
+- User successfully ran `pg_dump` against the Supabase Session Pooler and created `/home/kali/db-backups/web-sekolah-20261124-003809.dump`.
+- Reported file size: 497 KB. Archive metadata: CUSTOM format, gzip compression, 769 TOC entries; source PostgreSQL 17.12; client `pg_dump` 18.6.
+- `pg_restore --list "$BACKUP_FILE" | head -n 30` returned archive metadata and schema entries without a reported error, establishing that the archive is readable/listable. This is not a full restore test.
+- Reported SHA-256: `c4eeda6de6efb3aeb853a0e401d8dfb2cb0cb5fd9f7cf4e71901459948ae8fd2`.
+- File was stored outside the repository under `/home/kali/db-backups`; displayed mode was `-rw-rw----` and the containing directory was previously set to mode `700`. Recommend tightening the archive file itself to mode `600` with `chmod 600 "$BACKUP_FILE"`.
+- The six reviewed content migrations remain pending production application. Do not claim a restore test or migration execution occurred. Before applying, confirm the backup file and checksum remain available, then run the previously reviewed migration push and verify remote migration status.
