@@ -45,15 +45,16 @@ export async function activateAcademicYear(formData: FormData): Promise<void> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) fail("validasi");
   await requireClassPermission("classes:update");
   const supabase = await createClient();
-  const { error: deactivateError } = await supabase.from("academic_years")
-    .update({ is_active: false }).eq("is_active", true);
-  if (deactivateError) fail("simpan");
-  const { data, error } = await supabase.from("academic_years")
-    .update({ is_active: true }).eq("id", id).select("id").maybeSingle();
-  if (error || !data) fail("simpan");
+  const { data, error } = await supabase.rpc("activate_academic_year", {
+    target_year_id: id,
+  });
+  if (error || !data) {
+    console.error("admin_academic_year_activate_failed", error?.code ?? "no_rows");
+    fail(error?.code === "42501" ? "akses" : "simpan");
+  }
   await logActivity(supabase, {
     action: "update", module: "classes", entityType: "academic_year",
-    entityId: data.id, summary: "Mengaktifkan tahun ajaran",
+    entityId: data, summary: "Mengaktifkan tahun ajaran",
   });
   revalidatePath("/admin/kelas");
   redirect("/admin/kelas?saved=aktif");
