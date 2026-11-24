@@ -665,3 +665,18 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Perbaikan: pisahkan object payload umum, lalu tambahkan `updated_by` hanya pada pemanggilan `update()` dan `created_by` hanya pada pemanggilan `insert()`. Tidak mengubah skema database maupun perilaku permission/RLS.
 - Pada run tersebut, instalasi dependency dan lint selesai; test/build dilewati karena typecheck gagal. Dua warning lint pada halaman agenda bukan error dan tidak menyebabkan CI gagal.
 - Perbaikan ini belum diverifikasi oleh typecheck lokal; verifikasi berikutnya melalui GitHub Actions dan perintah lokal pengguna.
+
+
+## 2026-11-24 — Fondasi Tahun Ajaran, Kelas, dan Penempatan Siswa
+
+- Mengikuti keputusan pengguna, format nama rombongan belajar menggunakan contoh `X TKJ 1`. Nama kelas disimpan sebagai label yang dapat dibaca; tingkat (X/XI/XII), jurusan, wali kelas, dan tahun ajaran disimpan sebagai relasi terstruktur.
+- Menambahkan migrasi baru `20261124260000_academic_years_and_class_groups.sql`: tabel `academic_years`, `class_groups`, `student_class_enrollments`, dan `student_class_history`.
+- Satu tahun ajaran aktif dijamin oleh unique partial index. Kelas terikat pada satu tahun ajaran; siswa hanya memiliki satu penempatan per tahun ajaran.
+- Trigger database memvalidasi bahwa kelas dan tahun ajaran cocok, serta hanya siswa berstatus aktif yang dapat ditempatkan. Trigger riwayat mencatat penempatan awal dan perpindahan kelas.
+- RLS dan grant membatasi data kelas untuk permission `classes:view/create/update/delete`; penempatan dan riwayat memerlukan kombinasi `classes:view` dan `students:view`, sedangkan perubahan penempatan memerlukan `classes:update` dan `students:update`. Tidak ada akses anon.
+- Menambahkan halaman privat `/admin/kelas` untuk membuat/mengaktifkan tahun ajaran, membuat rombongan belajar, melihat daftar kelas, dan menempatkan/memindahkan siswa pada tahun ajaran aktif.
+- Menambahkan server actions dengan validasi Zod, pemeriksaan permission, activity log, dan revalidasi. Menu Kelas ditampilkan hanya jika route tersedia dan akun memiliki `classes:view`.
+- Tidak mengubah migrasi lama dan tidak membuat direktori siswa publik.
+- **Status migrasi:** file baru belum diterapkan ke Supabase. Jangan gunakan fitur kelas/penempatan sebelum migration list remote menunjukkan versi ini telah diterapkan.
+- **Status verifikasi:** perubahan kode belum dijalankan pada environment lokal. Jalankan `pnpm typecheck`, `pnpm lint`, `pnpm test`, dan `pnpm build`; audit SQL dan uji RLS pada staging sebelum penerapan production.
+- **Catatan batasan awal:** UI tahap pertama menyediakan pembuatan tahun ajaran/kelas dan penempatan siswa; edit/hapus kelas, pengelolaan kapasitas, kenaikan kelas massal, serta laporan wali kelas belum termasuk tahap ini.
