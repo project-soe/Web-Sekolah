@@ -716,3 +716,27 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 3. Audit dan uji migrasi `20261124270000` pada database lokal/staging yang terpisah dari production; sertakan uji RLS dan trigger di atas.
 4. Audit atomisitas aktivasi tahun ajaran dan konsistensi relasi kelas/penempatan.
 5. Hanya setelah semua bukti uji dan backup tersedia, rencanakan penerapan production secara terpisah.
+
+
+## 2026-11-24 — Aktivasi tahun ajaran atomik (pra-production)
+
+### Perubahan
+- Menambahkan migrasi `20261124280000_atomic_academic_year_activation.sql` yang menyediakan RPC `public.activate_academic_year(uuid)`.
+- Fungsi berjalan sebagai `SECURITY INVOKER`, memeriksa permission `classes:update`, dan tetap tunduk pada grants serta RLS pemanggil.
+- Perubahan tahun aktif dilakukan dalam satu transaksi PostgreSQL: menonaktifkan tahun aktif sebelumnya lalu mengaktifkan target. Jika target tidak ditemukan/tidak dapat diakses atau operasi gagal, seluruh transaksi dibatalkan.
+- Advisory transaction lock digunakan untuk menyerialkan permintaan aktivasi bersamaan dan mengurangi benturan dengan unique partial index satu tahun aktif.
+- Server action `activateAcademicYear` sekarang memanggil RPC tersebut, bukan dua request UPDATE terpisah.
+- Migrasi lama tidak diedit.
+
+### Status dan pengujian
+- Pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, `pnpm test`, dan `pnpm cf:build` lolos **sebelum** perubahan aktivasi atomik ini.
+- Perubahan kode dan migrasi baru belum diuji ulang setelah commit. Wajib jalankan keempat pemeriksaan tersebut setelah pull.
+- Belum ada pengujian PostgreSQL lokal/staging untuk RPC, rollback, permission, RLS, dan dua aktivasi bersamaan.
+- Tidak ada perintah database yang dijalankan; production tidak disentuh. Jangan jalankan `db push` ke production pada tahap ini.
+
+### Langkah pengujian berikutnya
+1. Pull branch `main`.
+2. Jalankan `pnpm typecheck`, `pnpm lint`, `pnpm test`, dan `pnpm cf:build`.
+3. Pada database lokal/staging terpisah, uji aktivasi normal, target tidak ada (harus rollback dan tahun aktif lama tetap aktif), role tanpa `classes:update` (harus ditolak), serta dua aktivasi bersamaan (harus berakhir dengan tepat satu tahun aktif).
+4. Periksa `pnpm dlx supabase migration list --local` hanya jika local Supabase tersedia; jangan menghubungkan atau menerapkan ke production.
+5. Setelah bukti uji tersedia, lanjutkan audit relasi dan kebijakan RLS sebelum merencanakan deployment database.
