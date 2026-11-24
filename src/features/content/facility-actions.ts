@@ -11,6 +11,37 @@ import { facilityInputSchema } from "./facility-schema";
 
 function fail(code: string): never { redirect(`/admin/fasilitas?error=${code}`); }
 
+export async function publishFacility(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) fail("validasi");
+
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (!can(session.access, "facilities:update") || !can(session.access, "facilities:publish")) fail("publikasi");
+
+  const supabase = await createClient();
+  const { data: item, error: readError } = await supabase.from("facilities")
+    .select("id, name, is_published").eq("id", id).maybeSingle();
+  if (readError || !item) fail("simpan");
+  if (item.is_published) redirect("/admin/fasilitas");
+
+  const { error } = await supabase.from("facilities")
+    .update({ is_published: true }).eq("id", id).select("id").maybeSingle();
+  if (error) {
+    console.error("admin_facility_publish_failed", error.code);
+    fail("publikasi");
+  }
+
+  await logActivity(supabase, {
+    action: "publish", module: "facilities", entityType: "facility",
+    entityId: id, summary: "Mempublikasikan fasilitas",
+    changes: { is_published: true },
+  });
+  revalidatePath("/fasilitas");
+  revalidatePath("/admin/fasilitas");
+  redirect("/admin/fasilitas?saved=1");
+}
+
 export async function saveFacility(formData: FormData): Promise<void> {
   const parsed = facilityInputSchema.safeParse({
     ...Object.fromEntries(formData.entries()),
