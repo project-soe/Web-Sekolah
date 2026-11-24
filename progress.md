@@ -5,10 +5,10 @@
 ## Status saat ini
 
 - **Branch:** `main`
-- **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita pertama sudah dibuat dan menunggu pemeriksaan lokal.
-- **Commit dokumentasi terbaru:** `e5b3a83` — sinkronisasi status CMS.
+- **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
+- **Commit dokumentasi terbaru sebelum pembaruan ini:** `637d2e6` — penjelasan commit CMS dan status migrasi.
 - **Commit perubahan kode terbaru:** `1972285` — sembunyikan tautan navigasi ke modul admin yang belum tersedia.
-- **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi Agenda. Pemeriksaan tersebut belum mencakup perubahan CMS Berita.
+- **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi CMS Berita (2026-11-24).
 - **Status Supabase:** penerapan migrasi konten publik, Galeri, Prestasi, Agenda, dan penguatan RLS publikasi ke proyek Supabase aktif belum dikonfirmasi. Jangan menganggap tabel-tabel ini sudah tersedia.
 - **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
 
@@ -105,7 +105,7 @@ Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis h
 
 ## Temuan dan tindak lanjut
 
-1. Jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah implementasi CMS Berita.
+1. Lanjutkan CMS Pengumuman; pertahankan pola validasi, server permission, activity log, RLS, dan dokumentasi progress.
 2. Terapkan migrasi Supabase secara berurutan dan konfirmasi hasilnya. Verifikasi RLS menggunakan sesi anon dan akun dengan permission berbeda.
 3. Setelah CMS Berita lolos, implementasikan CMS Pengumuman, Galeri, Prestasi, Agenda, Guru, dan Jurusan secara bertahap.
 4. Audit serta sinkronkan menu publik yang belum memiliki route (misalnya Siswa dan PPDB/SPMB) sebelum dianggap siap.
@@ -132,6 +132,34 @@ Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis h
 - Menambahkan penyaringan navigasi admin berdasarkan permission dan menyembunyikan modul yang belum memiliki route admin aktif agar tidak ada tautan mati. Commit: `2e99797`, `98e38ce`, `2dd1b04`, `884ecac`, `1972285`.
 - Menambahkan unit test validasi schema berita. Commit: `ebfe419`.
 - Perbaikan import tak terpakai pada halaman daftar berita: `d13e3d9`.
-- Status pengujian perubahan CMS ini: belum dijalankan oleh asisten dan belum dikonfirmasi pengguna. Perlu jalankan typecheck, lint, test.
+- Status pengujian perubahan CMS ini: pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` semuanya lolos (2026-11-24). Asisten tidak menjalankan tes secara lokal.
 - Status migrasi `20261124150000_content_publication_guard.sql`: belum dikonfirmasi diterapkan ke Supabase.
-- Tahap selanjutnya setelah modul Berita lolos: gunakan pola yang sama untuk Pengumuman, kemudian Galeri, Prestasi, Agenda, Guru, dan Jurusan. Jangan menambahkan menu admin baru sebelum route dan permission guard modul tersedia.
+- Modul Berita dinyatakan lolos pemeriksaan oleh pengguna. Tahap selanjutnya: gunakan pola yang sama untuk Pengumuman, kemudian Galeri, Prestasi, Agenda, Guru, dan Jurusan. Jangan menambahkan menu admin baru sebelum route dan permission guard modul tersedia.
+
+
+## Panduan penerapan migrasi Supabase (belum dijalankan/dikonfirmasi)
+
+Pengguna belum pernah mengonfirmasi penerapan migrasi konten. Status semua migrasi di tabel di atas tetap **Belum dikonfirmasi**. Tes aplikasi yang lolos tidak membuktikan migrasi database sudah diterapkan.
+
+### Jalur yang direkomendasikan: Supabase CLI
+
+1. Pastikan proyek Supabase yang benar dipilih dan pengguna memiliki akses.
+2. Dari root repository, login CLI: `pnpm dlx supabase login` (atau gunakan instalasi Supabase CLI yang sudah tersedia).
+3. Hubungkan folder proyek ke project Supabase yang benar: `pnpm dlx supabase link --project-ref <PROJECT_REF>`. Project ref dapat dilihat di Dashboard Supabase → Project Settings → General. Jangan menaruh access token atau database password di Git.
+4. Periksa migrasi yang akan diterapkan terlebih dahulu: `pnpm dlx supabase migration list`.
+5. Jika riwayat remote cocok dan belum ada migrasi tertunda yang tidak dikenal, jalankan `pnpm dlx supabase db push`.
+6. Periksa output CLI. Jika ada perbedaan riwayat, migrasi yang sudah pernah dijalankan secara manual, atau error, **berhenti** dan audit dahulu; jangan menjalankan ulang SQL secara membabi buta dan jangan memakai `migration repair` tanpa memastikan keadaan database.
+7. Setelah berhasil, jalankan kembali tes integrasi yang relevan dan konfirmasi tanggal, project ref (boleh disamarkan), serta daftar migrasi yang berhasil. Baru ubah status migrasi di dokumen ini menjadi diterapkan.
+
+**Penting:** jangan menjalankan seluruh file SQL secara manual di SQL Editor jika nanti akan mengelola migrasi dengan CLI, karena eksekusi manual tidak otomatis mencatat versi tersebut pada tabel riwayat migrasi CLI. Jika migrasi sebelumnya memang sudah dijalankan manual, hentikan dulu sebelum `db push`; kita perlu menyelaraskan riwayat secara hati-hati.
+
+### Urutan migrasi konten yang harus diperiksa
+
+- `20261124100000_public_content_foundation.sql`
+- `20261124110000_default_teacher_unpublished.sql`
+- `20261124120000_public_galleries.sql`
+- `20261124130000_public_achievements.sql`
+- `20261124140000_public_events.sql`
+- `20261124150000_content_publication_guard.sql`
+
+Migrasi fondasi sebelumnya (RBAC, akses, storage/activity log, identitas sekolah) juga harus tercatat pada database target. Jangan menganggap daftar di atas sebagai keseluruhan migrasi proyek.
