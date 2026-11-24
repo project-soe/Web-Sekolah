@@ -598,10 +598,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Penghapusan bukan alur operasional utama. Status `graduated`, `transferred`, dan `withdrawn` dipakai untuk mempertahankan riwayat.
 
 ### Perubahan yang sudah di-commit
-- `supabase/migrations/20261124250000_students_foundation.sql` (commit `89cb2278bae75187ad3d02d05751b91761924080`):
+- `supabase/migrations/20261124250000_students_foundation.sql` (awal: `89cb2278bae75187ad3d02d05751b91761924080`; perbaikan: `4fc518b75ad2ee77acada41826cbbaeaf7beb2a6`):
   - Membuat tabel privat `students` dengan NIS, NISN opsional, nama, jenis kelamin, tempat/tanggal lahir, alamat, wali, kontak wali, jurusan, tahun masuk, status, tanggal lulus, dan catatan.
   - Menambahkan indeks pencarian nama, status, jurusan, dan tahun masuk.
   - Membuat `student_status_history`; trigger otomatis mencatat status awal dan setiap perubahan status, termasuk user yang melakukan perubahan.
+  - Review SQL lanjutan menghapus CHECK berbasis `current_date` (fungsi non-immutable untuk CHECK PostgreSQL) dan grant sequence yang tidak diperlukan oleh pengguna aplikasi.
   - Mengaktifkan RLS. Tidak ada policy untuk `anon`; akses authenticated mensyaratkan permission `students:view/create/update/delete`.
   - Permission dasar `students:* ` sudah didefinisikan oleh migrasi RBAC fondasi; role `admin_sekolah` sudah mendapat permission modul students.
 - `src/app/admin/siswa/page.tsx` (commit `9d9c9b0047ec0ebdb3c616b3b7c781b4e7220620`):
