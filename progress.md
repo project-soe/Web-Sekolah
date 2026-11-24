@@ -4,13 +4,13 @@
 
 ## Status saat ini
 
-- **Tahap terbaru (2026-11-24):** modul CMS konten sampai Fasilitas telah tersedia; migration hardening RLS/Storage `20261124240000_security_rls_storage_hardening.sql` tercatat diterapkan pada production. Pemeriksaan policy/helper dan smoke test anon telah dilakukan. Pengguna menyatakan pengujian akun editor serta pembatasan permission Storage lintas-folder telah selesai; hasil detail/pass-fail belum disampaikan. Langkah berikutnya: build Cloudflare/OpenNext (`pnpm cf:build`), lalu uji browser responsif dan aksesibilitas.
+- **Tahap terbaru (2026-11-24):** build Cloudflare/OpenNext (`pnpm cf:build`) telah dikonfirmasi berhasil oleh pengguna dan artefak `.open-next/` tersedia. Audit RLS/Storage production, smoke test anon, serta pengujian editor dan permission Storage lintas-folder telah dilakukan/dilaporkan selesai. Langkah berikutnya: jalankan preview Worker (`pnpm exec wrangler dev`), lalu browser QA responsif dan aksesibilitas sebelum deployment.
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten untuk modul Berita, Pengumuman, Galeri, Prestasi, Agenda, Guru, Jurusan, dan Fasilitas; audit RLS/Storage sedang menuju verifikasi akhir.
-- **Commit dokumentasi terbaru:** `100d5daa1082da78307d908ee3a1d2fa9d7d6b05` — status pengujian editor/Storage dan langkah build Cloudflare/OpenNext.
+- **Commit dokumentasi terbaru:** `345f5b9f4ae782c5eae5638e4fb84c3dbb3d36bc` — konfirmasi build Cloudflare/OpenNext berhasil dan langkah preview Worker.
 - **Commit perubahan kode terbaru yang tercatat dalam audit ini:** migration hardening RLS/Storage `80552300ae9e55b075f8fd0908a66a7a519ac959`; periksa riwayat `main` untuk commit kode yang lebih baru sebelum mengubah implementasi.
-- **Status pemeriksaan:** pengguna telah mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos pada beberapa tahap CMS hingga Fasilitas. Pemeriksaan setelah perbaikan tombol publikasi Fasilitas dan build `pnpm cf:build` belum dikonfirmasi pada catatan ini.
+- **Status pemeriksaan:** pengguna telah mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos pada beberapa tahap CMS hingga Fasilitas. Pengguna kini juga mengonfirmasi `pnpm cf:build` selesai tanpa error; hasil preview Worker dan browser QA belum tersedia.
 - **Status Supabase:** migration konten hingga Fasilitas telah dikonfirmasi diterapkan sebelumnya; migration hardening `20261124240000_security_rls_storage_hardening.sql` juga dikonfirmasi tercatat Local/Remote sama pada production. Lihat bagian audit keamanan di bawah untuk batas bukti dan detail verifikasi.
 - **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
 
