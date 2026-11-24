@@ -9,7 +9,7 @@
 - **Commit dokumentasi terbaru sebelum pembaruan ini:** `637d2e6` — penjelasan commit CMS dan status migrasi.
 - **Commit perubahan kode terbaru:** `1972285` — sembunyikan tautan navigasi ke modul admin yang belum tersedia.
 - **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi CMS Berita (2026-11-24).
-- **Status Supabase:** penerapan migrasi konten publik, Galeri, Prestasi, Agenda, dan penguatan RLS publikasi ke proyek Supabase aktif belum dikonfirmasi. Jangan menganggap tabel-tabel ini sudah tersedia.
+- **Status Supabase:** pemeriksaan `pnpm dlx supabase migration list --remote` pada 2026-11-24 membuktikan lima migrasi fondasi awal sudah tercatat di remote, sedangkan enam migrasi konten (20261124100000–20261124150000) belum tercatat dan masih pending. Jangan menganggap tabel konten sudah tersedia sebelum migrasi pending diterapkan.
 - **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
 
 ## Ringkasan arsitektur
@@ -45,12 +45,12 @@
 
 | Migrasi | Isi | Status penerapan |
 |---|---|---|
-| `20261124100000_public_content_foundation.sql` | departments, teachers, news_categories, news, announcements | Belum dikonfirmasi |
-| `20261124110000_default_teacher_unpublished.sql` | Default guru tidak langsung tampil | Belum dikonfirmasi |
-| `20261124120000_public_galleries.sql` | galleries, gallery_images | Belum dikonfirmasi |
-| `20261124130000_public_achievements.sql` | achievements + permission publish | Belum dikonfirmasi |
-| `20261124140000_public_events.sql` | events + permission events:publish | Belum dikonfirmasi |
-| `20261124150000_content_publication_guard.sql` | Penguatan RLS publish News, Announcements, dan Galleries | Belum dikonfirmasi |
+| `20261124100000_public_content_foundation.sql` | departments, teachers, news_categories, news, announcements | Pending — belum tercatat di remote |
+| `20261124110000_default_teacher_unpublished.sql` | Default guru tidak langsung tampil | Pending — belum tercatat di remote |
+| `20261124120000_public_galleries.sql` | galleries, gallery_images | Pending — belum tercatat di remote |
+| `20261124130000_public_achievements.sql` | achievements + permission publish | Pending — belum tercatat di remote |
+| `20261124140000_public_events.sql` | events + permission events:publish | Pending — belum tercatat di remote |
+| `20261124150000_content_publication_guard.sql` | Penguatan RLS publish News, Announcements, dan Galleries | Pending — belum tercatat di remote |
 
 Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis harus mengikuti permission RBAC masing-masing modul.
 
@@ -163,3 +163,15 @@ Pengguna belum pernah mengonfirmasi penerapan migrasi konten. Status semua migra
 - `20261124150000_content_publication_guard.sql`
 
 Migrasi fondasi sebelumnya (RBAC, akses, storage/activity log, identitas sekolah) juga harus tercatat pada database target. Jangan menganggap daftar di atas sebagai keseluruhan migrasi proyek.
+
+
+### Bukti pemeriksaan migrasi remote — 2026-11-24
+
+Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek production `Web-Sekolah` (project ref `nofznzznzjsvnkrmzpwx`). Output menunjukkan:
+
+- Lima migrasi fondasi tercatat sama pada Local dan Remote: `20261123091127`, `20261123100631`, `20261123101642`, `20261123133817`, `20261123134224`.
+- Enam migrasi konten belum memiliki timestamp Remote: `20261124100000`, `20261124110000`, `20261124120000`, `20261124130000`, `20261124140000`, `20261124150000`.
+- Kesimpulan: enam migrasi tersebut pending berdasarkan riwayat CLI remote. Belum ada bukti bahwa skema konten telah dibuat di production.
+- CLI melewati `.gitkeep` karena bukan file migrasi SQL; ini aman diabaikan.
+- Peringatan pnpm native binary dan pemberitahuan versi CLI lebih baru bukan penyebab kegagalan; perintah remote berhasil terhubung.
+- Langkah berikutnya: sebelum `supabase db push`, tinjau keenam file SQL, pastikan target project benar dan lakukan backup database production. Setelah itu jalankan push secara sadar, tinjau output, lalu ulangi `pnpm dlx supabase migration list --remote` untuk memastikan semua versi tercatat.
