@@ -64,6 +64,11 @@ export async function saveGallery(formData: FormData): Promise<void> {
     galleryError("simpan");
   }
 
+  const { data: lastImage } = files.length
+    ? await supabase.from("gallery_images").select("sort_order")
+        .eq("gallery_id", result.data.id).order("sort_order", { ascending: false }).limit(1).maybeSingle()
+    : { data: null };
+  const nextSortOrder = (lastImage?.sort_order ?? -1) + 1;
   const uploadedPaths: string[] = [];
   const imageRows: { gallery_id: string; image_path: string; alt_text: string; sort_order: number }[] = [];
   for (const [index, file] of files.entries()) {
@@ -94,7 +99,7 @@ export async function saveGallery(formData: FormData): Promise<void> {
       gallery_id: result.data.id,
       image_path: path,
       alt_text: file.name.replace(/\.[^.]+$/, "").slice(0, 200) || input.title,
-      sort_order: index,
+      sort_order: nextSortOrder + index,
     });
   }
 
