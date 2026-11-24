@@ -324,3 +324,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Status tes tetap belum dijalankan setelah perubahan Galeri. Jalankan kembali typecheck, lint, dan unit test setelah menarik commit terbaru.
 
 - Perapian tambahan: urutan foto baru sekarang dimulai setelah `sort_order` tertinggi yang sudah ada, sehingga penambahan foto pada album lama tidak menimpa urutan foto sebelumnya. Commit: `9f09a78`.
+
+
+## 2026-11-24 — Validasi kode CMS Galeri lulus
+- Pengguna mengonfirmasi bahwa pemeriksaan setelah implementasi awal CMS Galeri berjalan tanpa error. Dicatat sebagai konfirmasi pengguna untuk `pnpm typecheck`, `pnpm lint`, dan `pnpm test` pada checkout lokal.
+- Pemeriksaan ini dilakukan setelah implementasi Galeri, termasuk review keamanan penghapusan foto dan penambahan migrasi policy Storage. Asisten tidak menjalankan perintah lokal secara independen.
+- Status migrasi production tetap **belum terkonfirmasi diterapkan**: pengguna belum memberikan output `supabase migration list --remote` yang menunjukkan versi `20261124170000` dan `20261124180000`. Tidak boleh menganggap migrasi sudah diterapkan hanya dari hasil tes kode.
+- Tindakan operasional berikutnya: jalankan `pnpm dlx supabase db push --remote`, lalu `pnpm dlx supabase migration list --remote`; pastikan dua versi Galeri tersebut muncul pada daftar Local dan Remote. Setelah itu lakukan uji fungsional upload, penghapusan, dan permission dengan akun berbeda.
