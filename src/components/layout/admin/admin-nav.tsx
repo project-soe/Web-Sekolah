@@ -18,6 +18,7 @@ const implementedRoutes = new Set([
   "/admin/guru",
   "/admin/jurusan",
   "/admin/fasilitas",
+  "/admin/siswa",
 ]);
 
 const permissionByHref: Record<string, string> = {
@@ -26,6 +27,7 @@ const permissionByHref: Record<string, string> = {
   "/admin/guru": "teachers:view",
   "/admin/jurusan": "departments:view",
   "/admin/fasilitas": "facilities:view",
+  "/admin/siswa": "students:view",
   "/admin/berita": "news:view",
   "/admin/kategori-berita": "news:view",
   "/admin/pengumuman": "announcements:view",
