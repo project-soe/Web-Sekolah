@@ -4,12 +4,12 @@
 
 ## Status saat ini
 
-- **Tahap terbaru:** CMS Guru (CRUD awal) ditambahkan ke branch `main`; migrasi guard publikasi `20261124210000_teacher_publication_storage_guard.sql` masih menunggu dry-run dan penerapan production. Pemeriksaan lokal setelah perubahan CMS Guru belum dijalankan.
+- **Tahap terbaru:** CMS Fasilitas ditambahkan ke branch `main`; migrasi `20261124230000_public_facilities.sql` masih menunggu dry-run dan penerapan production. Pemeriksaan lokal setelah perubahan CMS Fasilitas belum dijalankan.
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
 - **Commit dokumentasi terbaru sebelum pembaruan ini:** `637d2e6` — penjelasan commit CMS dan status migrasi.
-- **Commit perubahan kode terbaru:** `1972285` — sembunyikan tautan navigasi ke modul admin yang belum tersedia.
+- **Commit perubahan kode terbaru:** implementasi CMS Fasilitas (lihat entri terbaru di bawah).
 - **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi CMS Berita (2026-11-24).
 - **Status Supabase:** pemeriksaan `pnpm dlx supabase migration list --remote` pada 2026-11-24 membuktikan lima migrasi fondasi awal sudah tercatat di remote, sedangkan enam migrasi konten (20261124100000–20261124150000) belum tercatat dan masih pending. Jangan menganggap tabel konten sudah tersedia sebelum migrasi pending diterapkan.
 - **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
@@ -442,3 +442,20 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Status migrasi: `20261124220000_department_publication_storage_guard.sql` baru ditambahkan dan belum dikonfirmasi diterapkan ke Supabase production. Sebelum push, tinjau dry-run dan pastikan hanya migrasi yang diharapkan pending; setelah push, verifikasi dengan `pnpm dlx supabase migration list --remote`.
 - Status migrasi CMS Guru `20261124210000_teacher_publication_storage_guard.sql`: belum ada konfirmasi eksplisit pada percakapan ini bahwa migrasi sudah diterapkan ke production. Jangan menganggap hasil tes kode membuktikan migrasi database telah diterapkan.
 - Tindak lanjut: jalankan pemeriksaan otomatis CMS Jurusan, tinjau dry-run migrasi Guru dan Jurusan secara berurutan, lalu uji CRUD, upload gambar valid/invalid, publikasi draft/published, serta RLS/Storage dengan akun yang memiliki dan tidak memiliki permission terkait.
+
+
+## 2026-11-24 — Implementasi CMS Fasilitas Sekolah
+
+- Pengguna mengonfirmasi seluruh pemeriksaan CMS Jurusan (pnpm typecheck, pnpm lint, pnpm test) hijau. Konfirmasi ini mendahului implementasi Fasilitas; pemeriksaan setelah perubahan Fasilitas belum dilakukan.
+- Audit struktur branch main: belum ada tabel facilities, query publik fasilitas, halaman publik /fasilitas, atau route admin fasilitas. Menu fasilitas sudah tercantum di konfigurasi navigasi, tetapi sebelumnya disembunyikan karena route admin belum aktif.
+- Menambahkan migrasi baru 20261124230000_public_facilities.sql: tabel fasilitas dengan nama/slug, jenis (gedung, ruang, laboratorium, olahraga, ibadah, lainnya), deskripsi, lokasi, kapasitas opsional, foto, urutan, status publikasi, timestamp, indeks dan trigger. RLS membatasi pembacaan publik pada data terbit; create/update/delete dan publikasi memerlukan permission masing-masing.
+- Migrasi mendaftarkan permission facilities:view/create/update/delete/publish dan memperbarui can_manage_media() agar penghapusan foto fasilitas di bucket media dapat dilakukan oleh pemegang permission fasilitas yang sesuai. Migrasi ini belum diterapkan ke production.
+- Menambahkan schema Zod dan unit test fasilitas; Server Actions create/update/delete memeriksa sesi dan permission di server, validasi file melalui validateUpload, object path acak, pembersihan foto lama/upload gagal, activity log, serta revalidasi route.
+- Menambahkan editor fasilitas dengan kompresi gambar client-side melalui komponen bersama CompressedImageInput; validasi server tetap aktif. Field meliputi jenis, lokasi, kapasitas, deskripsi, urutan, foto, dan publikasi.
+- Menambahkan halaman admin daftar/tambah/edit dan konfirmasi hapus pada /admin/fasilitas; mengaktifkan menu admin dan tautan navigasi publik /fasilitas.
+- Menambahkan query anon getPublicFacilities yang hanya membaca baris terbit, serta halaman publik fasilitas dengan kartu dan statistik jumlah per jenis yang dihitung otomatis dari data yang tampil.
+- Memperbarui README agar tabel facilities dan statistik fasilitas tercatat dalam dokumentasi.
+- Commit implementasi: migrasi 398abac95a70d4a8be9eae76789016c3f7cbf974; schema 43a9ebfb4612c72e049a790abe10cd2f20990eec dan penyesuaian schema f264023b17af7b697e3a2df236e2dc3a07dafdc3; test 3cd8bd1660d7ceda0d4c3857c8d3328b958804d8; actions ed3493698d367d5057ac701ec5e4a3aea4b2466f; editor 4e375355c1be55930a1f4cddd24816731a372c17; delete form 162e30f131f591a146378e16ef833820186375f7; admin list cc80cbf1383bd4c581a9bfbd608fbc72f76d0abc; create 5c74a4c474557a7e7ca187be999a9496c838132f; edit 7ae8b87a3b191c3764243e14b33e8ccfdcd7820d; public page fe03fa7c045f3e1117921076a31a49b1e939531f; public query 58029a782cc74358bff0375509c41c92f5e5fb57; admin nav 6f5e7abdee8674da62d0c4a5332cccfd74c5c720; public nav 22801b13af4e2dcc21267a51a8453eabaa3e3720; README 052dc8566889e552e8ea6fc387f95410e22ef2ef.
+- Status pengujian: belum dijalankan setelah implementasi Fasilitas. Setelah git pull origin main, jalankan pnpm typecheck, pnpm lint, dan pnpm test; jangan menganggap hasilnya lolos sebelum pengguna mengonfirmasi.
+- Status migrasi: 20261124230000_public_facilities.sql belum diterapkan. Jalankan dry-run dan pastikan hanya migrasi Fasilitas yang muncul (atau tinjau seluruh daftar jika ada migrasi lain), pastikan backup production tersedia, lalu push dan verifikasi Local/Remote dengan pnpm dlx supabase migration list --remote.
+- Tindak lanjut fungsional: uji tambah/edit/hapus, upload gambar valid/invalid, draft/publish, akun tanpa facilities:publish tidak dapat mengubah baris terbit, serta statistik publik yang berubah sesuai jumlah fasilitas terbit.
