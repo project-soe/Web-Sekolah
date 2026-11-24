@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { saveAchievement } from "./achievement-actions";
 import { publicMediaUrl } from "@/lib/storage/media-url";
+import { CompressedImageInput } from "./compressed-image-input";
 
 export type AchievementEditorValues = {
   id?: string;
@@ -80,7 +81,7 @@ export function AchievementEditor({ initial = {}, canPublish }: {
         <div><h2 className="font-semibold">Gambar prestasi</h2><p className="mt-1 text-sm text-muted-foreground">JPEG, PNG, WebP, atau AVIF; maksimal 3 MB. Unggah gambar baru untuk mengganti gambar lama.</p></div>
         {imageUrl && <div className="relative aspect-video max-w-xl overflow-hidden rounded-lg bg-muted"><Image src={imageUrl} alt={initial.title ?? "Gambar prestasi"} fill unoptimized className="object-cover" /></div>}
         <Field id="image" label="Pilih gambar">
-          <Input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" />
+          <CompressedImageInput name="image" />
         </Field>
       </CardContent></Card>
       <div className="flex flex-wrap gap-3">
