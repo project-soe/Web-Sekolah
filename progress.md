@@ -197,8 +197,7 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 ### Keputusan backup database — 2026-11-24
 
 - Pengguna memilih tetap menggunakan paket Supabase gratis dan tidak melakukan upgrade berbayar hanya untuk fitur backup Dashboard.
-- Backup otomatis/point-in-time dari Dashboard tidak tersedia pada paket saat ini; karena itu belum ada backup production yang terkonfirmasi.
-- Keenam migrasi konten sudah ditinjau dan dry-run hanya menampilkan enam file yang diharapkan. Tidak ditemukan `drop table`, `truncate`, atau penghapusan massal data, tetapi ini tidak menghilangkan risiko kegagalan SQL atau perubahan policy.
+- Backup otomatis/point-in-time dari Dashboard tidak tersedia pada paket saat ini; karena itu belum ada backup production yang terkonfirmasi.- Keenam migrasi konten sudah ditinjau dan dry-run hanya menampilkan enam file yang diharapkan. Tidak ditemukan `drop table`, `truncate`, atau penghapusan massal data, tetapi ini tidak menghilangkan risiko kegagalan SQL atau perubahan policy.
 - **Jangan menyebut database sudah dibackup dan jangan menganggap migrasi sudah diterapkan.** Status keenam migrasi tetap pending.
 - Opsi backup tanpa upgrade yang dapat dipertimbangkan: gunakan PostgreSQL `pg_dump` dari mesin pengguna dengan connection string database Supabase (secret disimpan lokal, tidak dikirim ke chat atau Git). Untuk backup yang lebih lengkap, gunakan custom-format dump yang mencakup schema dan data, lalu verifikasi file dump. Alternatif ekspor CSV per tabel dari Dashboard hanya mencadangkan data tabel yang dipilih dan bukan pengganti backup penuh.
 - Sebelum memberi perintah backup yang spesifik, pastikan metode koneksi database yang tersedia (direct connection atau session pooler) dan apakah `pg_dump` terpasang. Jangan meminta pengguna menempelkan database password/connection string rahasia ke percakapan.
@@ -396,7 +395,6 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - **Status pemeriksaan:** belum dijalankan setelah implementasi Agenda. Jangan menganggap typecheck, lint, unit test, build, atau uji browser berhasil sebelum pengguna mengonfirmasi hasilnya.
 - **Status migrasi:** `20261124200000_event_publication_storage_guard.sql` baru ditambahkan dan belum dikonfirmasi diterapkan ke Supabase production. Lakukan dry-run, tinjau bahwa hanya migrasi ini yang pending (atau tinjau semua yang tampil), lalu push dan verifikasi `supabase migration list --remote`.
 - Tindak lanjut: jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`; perbaiki error bila ada. Setelah lolos, uji create/edit/delete agenda, upload gambar, jadwal publikasi, halaman publik `/agenda` dan detail, serta akun tanpa `events:publish` yang mencoba mengubah agenda terbit melalui UI dan pemanggilan Server Action langsung.
-
 
 ## 2026-11-24 — Migrasi guard CMS Agenda diterapkan ke production
 - Pengguna mengonfirmasi menjalankan `pnpm dlx supabase db push --remote` pada project production `Web-Sekolah` (project ref `nofznzznzjsvnkrmzpwx`). CLI menerapkan tepat satu migrasi: `20261124200000_event_publication_storage_guard.sql`; output berakhir dengan `Finished supabase db push.`
@@ -597,8 +595,7 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Calon siswa PPDB tetap berada pada domain pendaftaran; hanya pendaftar yang diterima dan menyelesaikan daftar ulang yang dikonversi menjadi data induk siswa.
 - Penghapusan bukan alur operasional utama. Status `graduated`, `transferred`, dan `withdrawn` dipakai untuk mempertahankan riwayat.
 
-### Perubahan yang sudah di-commit
-- `supabase/migrations/20261124250000_students_foundation.sql` (awal: `89cb2278bae75187ad3d02d05751b91761924080`; perbaikan: `4fc518b75ad2ee77acada41826cbbaeaf7beb2a6`):
+### Perubahan yang sudah di-commit- `supabase/migrations/20261124250000_students_foundation.sql` (awal: `89cb2278bae75187ad3d02d05751b91761924080`; perbaikan: `4fc518b75ad2ee77acada41826cbbaeaf7beb2a6`):
   - Membuat tabel privat `students` dengan NIS, NISN opsional, nama, jenis kelamin, tempat/tanggal lahir, alamat, wali, kontak wali, jurusan, tahun masuk, status, tanggal lulus, dan catatan.
   - Menambahkan indeks pencarian nama, status, jurusan, dan tahun masuk.
   - Membuat `student_status_history`; trigger otomatis mencatat status awal dan setiap perubahan status, termasuk user yang melakukan perubahan.
@@ -758,3 +755,15 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - CLI menunjukkan repository masih linked ke project `Web-Sekolah` dengan ref `nofznzznzjsvnkrmzpwx`, yaitu project production. Perintah status tersebut tidak menjalankan migrasi atau SQL dan tidak mengubah database.
 - Karena local Supabase tidak dapat dijalankan pada lingkungan ini, rencana pengujian database dialihkan ke proyek Supabase staging terpisah. Jangan menjalankan `db push`, SQL Editor, atau tes tulis terhadap project production.
 - Langkah berikutnya: buat project staging baru pada organisasi yang sesuai, jangan menyalin data pribadi production, lalu link CLI ke project ref staging sebelum memeriksa migration list atau menerapkan migrasi uji.
+
+## 2026-11-25 — Audit migrasi Siswa dan Kelas tanpa staging tambahan
+
+- Pengguna mengonfirmasi kedua slot project Supabase Free telah digunakan: satu untuk Website Sekolah dan satu untuk website lain. Project kedua tidak boleh dipakai sebagai staging dan tidak boleh disentuh.
+- Karena Docker/Podman tidak tersedia di lingkungan Kali/Termux dan tidak ada slot project Supabase staging, audit dilanjutkan secara statis dari file migrasi di branch `main`. Tidak ada SQL yang dijalankan dan tidak ada koneksi/tindakan tulis terhadap project production.
+- Membaca ulang `README.md`, bagian terbaru `progress.md`, serta migrasi `20261124250000_students_foundation.sql` sampai `20261124280000_atomic_academic_year_activation.sql`.
+- Pemeriksaan statis: migrasi 2500 menjaga tabel siswa dan riwayat status di balik RLS authenticated/RBAC; migrasi 2600 membatasi akses tahun ajaran/kelas/penempatan dan memakai constraint unik untuk satu tahun aktif serta satu penempatan per siswa/tahun; migrasi 2700 memperbaiki kepercayaan pada metadata actor dan mengunci identitas awal penempatan; migrasi 2800 memindahkan aktivasi tahun ajaran ke satu transaksi, memeriksa permission, mempertahankan RLS melalui SECURITY INVOKER, dan memakai advisory transaction lock.
+- Tidak ditemukan perintah penghapusan tabel/data massal pada empat migrasi yang ditinjau. Ini bukan bukti migrasi dapat dieksekusi atau seluruh perilaku database benar; pengujian PostgreSQL tetap belum tersedia.
+- Butir audit lanjutan: verifikasi dependensi extension `pg_trgm`/operator class `extensions.gin_trgm_ops` pada migrasi fondasi; uji hak akses fungsi `has_permission` dan grants tabel; uji RLS anon/tanpa permission; uji trigger status dan riwayat kelas; uji rollback RPC untuk target tidak ada; serta uji dua aktivasi bersamaan. Perlu fixture PostgreSQL terisolasi yang dapat dijalankan di GitHub Actions tanpa menggunakan project Supabase kedua.
+- Status migrasi 2600, 2700, dan 2800 pada production tidak dikonfirmasi ulang dalam sesi ini. Jangan menjalankan `db push`, SQL Editor, atau tes mutasi ke production.
+- Konfirmasi pengguna sebelumnya tetap berlaku: `pnpm typecheck`, `pnpm lint`, `pnpm test`, dan `pnpm cf:build` hijau untuk kode saat itu. Tidak ada tes PostgreSQL yang diklaim lulus.
+- Langkah berikutnya: siapkan test harness PostgreSQL sementara berbasis GitHub Actions dengan skema/fungsi Supabase minimum yang eksplisit, lalu jalankan migrasi dan tes negatif/positif di runner terisolasi. Jangan menggunakan project Supabase kedua.
