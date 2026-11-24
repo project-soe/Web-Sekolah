@@ -144,13 +144,16 @@ export async function deleteGalleryImage(formData: FormData): Promise<void> {
   const { data: image } = await supabase.from("gallery_images")
     .select("id, gallery_id, image_path").eq("id", imageId).maybeSingle();
   if (!image) galleryError("hapus-foto");
+  const { data: gallery } = await supabase.from("galleries")
+    .select("slug, status, cover_path").eq("id", image.gallery_id).maybeSingle();
+  if (!gallery) galleryError("hapus-foto");
+  if (gallery.status === "published" && !can(session.access, "galleries:publish")) galleryError("publikasi");
   const { error } = await supabase.from("gallery_images").delete().eq("id", imageId);
   if (error) galleryError("hapus-foto");
-  await supabase.storage.from("media").remove([image.image_path]);
+  const removed = await supabase.storage.from("media").remove([image.image_path]);
+  if (removed.error) console.error("admin_gallery_storage_remove_failed", removed.error.message);
 
-  const { data: gallery } = await supabase.from("galleries")
-    .select("slug, cover_path").eq("id", image.gallery_id).maybeSingle();
-  if (gallery?.cover_path === image.image_path) {
+  if (gallery.cover_path === image.image_path) {
     const { data: nextImage } = await supabase.from("gallery_images")
       .select("image_path").eq("gallery_id", image.gallery_id).order("sort_order").limit(1).maybeSingle();
     await supabase.from("galleries").update({ cover_path: nextImage?.image_path ?? null }).eq("id", image.gallery_id);
