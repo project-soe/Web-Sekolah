@@ -740,3 +740,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 3. Pada database lokal/staging terpisah, uji aktivasi normal, target tidak ada (harus rollback dan tahun aktif lama tetap aktif), role tanpa `classes:update` (harus ditolak), serta dua aktivasi bersamaan (harus berakhir dengan tepat satu tahun aktif).
 4. Periksa `pnpm dlx supabase migration list --local` hanya jika local Supabase tersedia; jangan menghubungkan atau menerapkan ke production.
 5. Setelah bukti uji tersedia, lanjutkan audit relasi dan kebijakan RLS sebelum merencanakan deployment database.
+
+
+## 2026-11-25 — Validasi kode aktivasi tahun ajaran atomik
+
+- Pengguna mengonfirmasi setelah menarik perubahan aktivasi tahun ajaran atomik bahwa `pnpm typecheck`, `pnpm lint`, `pnpm test`, dan `pnpm cf:build` semuanya lolos.
+- Konfirmasi ini berlaku untuk kode server action RPC dan migrasi `20261124280000_atomic_academic_year_activation.sql`; hasil tes dicatat sebagai konfirmasi pengguna, bukan eksekusi independen oleh asisten.
+- Pengujian PostgreSQL lokal/staging masih belum dilakukan: migrasi 2700 dan 2800, RLS, trigger audit penempatan, rollback RPC, penolakan permission, serta aktivasi bersamaan.
+- Production tidak disentuh pada sesi ini. Jangan jalankan `db push --remote` atau SQL Editor production.
+- Langkah berikutnya: pastikan Supabase local berjalan pada database terisolasi, lalu periksa `migration list --local` dan jalankan tes integrasi/negatif. Jika local stack tidak tersedia di perangkat, gunakan proyek staging Supabase terpisah (bukan project production).
