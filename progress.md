@@ -346,3 +346,16 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pengguna mengonfirmasi pemeriksaan lokal setelah commit hardening Galeri `d767753` aman/tanpa error. Dicatat sebagai konfirmasi pengguna bahwa `pnpm typecheck`, `pnpm lint`, dan `pnpm test` kembali lolos.
 - Konfirmasi tersebut berlaku setelah penambahan pemeriksaan status album lama pada `saveGallery`; asisten tidak menjalankan pemeriksaan secara independen.
 - Tindak lanjut: lanjutkan CMS Prestasi dengan pola validasi schema, server actions, RBAC/RLS, activity log, halaman admin, unit test, dan pembaruan dokumen ini.
+
+
+## 2026-11-24 — Implementasi CMS Prestasi (tahap awal)
+- Pengguna mengonfirmasi pemeriksaan hardening Galeri sebelumnya aman. Konfirmasi hasil pemeriksaan Galeri dicatat pada entri tepat di atas.
+- Menambahkan schema Zod dan unit test untuk data prestasi: judul, slug, deskripsi, penerima, tingkat, tanggal pencapaian, status publikasi, waktu publikasi, dan urutan.
+- Menambahkan Server Actions create/update/delete dengan pemeriksaan sesi dan permission server-side, validasi tanggal dan waktu Asia/Jakarta, upload gambar ke bucket `media` memakai validasi signature/MIME/ukuran dan object path acak, activity log, serta revalidasi halaman publik/admin.
+- Menambahkan editor prestasi, preview gambar, halaman admin daftar/tambah/edit, konfirmasi penghapusan, dan mengaktifkan menu `/admin/prestasi`.
+- Audit RLS menemukan update row prestasi published sebelumnya hanya memeriksa permission `achievements:update` pada row lama dan hanya mensyaratkan `achievements:publish` bila row baru berstatus published. Ini memungkinkan pengeditan isi prestasi terbit oleh pengguna tanpa permission publish. Migrasi baru `20261124190000_achievement_publication_storage_guard.sql` memperketat USING dan WITH CHECK agar perubahan row published memerlukan permission publish.
+- Migrasi 1900 juga menambahkan `achievements:delete` ke helper `can_manage_media()`, agar penghapusan prestasi dapat membersihkan gambar di Storage. Migrasi ini **belum diterapkan ke production**.
+- Commit utama: schema `809eb33`; unit test `fdb142a`; actions `edd12b6`; delete form `738e5be`; editor `8a1f9d3`; daftar admin `2418fc6`; tambah `fa6181b`; edit `66fd99a`; migrasi RLS/Storage `ea5f70b`; navigasi `f146c53`.
+- **Status pengujian CMS Prestasi:** belum dijalankan/dikonfirmasi oleh pengguna. Setelah menarik commit terbaru, jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`; perbaiki setiap error sebelum menguji alur UI.
+- **Status database:** migrasi `20261124190000` masih pending. Lakukan dry-run, pastikan backup production tersedia, terapkan setelah review, lalu verifikasi Local dan Remote pada `supabase migration list --remote`.
+- Tindak lanjut pengujian fungsional: buat/edit/hapus prestasi; upload gambar valid dan tolak file invalid; jadwalkan publikasi; uji akun tanpa `achievements:publish` tidak dapat membuat atau mengubah prestasi terbit; pastikan gambar Storage ikut dibersihkan saat penghapusan.
