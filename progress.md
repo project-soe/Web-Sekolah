@@ -4,7 +4,7 @@
 
 ## Status saat ini
 
-- **Tahap terbaru:** Implementasi awal CMS Agenda Sekolah tersedia di branch `main`; migrasi guard `20261124200000` sudah diterapkan dan tercatat sinkron pada Supabase production. Pemeriksaan kode lokal setelah implementasi Agenda masih menunggu konfirmasi pengguna.
+- **Tahap terbaru:** CMS Agenda telah diimplementasikan; migrasi guard `20261124200000` diterapkan dan sinkron pada Supabase production. Pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah implementasi Agenda lolos tanpa error. Tahap berikutnya: CMS Guru.
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
@@ -405,3 +405,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Peringatan pnpm tentang native binary/build scripts, pesan melewati `.gitkeep`, dan notifikasi Supabase CLI versi baru tidak menghalangi operasi; push dan pembacaan daftar migrasi selesai tanpa error.
 - Konfirmasi ini hanya membuktikan penerapan dan pencatatan migrasi. Pemeriksaan `pnpm typecheck`, `pnpm lint`, `pnpm test` setelah implementasi CMS Agenda serta uji fungsional/RLS masih belum dikonfirmasi.
 - Langkah berikutnya: pengguna menjalankan typecheck, lint, dan unit test; setelah lolos, uji CRUD Agenda, upload gambar, penjadwalan, halaman publik, dan pembatasan perubahan Agenda terbit untuk akun tanpa `events:publish`.
+
+
+## 2026-11-24 — Validasi kode CMS Agenda lulus
+- Pengguna mengonfirmasi setelah menarik perubahan CMS Agenda dan menerapkan migrasi production bahwa `pnpm typecheck`, `pnpm lint`, dan `pnpm test` semuanya berhasil tanpa error.
+- Konfirmasi berlaku untuk checkout lokal pengguna setelah implementasi awal CMS Agenda dan migrasi guard `20261124200000_event_publication_storage_guard.sql` diterapkan serta tercatat sinkron pada Local/Remote.
+- Asisten tidak menjalankan tes secara independen. Build Cloudflare/OpenNext dan pengujian browser/fungsional masih belum diverifikasi.
+- Tahap admin berikutnya dipilih: CMS Guru, menggunakan tabel `teachers` yang sudah tersedia. Audit awal menunjukkan permission CRUD dasar dan policy RLS telah ada; perlu menambahkan kontrol publikasi yang aman untuk row guru terbit serta memastikan permission Storage saat mengganti/menghapus foto. Tidak perlu membuat ulang tabel guru.
