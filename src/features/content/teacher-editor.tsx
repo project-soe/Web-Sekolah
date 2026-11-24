@@ -89,7 +89,7 @@ export function TeacherEditor({
             type="checkbox"
             name="is_published"
             defaultChecked={initial.is_published ?? false}
-            disabled={!canPublish && Boolean(initial.is_published)}
+            disabled={!canPublish}
             className="mt-1 size-4 accent-primary"
           />
           <span>
