@@ -225,3 +225,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Referensi resmi: https://supabase.com/docs/guides/database/connecting-to-postgres dan https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore.
 - Tahap berikutnya: periksa kemampuan IPv6/DNS/TLS dari Proot, lalu pilih direct connection atau session pooler sesuai hasil; uji koneksi tanpa menampilkan password; jalankan custom-format `pg_dump` dengan schema + data; verifikasi file menggunakan `pg_restore --list` dan ukuran/checksum. Secret hanya boleh dimasukkan secara lokal, tidak di chat atau Git.
 - Status saat catatan ini dibuat: belum ada koneksi PostgreSQL yang diuji, belum ada file backup, dan keenam migrasi konten tetap pending.
+
+
+### 2026-11-24 — Pengguna melaporkan koneksi Session Pooler berhasil
+
+- Pengguna melaporkan sudah berhasil masuk/terhubung ke PostgreSQL Supabase menggunakan Session Pooler.
+- Tahap berikutnya adalah menjalankan `pg_dump` dari shell Proot Kali (bukan dari prompt interaktif SQL `postgres=>`). Jika masih berada di psql, keluar dengan `\\q` terlebih dahulu.
+- Disiapkan folder backup privat di luar repository: `$HOME/db-backups` dengan permission direktori `700`.
+- Belum ada bukti bahwa `pg_dump` sudah dijalankan atau file dump sudah terbentuk. Jangan menandai backup selesai sebelum arsip diverifikasi dengan `pg_restore --list` dan checksum.
+- Untuk menyusun perintah yang tepat, perlu mengetahui host pooler dan username persis dari Dashboard → Connect (bukan password); port Session Pooler umumnya 5432 dan database umumnya postgres, tetapi nilai aktual harus mengikuti connection string proyek.
+- Tetap jangan menjalankan migrasi production sampai backup diverifikasi dan pengguna menyetujui.
