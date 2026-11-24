@@ -4,7 +4,7 @@
 
 ## Status saat ini
 
-- **Tahap terbaru:** CMS Agenda telah diimplementasikan; migrasi guard `20261124200000` diterapkan dan sinkron pada Supabase production. Pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah implementasi Agenda lolos tanpa error. Tahap berikutnya: CMS Guru.
+- **Tahap terbaru:** CMS Guru (CRUD awal) ditambahkan ke branch `main`; migrasi guard publikasi `20261124210000_teacher_publication_storage_guard.sql` masih menunggu dry-run dan penerapan production. Pemeriksaan lokal setelah perubahan CMS Guru belum dijalankan.
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
@@ -412,3 +412,18 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Konfirmasi berlaku untuk checkout lokal pengguna setelah implementasi awal CMS Agenda dan migrasi guard `20261124200000_event_publication_storage_guard.sql` diterapkan serta tercatat sinkron pada Local/Remote.
 - Asisten tidak menjalankan tes secara independen. Build Cloudflare/OpenNext dan pengujian browser/fungsional masih belum diverifikasi.
 - Tahap admin berikutnya dipilih: CMS Guru, menggunakan tabel `teachers` yang sudah tersedia. Audit awal menunjukkan permission CRUD dasar dan policy RLS telah ada; perlu menambahkan kontrol publikasi yang aman untuk row guru terbit serta memastikan permission Storage saat mengganti/menghapus foto. Tidak perlu membuat ulang tabel guru.
+
+
+## 2026-11-24 — Implementasi awal CMS Guru
+- Pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah CMS Agenda semuanya lolos tanpa error. Konfirmasi tersebut dicatat sebelum memulai modul berikutnya.
+- Audit database: tabel `teachers` sudah tersedia dari fondasi konten; kolom mencakup nama, slug, nomor pegawai, jabatan, relasi jurusan/unit, pendidikan, biografi, foto, email, urutan, dan `is_published`. Migrasi `20261124110000_default_teacher_unpublished.sql` sudah mengubah default publikasi menjadi false. Tidak membuat ulang tabel atau mengubah migrasi lama.
+- Menambahkan schema Zod `src/features/content/teacher-schema.ts` dan unit test `tests/unit/teacher-schema.test.ts`.
+- Menambahkan Server Actions `src/features/content/teacher-actions.ts` untuk create/update/delete dengan pemeriksaan sesi dan permission server-side (`teachers:create/update/delete/publish`), validasi data, validasi signature/MIME/ukuran foto melalui `validateUpload`, object path acak di bucket `media`, pembersihan foto lama/upload gagal, activity log, dan revalidasi halaman `/guru` serta admin.
+- Menambahkan editor `teacher-editor.tsx` dengan profil guru, nomor pegawai, jabatan, jurusan/unit, pendidikan, email dinas (tidak ditampilkan publik), biografi, urutan, status tampil, dan foto terkompresi otomatis melalui komponen `CompressedImageInput` yang sama dengan Prestasi/Agenda.
+- Menambahkan route admin daftar, tambah, dan edit pada `src/app/admin/guru/**`, konfirmasi hapus, serta mengaktifkan menu Guru pada sidebar.
+- Keamanan: RLS lama untuk guru hanya memeriksa permission update/create tanpa permission publikasi khusus. Menambahkan migrasi `20261124210000_teacher_publication_storage_guard.sql` untuk mendaftarkan `teachers:publish`, mewajibkan permission tersebut saat membuat/mengubah row yang tampil, dan menambahkan `teachers:delete` serta `events:delete` ke daftar permission yang dapat mengelola objek media Storage. Policy RLS melindungi pemanggilan langsung di luar UI.
+- File/commit: schema `ba78f8e`; test `d99f772`; actions `4855a68`; delete form `54f99aa`; editor `905e42d` dan perbaikan permission checkbox `3db6d84`; daftar `02fb661`; tambah `5548bd1`; edit `17b716e`; migrasi `1656a03`; navigasi `9601b66`.
+- Tidak ada perubahan query publik `getPublicTeachers`; halaman publik `/guru` tetap memakai field publik yang tidak mencakup nomor pegawai atau email.
+- **Status pengujian CMS Guru:** belum dijalankan setelah implementasi. Pengguna perlu menarik commit terbaru dan menjalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`. Asisten tidak menjalankan tes secara independen.
+- **Status migrasi:** `20261124210000_teacher_publication_storage_guard.sql` baru ditambahkan dan belum diterapkan ke production. Lakukan dry-run, tinjau bahwa hanya migrasi ini yang pending, pastikan backup tersedia, kemudian push dan verifikasi Local/Remote pada `supabase migration list --remote`.
+- Langkah uji fungsional setelah pemeriksaan otomatis: buat/edit/hapus profil guru; upload foto valid dan tolak file invalid; pastikan akun tanpa `teachers:publish` tidak dapat membuat atau mengubah profil tampil melalui UI maupun Server Action langsung; uji foto lama terhapus dari Storage setelah diganti/dihapus; cek `/guru` hanya menampilkan profil terbit.
