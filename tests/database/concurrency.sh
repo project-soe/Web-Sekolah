@@ -7,13 +7,14 @@ year_two="10000000-0000-4000-8000-000000000002"
 lock_key_a=2026112428
 lock_key_b=1
 
+# Both permissions are required: activation updates rows and RLS also checks SELECT visibility.
 # Session one deliberately holds the same transaction advisory lock before
 # calling the RPC. Session two starts while that lock is held and must wait.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "
   begin;
   set role authenticated;
   select set_config('request.jwt.claim.sub', '$actor_id', false);
-  select set_config('test.permissions', 'classes:update', false);
+  select set_config('test.permissions', 'classes:view,classes:update', false);
   select pg_advisory_xact_lock($lock_key_a, $lock_key_b);
   select pg_sleep(1);
   select public.activate_academic_year('$year_one');
@@ -27,7 +28,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "
   begin;
   set role authenticated;
   select set_config('request.jwt.claim.sub', '$actor_id', false);
-  select set_config('test.permissions', 'classes:update', false);
+  select set_config('test.permissions', 'classes:view,classes:update', false);
   select public.activate_academic_year('$year_two');
   commit;
 " >/tmp/academic-year-activation-two.log 2>&1 &

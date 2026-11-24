@@ -776,3 +776,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Catatan cakupan: fixture menguji empat migrasi siswa/kelas terbaru, bukan seluruh rangkaian migrasi aplikasi dan bukan replika penuh Supabase Auth/Storage. Jika job menemukan perbedaan kompatibilitas, perbaiki fixture/test berdasarkan log sebelum mengubah migrasi produksi.
 - Review awal harness menemukan dan memperbaiki nama variabel PL/pgSQL yang berpotensi ambigu pada assertion riwayat kelas sebelum hasil CI dinilai.
 - Perbaikan lanjutan harness: seluruh referensi ID penempatan pada assertion PL/pgSQL diselaraskan ke variabel lokal `v_enrollment_id`.
+
+## 2026-11-25 — Perbaikan CI #244: permission pada tes konkurensi
+
+- CI run #244 (`45503812792`) menunjukkan job `check` lulus seluruh tahap (lint, typecheck, test, build), dan seluruh assertion migrasi database lulus.
+- Kegagalan terbatas pada `tests/database/concurrency.sh`: kedua sesi tes hanya diberi `classes:update`, padahal RPC `activate_academic_year` menargetkan baris `academic_years` yang tetap dilindungi policy SELECT `classes:view`.
+- Memperbaiki kedua sesi tes agar menggunakan permission `classes:view,classes:update`. Tidak mengubah migrasi atau kode aplikasi; hanya memperbaiki konteks permission pada fixture pengujian agar sesuai dengan RLS.
+- Belum mengklaim CI hijau; workflow baru harus menyelesaikan ulang job `database-tests` dan `check`.
+- Perubahan hanya pada skrip tes dan dokumentasi. Tidak ada koneksi atau perubahan pada Supabase production maupun project Supabase kedua.
