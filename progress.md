@@ -4,14 +4,14 @@
 
 ## Status saat ini
 
-- **Tahap terbaru:** CMS Fasilitas telah diterapkan ke production dan pengguna mengonfirmasi data fasilitas sudah tampil di halaman publik setelah pembaruan terakhir. Berikutnya: audit keamanan RLS/Storage lintas modul, lalu build Cloudflare/OpenNext dan uji browser responsif. Detail perubahan database yang membuat halaman kembali tampil belum dikonfirmasi; jangan mengasumsikan ada migrasi tertentu.
+- **Tahap terbaru (2026-11-24):** modul CMS konten sampai Fasilitas telah tersedia; migration hardening RLS/Storage `20261124240000_security_rls_storage_hardening.sql` tercatat diterapkan pada production. Pemeriksaan policy/helper dan smoke test anon telah dilakukan. Pengguna menyatakan pengujian akun editor serta pembatasan permission Storage lintas-folder telah selesai; hasil detail/pass-fail belum disampaikan. Langkah berikutnya: build Cloudflare/OpenNext (`pnpm cf:build`), lalu uji browser responsif dan aksesibilitas.
 
 - **Branch:** `main`
-- **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
-- **Commit dokumentasi terbaru sebelum pembaruan ini:** `637d2e6` — penjelasan commit CMS dan status migrasi.
+- **Tahap:** Fase 5 — Admin CRUD dan publikasi konten untuk modul Berita, Pengumuman, Galeri, Prestasi, Agenda, Guru, Jurusan, dan Fasilitas; audit RLS/Storage sedang menuju verifikasi akhir.
+- **Commit dokumentasi terbaru sebelum catatan ini:** `187b166c` — hasil smoke test RLS role anon.
 - **Commit perubahan kode terbaru:** implementasi CMS Fasilitas (lihat entri terbaru di bawah).
 - **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi CMS Berita (2026-11-24).
-- **Status Supabase:** pemeriksaan `pnpm dlx supabase migration list --remote` pada 2026-11-24 membuktikan lima migrasi fondasi awal sudah tercatat di remote, sedangkan enam migrasi konten (20261124100000–20261124150000) belum tercatat dan masih pending. Jangan menganggap tabel konten sudah tersedia sebelum migrasi pending diterapkan.
+- **Status Supabase:** migration konten hingga Fasilitas telah dikonfirmasi diterapkan sebelumnya; migration hardening `20261124240000_security_rls_storage_hardening.sql` juga dikonfirmasi tercatat Local/Remote sama pada production. Lihat bagian audit keamanan di bawah untuk batas bukti dan detail verifikasi.
 - **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
 
 ## Ringkasan arsitektur
@@ -536,3 +536,16 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pemeriksaan sebelumnya telah mengonfirmasi ekspresi policy UPDATE untuk News, Announcements, Galleries, serta policy mutasi `gallery_images`: editor memerlukan permission modul, dan operasi pada konten/album terbit memerlukan permission publish.
 - **Tindak lanjut audit:** lakukan pengujian terkontrol memakai sesi akun editor tanpa permission publish dan publisher; uji transisi draft/published tanpa mengubah data penting (gunakan fixture/test row bila memungkinkan). Lanjutkan pengujian Storage lintas-folder: akun dengan permission fasilitas tidak boleh mengelola folder media modul lain. Setelah itu jalankan build Cloudflare/OpenNext dan uji responsivitas/aksesibilitas.
 - Tidak ada perubahan kode atau database pada langkah pengujian ini. Catatan ini hanya mendokumentasikan hasil yang dilaporkan pengguna.
+
+
+## 2026-11-24 — Pengujian akun editor dan Storage lintas-folder dilaporkan selesai
+
+- Pengguna mengonfirmasi pengujian akun editor dan permission Storage lintas-folder telah selesai dilakukan setelah smoke test anon serta pemeriksaan ekspresi policy UPDATE/`gallery_images`.
+- **Batas bukti:** pesan konfirmasi belum menyertakan skenario, hasil aktual (diizinkan/ditolak), akun/role yang dipakai, atau output SQL. Karena itu dokumentasi mencatat pengujian telah dilakukan berdasarkan laporan pengguna, tetapi tidak mengklaim seluruh skenario lulus. Lengkapi hasil pass/fail bila tersedia.
+- Query agregasi role/permission yang dikirim pengguna menghasilkan: `super_admin` memiliki 1 akun aktif; role `editor`, `admin_sekolah`, `guru`, `operator_ppdb`, dan `superadmin` masing-masing 0 akun aktif. Role `editor` tetap memiliki daftar permission termasuk `news:publish`, `announcements:publish`, dan `galleries:publish`, tetapi tidak ada assignment user aktif ke role tersebut pada saat query dijalankan. Jangan menyamakan daftar permission role dengan bukti bahwa akun editor aktif benar-benar memakai role itu.
+- Query role hanya membaca metadata RBAC; tidak mengubah data. Untuk mengulang pengujian akun, verifikasi assignment role aktual dan hindari menambah/mengubah akun production hanya demi tes tanpa rencana dan persetujuan.
+- Smoke test anon sebelumnya: `news=0`, `announcements=0`, `galleries=0`, `gallery_images=0`, `achievements=1`, `events=0`, `teachers=0`, `departments=0`, `facilities=1`. Ini hanya hitungan visibilitas, bukan pemeriksaan isi/status tiap row.
+- Ekspresi policy UPDATE News/Announcements/Galleries mensyaratkan permission `:update` serta permission `:publish` untuk row terbit; mutasi `gallery_images` memakai helper `can_manage_gallery_images(gallery_id)`.
+- Konfigurasi build: `package.json` menyediakan script `pnpm cf:build` = `opennextjs-cloudflare build`; konfigurasi ada pada `open-next.config.ts` dan `wrangler.jsonc`. Script `pnpm build` menjalankan `next build`, bukan build Cloudflare.
+- **Langkah berikutnya:** jalankan `git pull origin main`, pastikan working tree bersih, lalu `pnpm cf:build`. Simpan output lengkap jika gagal; jangan menganggap build sukses sebelum ada hasil terminal. Setelah build berhasil, lanjutkan smoke test preview/deployment dan uji browser responsif, keyboard, label form, kontras, serta tautan navigasi.
+- **Commit rujukan sebelum catatan ini:** `187b166c1128b129cb8dc248b495ff887a96eac9` (`docs: record anon RLS smoke test results`).
