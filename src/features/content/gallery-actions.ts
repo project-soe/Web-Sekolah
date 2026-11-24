@@ -48,6 +48,22 @@ export async function saveGallery(formData: FormData): Promise<void> {
   if (input.status === "published" && !publishedAt) galleryError("jadwal");
 
   const supabase = await createClient();
+
+  // Jangan izinkan pengguna tanpa permission publikasi mengubah atau
+  // menurunkan status album yang sudah terbit melalui pemanggilan action langsung.
+  if (isUpdate) {
+    const { data: existing, error: existingError } = await supabase
+      .from("galleries")
+      .select("id, status")
+      .eq("id", input.id!)
+      .maybeSingle();
+    if (existingError || !existing) galleryError("simpan");
+    if (
+      (existing.status === "published" || input.status === "published") &&
+      !can(session.access, "galleries:publish")
+    ) galleryError("publikasi");
+  }
+
   const payload = {
     title: input.title,
     slug: input.slug,
