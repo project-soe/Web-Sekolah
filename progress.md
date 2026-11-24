@@ -687,3 +687,32 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - GitHub Actions run `45379534402` pada commit `d1ec83f6785a941b13e170183df2209f16614120` berhasil pada instalasi dependency dan lint, tetapi typecheck gagal.
 - Penyebab: nilai action activity log `activate`, `assign_class`, dan `transfer_class` belum termasuk union `ActivityAction`. Ada juga tiga variabel sesi yang tidak dipakai pada server actions.
 - Perbaikan: gunakan action yang sudah didukung (`update`, `create`, `status_change`) dan hapus variabel sesi yang tidak diperlukan. Pemeriksaan CI ulang menunggu.
+
+
+## 2026-11-24 — Audit statis migrasi Siswa dan Kelas (pra-production)
+
+### Ruang lingkup
+- Membaca README, status progress terbaru, daftar migrasi pada `main`, serta migrasi fondasi siswa, penguatan RLS/Storage, dan tahun ajaran/rombongan belajar.
+- Memeriksa server action penempatan siswa untuk membandingkan validasi aplikasi dengan perlindungan di database.
+- Tidak menjalankan SQL terhadap Supabase production, tidak menjalankan `db push`, dan tidak mengubah data production.
+
+### Temuan audit
+- Migrasi `20261124250000_students_foundation.sql` membuat data siswa privat: tidak ada policy untuk role `anon`; akses authenticated dibatasi permission RBAC. Riwayat status ditulis oleh trigger dan hanya diberikan hak baca kepada authenticated.
+- Migrasi `20261124260000_academic_years_and_class_groups.sql` membuat tahun ajaran, rombongan belajar, penempatan siswa, dan riwayat kelas. RLS membatasi akses; constraint unik mencegah lebih dari satu tahun ajaran aktif dan lebih dari satu penempatan siswa pada tahun ajaran yang sama.
+- **Temuan yang diperbaiki dengan migrasi baru:** trigger penempatan sebelumnya menerima nilai `assigned_by` dari klien bila kolom itu diisi. Selain itu, policy UPDATE berbasis baris tidak membatasi perubahan kolom identitas penempatan. Server action saat ini hanya mengubah kelas, tetapi akses PostgREST langsung dengan permission yang sama dapat mencoba mengubah `student_id`, `academic_year_id`, atau metadata penempatan.
+- Menambahkan `20261124270000_student_class_enrollment_audit_guard.sql`: actor `assigned_by` selalu diambil dari `auth.uid()`; perubahan `student_id`, `academic_year_id`, `assigned_at`, atau `assigned_by` saat UPDATE ditolak; `updated_by` ditetapkan database dari `auth.uid()`. Validasi kecocokan kelas/tahun ajaran dan status siswa aktif tetap dipertahankan.
+- Migrasi baru menggunakan `CREATE OR REPLACE FUNCTION`; migrasi lama tidak diedit.
+
+### Status verifikasi dan batasan
+- Ini adalah **review statis kode SQL**, bukan hasil eksekusi PostgreSQL. Belum ada klaim bahwa migrasi baru lolos pada database lokal/staging.
+- Belum ada bukti status penerapan migrasi `20261124260000` dan `20261124270000` pada remote terbaru dalam sesi ini. Jangan menerapkan keduanya ke production sebelum backup, pemeriksaan migration list, dan uji pada database lokal/staging.
+- Pemeriksaan CI untuk commit terbaru tidak dapat dipastikan dari hasil endpoint workflow yang tersedia pada sesi audit ini. Jangan menyatakan CI terbaru hijau tanpa membuka run yang sesuai.
+- Perlu pengujian negatif: anon tidak dapat membaca tabel privat; authenticated tanpa permission ditolak; pengguna berizin tidak dapat memalsukan `assigned_by` atau mengubah identitas penempatan; transfer kelas yang sah tetap menghasilkan riwayat; kelas dan tahun ajaran yang tidak cocok ditolak.
+- Aktivasi tahun ajaran pada server action saat ini dilakukan melalui dua request UPDATE terpisah (non-atomik). Ini perlu ditangani pada audit lanjutan, idealnya dengan operasi database transaksional agar kegagalan request kedua tidak meninggalkan kondisi tanpa tahun ajaran aktif.
+
+### Langkah berikutnya
+1. Tarik commit terbaru dari `main`.
+2. Jalankan `pnpm typecheck`, `pnpm lint`, `pnpm test`, dan `pnpm cf:build`.
+3. Audit dan uji migrasi `20261124270000` pada database lokal/staging yang terpisah dari production; sertakan uji RLS dan trigger di atas.
+4. Audit atomisitas aktivasi tahun ajaran dan konsistensi relasi kelas/penempatan.
+5. Hanya setelah semua bukti uji dan backup tersedia, rencanakan penerapan production secara terpisah.
