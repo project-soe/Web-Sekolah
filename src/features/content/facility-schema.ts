@@ -10,7 +10,7 @@ export const facilityInputSchema = z.object({
   facility_type: z.enum(facilityTypes),
   description: z.string().trim().max(5000).optional(),
   location: z.string().trim().max(200).optional(),
-  capacity: z.preprocess((value) => value === "" || value == null ? null : value, z.coerce.number().int().min(1).max(100000).nullable()),
+  capacity: z.union([z.literal("").transform(() => null), z.coerce.number().int().min(1).max(100000)]),
   sort_order: z.coerce.number().int().min(-100000).max(100000),
   is_published: z.boolean(),
 });
