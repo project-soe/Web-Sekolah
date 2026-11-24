@@ -15,6 +15,7 @@ const implementedRoutes = new Set([
   "/admin/galeri",
   "/admin/prestasi",
   "/admin/agenda",
+  "/admin/guru",
 ]);
 
 const permissionByHref: Record<string, string> = {
