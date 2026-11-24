@@ -628,3 +628,31 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 
 ### Catatan konsistensi dokumentasi
 - Bagian status lama di atas masih memuat sejumlah catatan migrasi dan tahapan yang sudah kedaluwarsa/bertentangan dengan perkembangan berikutnya. Untuk pekerjaan Modul Siswa, gunakan catatan bertanggal terbaru dan verifikasi commit/migration list aktual sebelum menyimpulkan status production.
+
+
+## 2026-11-24 — Admin Siswa: CRUD aman, pencarian, detail, dan riwayat
+
+- Sebelum perubahan ini, pengguna mengonfirmasi pnpm typecheck, pnpm lint, pnpm test, dan pnpm build selesai tanpa error.
+- Pengguna mengirim migration list --remote: seluruh 20 versi Local/Remote sinkron, termasuk 20261124250000_students_foundation.sql pada production project nofznzznzjsvnkrmzpwx.
+- Menambahkan validasi Zod untuk NIS, NISN 10 digit, nama, jenis kelamin, tanggal kalender, kontak wali, jurusan, tahun masuk, status, dan tanggal lulus.
+- Menambahkan server action create/update dengan validasi server, pemeriksaan sesi dan permission students:create/students:update, Supabase server client dengan RLS tetap aktif, activity log tanpa data pribadi, dan revalidasi route.
+- Menambahkan formulir tambah/edit serta route /admin/siswa/tambah dan /admin/siswa/[id]/edit.
+- Memperbarui /admin/siswa dengan pencarian nama/NIS/NISN dan filter status. Daftar hanya menampilkan kolom minimum.
+- Menambahkan /admin/siswa/[id] untuk detail privat dan 50 riwayat status terakhir. Riwayat dibuat otomatis oleh trigger database.
+- Tidak menambahkan operasi hapus permanen; status lulus/pindah/keluar mempertahankan rekam jejak. Tidak ada direktori siswa publik.
+
+### Batas verifikasi
+- Kode pada commit ini belum diuji setelah perubahan oleh asisten. Hasil empat pemeriksaan yang dikonfirmasi pengguna berlaku untuk kode sebelum perubahan ini.
+- Jalankan ulang pnpm typecheck, pnpm lint, pnpm test, dan pnpm build.
+- Uji integrasi: anon tidak dapat membaca students; akun tanpa permission ditolak; students:view dapat membaca daftar/detail/riwayat; students:create dapat membuat siswa; students:update dapat mengubah data dan memicu student_status_history.
+- Tes unit baru: tests/unit/student-schema.test.ts. Uji mutasi dengan fixture/staging, bukan data nyata production.
+
+### Langkah berikutnya
+1. Tarik commit ke Kali dengan git pull origin main, lalu jalankan ulang empat pemeriksaan.
+2. QA di environment aman: daftar, pencarian, filter, tambah data dummy, edit, dan riwayat status.
+3. Verifikasi RLS memakai anon dan akun/role dengan permission berbeda. Migration list bukan bukti RLS lulus.
+4. Setelah Admin Siswa lolos, rancang pengelolaan kelas/tahun ajaran sebelum Portal Siswa dan integrasi PPDB/SPMB.
+
+### Catatan status terbaru yang mengesampingkan catatan lama
+- Migration 20261124250000_students_foundation.sql telah dikonfirmasi tercatat sama pada Local dan Remote pada 2026-11-24; catatan lama yang menyebutnya belum diterapkan sudah kedaluwarsa.
+- Typecheck/lint/test/build dilaporkan lolos sebelum implementasi Admin Siswa pada commit ini; belum ada klaim pemeriksaan setelah perubahan ini.
