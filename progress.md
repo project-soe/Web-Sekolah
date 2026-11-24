@@ -314,3 +314,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - **Status database:** migrasi sampai `20261124160000` sudah dikonfirmasi diterapkan pengguna. Migrasi baru `20261124170000` masih pending; jangan menjalankan fitur uji tulis Galeri terhadap production sampai migrasi ini diterapkan. Lakukan dry-run dan verifikasi daftar migrasi sebelum push.
 - Catatan koreksi: bagian status migrasi dan tindak lanjut lama di atas adalah catatan historis. Bukti yang lebih baru pada entri ini dan entri validasi CMS Pengumuman menjadi acuan status saat ini.
 - Langkah berikutnya: jalankan pemeriksaan otomatis lokal; perbaiki temuan; preview dan terapkan migrasi `20261124170000` setelah review; lalu uji create/edit album, upload file valid/invalid, hapus foto/album, publikasi terjadwal, serta akses RLS dengan role yang memiliki dan tidak memiliki permission Galeri.
+
+
+### Review keamanan lanjutan CMS Galeri — 2026-11-24
+- Menutup celah pada penghapusan foto: server action sekarang memeriksa status album induk dan mensyaratkan `galleries:publish` bila foto dihapus dari album yang sudah published. Ini mencegah pengguna dengan `galleries:update` saja mengubah konten album terbit melalui action langsung.
+- Audit Storage menemukan helper `can_manage_media()` sebelumnya tidak mencakup `galleries:delete`. Tanpa izin tersebut, penghapusan album/foto dapat menghapus row database tetapi gagal membersihkan objek Storage. Menambahkan migrasi `20261124180000_gallery_storage_delete_permission.sql` untuk memasukkan permission tersebut.
+- Migrasi Galeri yang sekarang menunggu penerapan: `20261124170000_gallery_image_update_permission.sql` dan `20261124180000_gallery_storage_delete_permission.sql`. Keduanya **belum diterapkan ke production**; jangan tandai selesai sebelum dry-run, push, dan daftar remote dikonfirmasi pengguna.
+- Commit review keamanan: `2dae8d0`; migrasi Storage: `315ea61`.
+- Status tes tetap belum dijalankan setelah perubahan Galeri. Jalankan kembali typecheck, lint, dan unit test setelah menarik commit terbaru.
