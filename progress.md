@@ -8,9 +8,9 @@
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten untuk modul Berita, Pengumuman, Galeri, Prestasi, Agenda, Guru, Jurusan, dan Fasilitas; audit RLS/Storage sedang menuju verifikasi akhir.
-- **Commit dokumentasi terbaru sebelum catatan ini:** `187b166c` — hasil smoke test RLS role anon.
-- **Commit perubahan kode terbaru:** implementasi CMS Fasilitas (lihat entri terbaru di bawah).
-- **Status pemeriksaan:** pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi CMS Berita (2026-11-24).
+- **Commit dokumentasi terbaru:** `100d5daa1082da78307d908ee3a1d2fa9d7d6b05` — status pengujian editor/Storage dan langkah build Cloudflare/OpenNext.
+- **Commit perubahan kode terbaru yang tercatat dalam audit ini:** migration hardening RLS/Storage `80552300ae9e55b075f8fd0908a66a7a519ac959`; periksa riwayat `main` untuk commit kode yang lebih baru sebelum mengubah implementasi.
+- **Status pemeriksaan:** pengguna telah mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos pada beberapa tahap CMS hingga Fasilitas. Pemeriksaan setelah perbaikan tombol publikasi Fasilitas dan build `pnpm cf:build` belum dikonfirmasi pada catatan ini.
 - **Status Supabase:** migration konten hingga Fasilitas telah dikonfirmasi diterapkan sebelumnya; migration hardening `20261124240000_security_rls_storage_hardening.sql` juga dikonfirmasi tercatat Local/Remote sama pada production. Lihat bagian audit keamanan di bawah untuk batas bukti dan detail verifikasi.
 - **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
 
