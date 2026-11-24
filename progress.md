@@ -549,3 +549,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Konfigurasi build: `package.json` menyediakan script `pnpm cf:build` = `opennextjs-cloudflare build`; konfigurasi ada pada `open-next.config.ts` dan `wrangler.jsonc`. Script `pnpm build` menjalankan `next build`, bukan build Cloudflare.
 - **Langkah berikutnya:** jalankan `git pull origin main`, pastikan working tree bersih, lalu `pnpm cf:build`. Simpan output lengkap jika gagal; jangan menganggap build sukses sebelum ada hasil terminal. Setelah build berhasil, lanjutkan smoke test preview/deployment dan uji browser responsif, keyboard, label form, kontras, serta tautan navigasi.
 - **Commit rujukan sebelum catatan ini:** `187b166c1128b129cb8dc248b495ff887a96eac9` (`docs: record anon RLS smoke test results`).
+
+## 2026-11-24 — Konfirmasi build Cloudflare/OpenNext
+
+- Pengguna mengonfirmasi perintah `pnpm cf:build` selesai tanpa error pada lingkungan Kali/Termux.
+- Pengguna memeriksa direktori `.open-next/`; artefak build tersedia, termasuk `worker.js`, `assets/`, `server-functions/`, `middleware/`, `cloudflare/`, dan direktori runtime lainnya.
+- Konfigurasi yang diperiksa pada branch `main`: script `cf:build` menjalankan `opennextjs-cloudflare build`; `wrangler.jsonc` menunjuk `.open-next/worker.js` sebagai entry point dan `.open-next/assets` sebagai asset binding `ASSETS`; compatibility flags mencakup `nodejs_compat` dan `global_fetch_strictly_public`.
+- **Kesimpulan:** build artefak Cloudflare/OpenNext berhasil menurut output pengguna. Ini belum membuktikan Worker berhasil berjalan, ter-deploy, terhubung ke binding/environment production, atau seluruh halaman lolos browser QA.
+- **Langkah berikutnya:** jalankan preview lokal Worker dengan `pnpm exec wrangler dev` setelah build. Buka URL localhost yang dicetak Wrangler dan lakukan smoke test halaman publik serta admin. Jangan jalankan `wrangler deploy` dahulu; deployment production dilakukan setelah preview, binding, dan QA diperiksa.
+- Checklist browser: halaman beranda, berita, pengumuman, galeri, prestasi, agenda, guru, jurusan, fasilitas; navigasi mobile/desktop; login dan route admin; form; upload gambar; konsol browser/network; keyboard focus dan label form. Pastikan environment variable/binding yang diperlukan tersedia tanpa menyalin secret ke chat atau Git.
+- **Batas pengujian:** pengguna belum melaporkan hasil `wrangler dev` atau pengujian browser. Jangan menyatakan preview/deployment/QA berhasil sebelum ada outputnya.
