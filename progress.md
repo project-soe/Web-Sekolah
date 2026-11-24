@@ -4,7 +4,7 @@
 
 ## Status saat ini
 
-- **Tahap terbaru:** CMS Fasilitas telah diimplementasikan di branch `main`; pengguna mengonfirmasi pnpm typecheck, pnpm lint, dan pnpm test lolos. Migrasi 20261124230000_public_facilities.sql telah diterapkan ke production dan Local/Remote terkonfirmasi sinkron pada 2026-11-24. Tahap berikutnya adalah uji fungsional CMS Fasilitas dan audit akses RLS/Storage.
+- **Tahap terbaru:** CMS Fasilitas telah diterapkan ke production dan pengguna mengonfirmasi data fasilitas sudah tampil di halaman publik setelah pembaruan terakhir. Berikutnya: audit keamanan RLS/Storage lintas modul, lalu build Cloudflare/OpenNext dan uji browser responsif. Detail perubahan database yang membuat halaman kembali tampil belum dikonfirmasi; jangan mengasumsikan ada migrasi tertentu.
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
@@ -481,3 +481,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Commit perbaikan: Server Action `5c647401b9b781d102ecdf992c20255f2342a4e0`, UI tombol publikasi `f6be8de1731634ea3e2bae81817bf7b71bc3520d`, pemeriksaan hasil update `35c6525a727fdbaeb371147469247087795165bc`.
 - **Status pemeriksaan:** belum dijalankan setelah perbaikan. Pengguna perlu menarik `main`, menjalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`, lalu menguji tombol Publikasikan dengan akun yang memiliki permission `facilities:update` dan `facilities:publish`.
 - **Catatan:** akun tanpa permission publikasi memang tidak akan melihat tombol. Jika tombol tetap tidak muncul pada akun administrator, periksa assignment permission akun tersebut; jangan melemahkan pemeriksaan RBAC atau RLS sebagai jalan pintas.
+
+
+## 2026-11-24 — Konfirmasi halaman publik Fasilitas dan langkah lanjutan
+
+- Pengguna mengonfirmasi bahwa hasil pembaruan fasilitas sekarang sudah dapat dilihat pada halaman publik.
+- Ini mengonfirmasi alur data fasilitas terbit ke halaman publik berfungsi pada kondisi production saat ini. Penyebab teknis/perubahan spesifik yang menyelesaikan kendala akses sebelumnya belum dikonfirmasi, sehingga catatan ini tidak mengatribusikannya pada GRANT atau perubahan policy tertentu.
+- Tidak ada migrasi baru yang dibuat atau diklaim diterapkan pada sesi konfirmasi ini.
+- Langkah berikutnya: audit konsistensi RLS dan Storage lintas modul (terutama izin baca publik, pemisahan draft/published, validasi upload, dan hak hapus objek), lalu verifikasi build Cloudflare/OpenNext dan pengujian browser responsif/aksesibilitas.
+- Catatan status: implementasi tombol Publikasikan Fasilitas sebelumnya belum memiliki konfirmasi terpisah bahwa typecheck/lint/test dijalankan setelah commit perbaikannya. Konfirmasi tampilnya data publik bukan pengganti pemeriksaan otomatis.
