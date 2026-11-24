@@ -4,6 +4,8 @@
 
 ## Status saat ini
 
+- **Tahap terbaru:** Implementasi awal CMS Agenda Sekolah ditambahkan ke branch `main`; menunggu pemeriksaan lokal pengguna dan penerapan migrasi guard `20261124200000`.
+
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
 - **Commit dokumentasi terbaru sebelum pembaruan ini:** `637d2e6` — penjelasan commit CMS dan status migrasi.
@@ -380,3 +382,17 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Commit komponen: `589aa90`; integrasi editor: `a5ab64c`; perapian tipe event: `da846fa`.
 - Status: perubahan sudah di-commit ke `main`; pemeriksaan typecheck/lint/test belum dijalankan setelah perubahan. Pengguna perlu `git pull` lalu menjalankan seluruh pemeriksaan.
 - Catatan diagnosis: kegagalan unggah sebelumnya belum dapat dipastikan hanya karena ukuran. Jika kompresi berhasil tetapi upload tetap gagal, catat pesan error di UI dan kode/detail server log `admin_achievement_upload_failed`; penyebab lain dapat berupa sesi/permission, policy Storage, jaringan, atau batas request.
+
+
+## 2026-11-24 — Implementasi awal CMS Agenda Sekolah
+- Mengimplementasikan area admin Agenda pada `/admin/agenda`, halaman tambah, halaman edit, editor, dan konfirmasi hapus.
+- Menambahkan schema Zod `event-schema.ts` serta unit test `event-schema.test.ts` untuk judul, slug, ringkasan, deskripsi, lokasi, URL HTTPS, waktu mulai/selesai, status publikasi, dan urutan.
+- Server Actions `event-actions.ts` memeriksa sesi dan permission `events:create/update/delete/publish` di server; memvalidasi tanggal/waktu lokal Asia/Jakarta, rentang waktu, URL pendaftaran HTTPS, file melalui `validateUpload`, dan object path acak; mencatat activity log; membersihkan gambar lama atau upload baru yang gagal disimpan; serta me-revalidate route publik/admin.
+- Editor Agenda mendukung draft, published, archived, penjadwalan publikasi, gambar dengan kompresi browser melalui komponen yang sama seperti Prestasi, waktu mulai/selesai, lokasi, ringkasan, deskripsi, dan tautan pendaftaran.
+- Mengaktifkan menu Agenda di sidebar hanya setelah route admin tersedia. Pemeriksaan route tetap disaring dengan permission `events:view`.
+- Review keamanan menemukan policy RLS `events_update` sebelumnya hanya mensyaratkan `events:publish` pada row baru berstatus published. Hal itu belum melindungi isi row lama yang sudah published. Migrasi baru `20261124200000_event_publication_storage_guard.sql` memperketat USING dan WITH CHECK, serta menambahkan `events:delete` ke helper Storage `can_manage_media()` agar gambar dapat dibersihkan ketika agenda dihapus.
+- File utama: `src/features/content/event-schema.ts`, `event-actions.ts`, `event-editor.tsx`, `delete-event-form.tsx`; route `src/app/admin/agenda/**`; test `tests/unit/event-schema.test.ts`; migrasi `supabase/migrations/20261124200000_event_publication_storage_guard.sql`.
+- Commit implementasi schema: `d0e40cb6a73a53f1ddaa4a378ce1bee3b567aea9`; test: `8abf40de1f0fdd190dfced9542df7d22ba51aff3`; actions: `00337ee4ff27f2971735c481828e61534a394673`; delete form: `37c95ebed50df688f589a2b39f73b23b7e3305da`; editor: `b6d5e84515bdeb1032e5586d1f98ea06f7566105`; daftar: `2b0e1c02e6448a3acf61397e5e200434f3409bfc`; tambah: `1ff325eff70e135920d1d90b5530434b018aa41f`; edit: `18e53ba600d882bc5706121f17b87cc7b60cad61`; migrasi: `463651b467d4df4f1d9401c1c2b788c45a4e9c82`; navigasi: `c1d28769cdc511339c448e0fea4258e2b411293c`.
+- **Status pemeriksaan:** belum dijalankan setelah implementasi Agenda. Jangan menganggap typecheck, lint, unit test, build, atau uji browser berhasil sebelum pengguna mengonfirmasi hasilnya.
+- **Status migrasi:** `20261124200000_event_publication_storage_guard.sql` baru ditambahkan dan belum dikonfirmasi diterapkan ke Supabase production. Lakukan dry-run, tinjau bahwa hanya migrasi ini yang pending (atau tinjau semua yang tampil), lalu push dan verifikasi `supabase migration list --remote`.
+- Tindak lanjut: jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`; perbaiki error bila ada. Setelah lolos, uji create/edit/delete agenda, upload gambar, jadwal publikasi, halaman publik `/agenda` dan detail, serta akun tanpa `events:publish` yang mencoba mengubah agenda terbit melalui UI dan pemanggilan Server Action langsung.
