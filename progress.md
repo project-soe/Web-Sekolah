@@ -470,3 +470,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pengguna mengonfirmasi pnpm dlx supabase db push --remote berhasil dan seluruh daftar pnpm dlx supabase migration list --remote sudah sesuai. Dengan demikian migrasi 20261124230000_public_facilities.sql tercatat diterapkan pada production dan sinkron Local/Remote.
 - Status tes kode CMS Fasilitas: pengguna mengonfirmasi pnpm typecheck, pnpm lint, dan pnpm test semuanya hijau sebelum migrasi production.
 - Belum ada konfirmasi uji fungsional langsung pada production. Tindak lanjut: uji CRUD fasilitas, upload gambar valid/invalid, pembersihan foto lama, akses draft oleh staf berizin, visibilitas publik hanya untuk fasilitas terbit, serta pembatasan publikasi oleh permission facilities:publish. Pastikan uji dilakukan dengan akun/role yang sesuai dan jangan menguji penghapusan data penting.
+
+
+## 2026-11-24 — Perbaikan alur publikasi CMS Fasilitas
+
+- Berdasarkan laporan uji browser pengguna, fasilitas berhasil disimpan tetapi tidak muncul pada halaman publik; pengguna mengonfirmasi tidak menemukan tombol publikasi.
+- Audit kode menemukan halaman daftar admin hanya menyediakan Edit dan Hapus. Kontrol publikasi sebelumnya hanya berupa checkbox pada editor, dan checkbox tersebut nonaktif untuk akun tanpa permission `facilities:publish`; tidak tersedia tindakan publikasi khusus pada daftar fasilitas.
+- Menambahkan Server Action `publishFacility` untuk memublikasikan fasilitas Draft yang sudah ada. Action memvalidasi UUID, sesi, permission `facilities:update` dan `facilities:publish`, status data, hasil update Supabase, activity log, serta revalidasi `/fasilitas` dan `/admin/fasilitas`. RLS tabel tetap menjadi lapisan perlindungan database; tidak ada perubahan migrasi.
+- Menambahkan tombol **Publikasikan** pada baris fasilitas berstatus Draft. Tombol hanya ditampilkan bagi akun yang memiliki kedua permission yang diperlukan; fasilitas berstatus Tampil tidak menampilkan tombol tersebut.
+- Commit perbaikan: Server Action `5c647401b9b781d102ecdf992c20255f2342a4e0`, UI tombol publikasi `f6be8de1731634ea3e2bae81817bf7b71bc3520d`, pemeriksaan hasil update `35c6525a727fdbaeb371147469247087795165bc`.
+- **Status pemeriksaan:** belum dijalankan setelah perbaikan. Pengguna perlu menarik `main`, menjalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`, lalu menguji tombol Publikasikan dengan akun yang memiliki permission `facilities:update` dan `facilities:publish`.
+- **Catatan:** akun tanpa permission publikasi memang tidak akan melihat tombol. Jika tombol tetap tidak muncul pada akun administrator, periksa assignment permission akun tersebut; jangan melemahkan pemeriksaan RBAC atau RLS sebagai jalan pintas.
