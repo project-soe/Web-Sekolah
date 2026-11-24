@@ -25,10 +25,10 @@ export async function publishFacility(formData: FormData): Promise<void> {
   if (readError || !item) fail("simpan");
   if (item.is_published) redirect("/admin/fasilitas");
 
-  const { error } = await supabase.from("facilities")
+  const { data: published, error } = await supabase.from("facilities")
     .update({ is_published: true }).eq("id", id).select("id").maybeSingle();
-  if (error) {
-    console.error("admin_facility_publish_failed", error.code);
+  if (error || !published) {
+    console.error("admin_facility_publish_failed", error?.code ?? "no_rows");
     fail("publikasi");
   }
 
