@@ -579,3 +579,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Status: perubahan konfigurasi sudah dicommit ke `main`; pengguna perlu menarik perubahan, lalu mencoba kembali `pnpm dlx wrangler@4.167.0 preview --name web-sekolah-audit`.
 - Peringatan keamanan: Worker Preview memiliki URL publik secara default dan konfigurasi Preview tidak otomatis mewarisi variabel/secret produksi. Namun, nilai `NEXT_PUBLIC_*` dapat tertanam ke bundle ketika `pnpm cf:build` dijalankan. Build sebelumnya dilakukan saat `.env.local` memuat konfigurasi Supabase produksi; karena itu Preview harus diperlakukan sebagai terhubung ke Supabase produksi sampai dibuktikan sebaliknya. Batasi pengujian pada GET halaman publik; jangan login admin, submit form, upload, atau menjalankan Server Action yang mengubah data.
 - Belum ada URL Preview atau hasil browser QA. Jangan menyatakan Preview berhasil sebelum output Wrangler dan uji browser diterima.
+
+## 2026-11-24 — Browser QA Worker Preview (laporan pengguna)
+
+- Pengguna membuka Worker Preview `https://web-sekolah-audit-web-sekolah.soegenglz7.workers.dev` dan melaporkan halaman-halaman yang sudah tersedia dapat dibuka dengan normal, tanpa error.
+- Pengguna juga menguji tautan/route PPDB/SPMB dan Siswa; keduanya masih menampilkan halaman tidak ditemukan (404).
+- Ini bukan kegagalan runtime Preview berdasarkan laporan yang tersedia. Audit struktur sebelumnya memang mencatat navigasi publik Siswa dan PPDB/SPMB belum memiliki route/implementasi halaman.
+- **Status QA:** smoke test browser untuk halaman publik yang sudah diimplementasikan dilaporkan aman oleh pengguna. Route PPDB/SPMB dan Siswa belum lulus QA karena belum dibuat. Tidak ada klaim pengujian admin, form, upload, atau operasi tulis.
+- **Tindak lanjut:** rancang dan implementasikan modul Siswa serta PPDB/SPMB secara terpisah; tentukan terlebih dahulu kebutuhan data, alur pendaftaran, akses orang tua/calon siswa, role/permission, dan kebijakan privasi sebelum menambah tabel, route, atau form. Setelah implementasi, jalankan typecheck/lint/test/build dan QA pada environment staging yang aman.
