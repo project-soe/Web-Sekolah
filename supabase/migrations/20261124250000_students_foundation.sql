@@ -20,7 +20,6 @@ create table public.students (
   updated_at timestamptz not null default now(),
   created_by uuid references public.users(id) on delete set null,
   updated_by uuid references public.users(id) on delete set null,
-  check (birth_date is null or birth_date <= current_date),
   check (graduation_date is null or graduation_date >= birth_date)
 );
 
@@ -74,7 +73,6 @@ revoke all on public.students, public.student_status_history from anon;
 revoke truncate, references, trigger on public.students, public.student_status_history from authenticated;
 grant select, insert, update, delete on public.students to authenticated;
 grant select on public.student_status_history to authenticated;
-grant usage, select on sequence public.student_status_history_id_seq to authenticated;
 
 create policy students_select on public.students
   for select to authenticated using (public.has_permission('students:view'));
