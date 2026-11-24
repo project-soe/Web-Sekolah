@@ -235,3 +235,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Belum ada bukti bahwa `pg_dump` sudah dijalankan atau file dump sudah terbentuk. Jangan menandai backup selesai sebelum arsip diverifikasi dengan `pg_restore --list` dan checksum.
 - Untuk menyusun perintah yang tepat, perlu mengetahui host pooler dan username persis dari Dashboard → Connect (bukan password); port Session Pooler umumnya 5432 dan database umumnya postgres, tetapi nilai aktual harus mengikuti connection string proyek.
 - Tetap jangan menjalankan migrasi production sampai backup diverifikasi dan pengguna menyetujui.
+
+
+## 2026-11-24 — Session Pooler details confirmed for database backup
+- User supplied the Session Pooler endpoint shown in Supabase Dashboard: host `aws-1-ap-northeast-2.pooler.supabase.com`, username `postgres.nofznzznzjsvnkrmzpwx`.
+- Backup connection parameters to use: port `5432`, database `postgres`, Session Pooler host and username above.
+- `pg_dump` has not yet been executed; no backup file or checksum has been verified. Do not run pending production migrations until a backup archive is created and validated.
+- Keep the backup outside the Git repository in `$HOME/db-backups` with directory permissions `700`; prompt for the database password interactively rather than placing it in shell history or sharing it in chat.
