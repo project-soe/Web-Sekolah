@@ -13,6 +13,14 @@ function localDateTimeToIso(value: string | undefined): string | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
   if (!match) return null;
   const [, year, month, day, hour, minute] = match;
+  const calendarCheck = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute)));
+  if (
+    calendarCheck.getUTCFullYear() !== Number(year) ||
+    calendarCheck.getUTCMonth() !== Number(month) - 1 ||
+    calendarCheck.getUTCDate() !== Number(day) ||
+    calendarCheck.getUTCHours() !== Number(hour) ||
+    calendarCheck.getUTCMinutes() !== Number(minute)
+  ) return null;
   const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:00+07:00`);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
