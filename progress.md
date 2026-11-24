@@ -331,3 +331,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pemeriksaan ini dilakukan setelah implementasi Galeri, termasuk review keamanan penghapusan foto dan penambahan migrasi policy Storage. Asisten tidak menjalankan perintah lokal secara independen.
 - Status migrasi production tetap **belum terkonfirmasi diterapkan**: pengguna belum memberikan output `supabase migration list --remote` yang menunjukkan versi `20261124170000` dan `20261124180000`. Tidak boleh menganggap migrasi sudah diterapkan hanya dari hasil tes kode.
 - Tindakan operasional berikutnya: jalankan `pnpm dlx supabase db push --remote`, lalu `pnpm dlx supabase migration list --remote`; pastikan dua versi Galeri tersebut muncul pada daftar Local dan Remote. Setelah itu lakukan uji fungsional upload, penghapusan, dan permission dengan akun berbeda.
+
+
+## 2026-11-24 — CMS Galeri: migrasi dan hardening action
+- Pengguna mengonfirmasi langkah penerapan migrasi Galeri berjalan aman/tanpa masalah. Berdasarkan konfirmasi tersebut, migrasi `20261124170000_gallery_image_update_permission.sql` dan `20261124180000_gallery_storage_delete_permission.sql` dicatat telah diterapkan ke Supabase production. Output lengkap daftar migrasi tidak ditempel pada pesan konfirmasi ini, sehingga status merupakan konfirmasi pengguna, bukan verifikasi independen.
+- Pengguna sebelumnya juga mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos untuk implementasi CMS Galeri. Pemeriksaan tersebut dilakukan pada checkout lokal pengguna.
+- Audit lanjutan menemukan celah pada `saveGallery`: pengguna yang memiliki `galleries:update` tetapi tidak `galleries:publish` berpotensi mengubah metadata atau menurunkan status album yang sudah published melalui pemanggilan Server Action langsung, meskipun halaman edit sudah membatasi UI.
+- Memperbaiki `src/features/content/gallery-actions.ts`: saat update, action sekarang membaca status album yang ada dan mewajibkan `galleries:publish` jika album lama sudah published atau status baru akan published. Pemeriksaan dilakukan di server sebelum update database. Commit: `d767753977fe06e8dcc72c0e90683d5977b66a66`.
+- Status pengujian setelah hardening terakhir: belum dikonfirmasi. Jalankan ulang `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah `git pull`.
+- Tindak lanjut: uji alur CRUD album, upload foto, hapus foto/album, dan pastikan akun tanpa `galleries:publish` tidak dapat mengubah album terbit melalui UI maupun Server Action; lalu verifikasi objek Storage benar-benar terhapus dan halaman publik ter-revalidate.
