@@ -656,3 +656,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 ### Catatan status terbaru yang mengesampingkan catatan lama
 - Migration 20261124250000_students_foundation.sql telah dikonfirmasi tercatat sama pada Local dan Remote pada 2026-11-24; catatan lama yang menyebutnya belum diterapkan sudah kedaluwarsa.
 - Typecheck/lint/test/build dilaporkan lolos sebelum implementasi Admin Siswa pada commit ini; belum ada klaim pemeriksaan setelah perubahan ini.
+
+
+## 2026-11-24 — Perbaikan typecheck Admin Siswa
+
+- Audit log GitHub Actions run 45376947319 pada commit 4a0107045775d675eed6043b829ebea770018d9e menemukan satu kegagalan pada `pnpm typecheck`, tepatnya `src/features/students/student-actions.ts(38,46)`.
+- Akar masalah: object payload dibuat sebagai union antara varian `created_by` dan `updated_by`, lalu union itu dipakai untuk operasi Supabase update/insert. Inferensi tipe Supabase menolak varian insert saat memeriksa update.
+- Perbaikan: pisahkan object payload umum, lalu tambahkan `updated_by` hanya pada pemanggilan `update()` dan `created_by` hanya pada pemanggilan `insert()`. Tidak mengubah skema database maupun perilaku permission/RLS.
+- Pada run tersebut, instalasi dependency dan lint selesai; test/build dilewati karena typecheck gagal. Dua warning lint pada halaman agenda bukan error dan tidak menyebabkan CI gagal.
+- Perbaikan ini belum diverifikasi oleh typecheck lokal; verifikasi berikutnya melalui GitHub Actions dan perintah lokal pengguna.

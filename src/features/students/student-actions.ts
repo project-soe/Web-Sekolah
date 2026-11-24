@@ -25,17 +25,34 @@ export async function saveStudent(formData: FormData): Promise<void> {
     previousStatus = existing.data.status;
   }
   const payload = {
-    nis: input.nis, nisn: input.nisn || null, full_name: input.full_name, gender: input.gender,
-    birth_place: input.birth_place || null, birth_date: input.birth_date || null,
-    address: input.address || null, guardian_name: input.guardian_name || null,
-    guardian_phone: input.guardian_phone || null, department_id: input.department_id || null,
-    enrollment_year: input.enrollment_year, status: input.status,
-    graduation_date: input.graduation_date || null, notes: input.notes || null,
-    ...(editing ? { updated_by: session.userId } : { created_by: session.userId }),
+    nis: input.nis,
+    nisn: input.nisn || null,
+    full_name: input.full_name,
+    gender: input.gender,
+    birth_place: input.birth_place || null,
+    birth_date: input.birth_date || null,
+    address: input.address || null,
+    guardian_name: input.guardian_name || null,
+    guardian_phone: input.guardian_phone || null,
+    department_id: input.department_id || null,
+    enrollment_year: input.enrollment_year,
+    status: input.status,
+    graduation_date: input.graduation_date || null,
+    notes: input.notes || null,
   };
+
   const result = editing
-    ? await supabase.from("students").update(payload).eq("id", input.id!).select("id").maybeSingle()
-    : await supabase.from("students").insert(payload).select("id").single();
+    ? await supabase
+        .from("students")
+        .update({ ...payload, updated_by: session.userId })
+        .eq("id", input.id!)
+        .select("id")
+        .maybeSingle()
+    : await supabase
+        .from("students")
+        .insert({ ...payload, created_by: session.userId })
+        .select("id")
+        .single();
   if (result.error || !result.data) {
     console.error("admin_students_save_failed", result.error?.code ?? "no_rows");
     redirect("/admin/siswa?error=" + (result.error?.code === "23505" ? "duplikat" : "simpan"));
