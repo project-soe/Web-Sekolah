@@ -213,3 +213,15 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pengguna menjalankan command -v pg_dump dan pg_dump --version pada Kali Linux ARM64; executable tersedia di /usr/bin/pg_dump, versi PostgreSQL 18.6 (Debian 18.6-3).
 - Tidak perlu memasang PostgreSQL client tambahan pada tahap ini. Belum ada koneksi database atau backup yang dijalankan.
 - Langkah berikutnya: ambil URI koneksi database dari Supabase Dashboard secara lokal, simpan secara aman sebagai environment variable tanpa menempelkannya ke chat/repository, lalu uji koneksi dan jalankan dump custom-format schema + data. Pastikan host/port sesuai mode koneksi Supabase dan jaringan IPv4/IPv6 lingkungan pengguna.
+
+
+### 2026-11-24 — Mulai menyiapkan backup PostgreSQL dari Proot Kali/Termux
+
+- Pengguna meminta pendampingan langkah demi langkah untuk membuat backup Supabase melalui PostgreSQL Direct Connection dari Proot Kali Linux di Termux Android, tetap pada paket gratis.
+- Sebelum melanjutkan, README.md dan progress.md branch main dibaca ulang; commit terbaru yang terlihat saat audit adalah `2e9133e9fe3f0ccc77959c6a57b816cf152ca217` (`docs: record pg_dump availability`). README menegaskan stack Next.js 16.4.6, React 19, Tailwind CSS 4, Supabase PostgreSQL/Auth/RLS/Storage, Cloudflare Workers/OpenNext, dan kewajiban membaca serta memperbarui progress.md.
+- progress.md mengonfirmasi enam migrasi konten `20261124100000`–`20261124150000` masih pending pada remote; dry-run sebelumnya hanya mem-preview keenam migrasi dan tidak mengubah database. Jangan jalankan `db push` sebelum backup selesai diverifikasi dan pengguna menyetujui langkah berikutnya.
+- Lingkungan pengguna: Proot Kali Linux pada Termux/Android, ARM64/aarch64; `pg_dump` tersedia di `/usr/bin/pg_dump`, versi PostgreSQL 18.6.
+- Dokumentasi resmi Supabase yang diperiksa (2026-11-24): untuk `pg_dump`/backup gunakan Direct Connection bila jaringan mendukung IPv6; jika tidak, gunakan Shared Pooler Session Mode (port 5432, IPv4). Jangan gunakan Transaction Pooler (port 6543) untuk backup. Connection string harus disalin dari Dashboard → Connect, bukan merakit host pooler sendiri. Direct connection Supabase Free menggunakan IPv6; session pooler tersedia melalui IPv4.
+- Referensi resmi: https://supabase.com/docs/guides/database/connecting-to-postgres dan https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore.
+- Tahap berikutnya: periksa kemampuan IPv6/DNS/TLS dari Proot, lalu pilih direct connection atau session pooler sesuai hasil; uji koneksi tanpa menampilkan password; jalankan custom-format `pg_dump` dengan schema + data; verifikasi file menggunakan `pg_restore --list` dan ukuran/checksum. Secret hanya boleh dimasukkan secara lokal, tidak di chat atau Git.
+- Status saat catatan ini dibuat: belum ada koneksi PostgreSQL yang diuji, belum ada file backup, dan keenam migrasi konten tetap pending.
