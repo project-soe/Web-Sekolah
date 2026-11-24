@@ -22,7 +22,7 @@ async function requireClassPermission(permission: "classes:create" | "classes:up
 export async function createAcademicYear(formData: FormData): Promise<void> {
   const parsed = academicYearSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) fail("validasi");
-  const session = await requireClassPermission("classes:create");
+  await requireClassPermission("classes:create");
   const supabase = await createClient();
   const { data, error } = await supabase.from("academic_years").insert({
     ...parsed.data,
@@ -43,7 +43,7 @@ export async function createAcademicYear(formData: FormData): Promise<void> {
 export async function activateAcademicYear(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) fail("validasi");
-  const session = await requireClassPermission("classes:update");
+  await requireClassPermission("classes:update");
   const supabase = await createClient();
   const { error: deactivateError } = await supabase.from("academic_years")
     .update({ is_active: false }).eq("is_active", true);
@@ -52,7 +52,7 @@ export async function activateAcademicYear(formData: FormData): Promise<void> {
     .update({ is_active: true }).eq("id", id).select("id").maybeSingle();
   if (error || !data) fail("simpan");
   await logActivity(supabase, {
-    action: "activate", module: "classes", entityType: "academic_year",
+    action: "update", module: "classes", entityType: "academic_year",
     entityId: data.id, summary: "Mengaktifkan tahun ajaran",
   });
   revalidatePath("/admin/kelas");
@@ -116,7 +116,7 @@ export async function assignStudentToClass(formData: FormData): Promise<void> {
     fail("penempatan");
   }
   await logActivity(supabase, {
-    action: previous ? "transfer_class" : "assign_class",
+    action: previous ? "status_change" : "create",
     module: "classes", entityType: "student_class_enrollment",
     entityId: result.data.id,
     summary: previous ? "Memindahkan siswa ke kelas lain" : "Menempatkan siswa ke kelas",

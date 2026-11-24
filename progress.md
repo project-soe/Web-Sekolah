@@ -680,3 +680,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - **Status migrasi:** file baru belum diterapkan ke Supabase. Jangan gunakan fitur kelas/penempatan sebelum migration list remote menunjukkan versi ini telah diterapkan.
 - **Status verifikasi:** perubahan kode belum dijalankan pada environment lokal. Jalankan `pnpm typecheck`, `pnpm lint`, `pnpm test`, dan `pnpm build`; audit SQL dan uji RLS pada staging sebelum penerapan production.
 - **Catatan batasan awal:** UI tahap pertama menyediakan pembuatan tahun ajaran/kelas dan penempatan siswa; edit/hapus kelas, pengelolaan kapasitas, kenaikan kelas massal, serta laporan wali kelas belum termasuk tahap ini.
+
+
+## 2026-11-24 — Perbaikan CI awal modul Kelas
+
+- GitHub Actions run `45379534402` pada commit `d1ec83f6785a941b13e170183df2209f16614120` berhasil pada instalasi dependency dan lint, tetapi typecheck gagal.
+- Penyebab: nilai action activity log `activate`, `assign_class`, dan `transfer_class` belum termasuk union `ActivityAction`. Ada juga tiga variabel sesi yang tidak dipakai pada server actions.
+- Perbaikan: gunakan action yang sudah didukung (`update`, `create`, `status_change`) dan hapus variabel sesi yang tidak diperlukan. Pemeriksaan CI ulang menunggu.
