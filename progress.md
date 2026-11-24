@@ -322,3 +322,5 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Migrasi Galeri yang sekarang menunggu penerapan: `20261124170000_gallery_image_update_permission.sql` dan `20261124180000_gallery_storage_delete_permission.sql`. Keduanya **belum diterapkan ke production**; jangan tandai selesai sebelum dry-run, push, dan daftar remote dikonfirmasi pengguna.
 - Commit review keamanan: `2dae8d0`; migrasi Storage: `315ea61`.
 - Status tes tetap belum dijalankan setelah perubahan Galeri. Jalankan kembali typecheck, lint, dan unit test setelah menarik commit terbaru.
+
+- Perapian tambahan: urutan foto baru sekarang dimulai setelah `sort_order` tertinggi yang sudah ada, sehingga penambahan foto pada album lama tidak menimpa urutan foto sebelumnya. Commit: `9f09a78`.
