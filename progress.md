@@ -525,3 +525,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pengguna mengonfirmasi kedua helper `can_manage_gallery_images(uuid)` dan `can_manage_media_folder(text)` tersedia sebagai SECURITY DEFINER dengan `search_path` kosong; EXECUTE tidak diberikan kepada anon dan tersedia untuk authenticated.
 - **Batas verifikasi:** hasil `pg_policies` yang dikirim baru memuat nama, command, dan role untuk tabel publik; ekspresi `qual`/`with_check` policy tabel belum dikirim. Belum ada uji sesi anon/editor/publisher atau uji akses folder Storage lintas modul. Jangan menyatakan seluruh skenario RLS sudah lolos sebelum pengujian tersebut.
 - Tindak lanjut: periksa ekspresi policy UPDATE/INSERT untuk News, Pengumuman, Galeri, dan gallery_images; lalu uji dengan JWT role/akun terpisah bahwa anon hanya membaca konten terbit, editor tanpa permission publish tidak dapat mengubah/unpublish konten terbit atau album terbit, publisher dapat melakukan aksi yang diizinkan, serta permission fasilitas tidak dapat mengelola folder media modul lain.
+
+
+## 2026-11-24 — Uji awal RLS menggunakan role anon
+
+- Pengguna menjalankan transaksi read-only dengan `SET LOCAL ROLE anon` untuk menghitung baris yang terlihat pada sembilan tabel konten.
+- Hasil: `news=0`, `announcements=0`, `galleries=0`, `gallery_images=0`, `achievements=1`, `events=0`, `teachers=0`, `departments=0`, `facilities=1`.
+- Tidak ada error permission/RLS yang dilaporkan. Hasil ini konsisten dengan policy SELECT yang mengizinkan role anon membaca data publik; dua modul memiliki masing-masing satu baris yang terlihat.
+- **Batas bukti:** hitungan nol tidak membuktikan draft tersembunyi jika tabel memang tidak memiliki draft/row lain. Hitungan positif juga belum memeriksa kolom/status/waktu publikasi pada baris yang terlihat. Karena itu, ini merupakan smoke test anon, bukan bukti lengkap seluruh skenario RLS.
+- Pemeriksaan sebelumnya telah mengonfirmasi ekspresi policy UPDATE untuk News, Announcements, Galleries, serta policy mutasi `gallery_images`: editor memerlukan permission modul, dan operasi pada konten/album terbit memerlukan permission publish.
+- **Tindak lanjut audit:** lakukan pengujian terkontrol memakai sesi akun editor tanpa permission publish dan publisher; uji transisi draft/published tanpa mengubah data penting (gunakan fixture/test row bila memungkinkan). Lanjutkan pengujian Storage lintas-folder: akun dengan permission fasilitas tidak boleh mengelola folder media modul lain. Setelah itu jalankan build Cloudflare/OpenNext dan uji responsivitas/aksesibilitas.
+- Tidak ada perubahan kode atau database pada langkah pengujian ini. Catatan ini hanya mendokumentasikan hasil yang dilaporkan pengguna.
