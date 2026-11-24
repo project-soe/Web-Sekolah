@@ -290,3 +290,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Dengan demikian seluruh migrasi sampai `20261124160000_announcement_publish_permission.sql` sudah tercatat diterapkan pada Supabase production project `nofznzznzjsvnkrmzpwx`.
 - Catatan CLI: pesan pnpm tentang native binary/build scripts dan notifikasi versi Supabase CLI lebih baru muncul sebagai peringatan/informasi; tidak menghalangi push maupun pembacaan daftar migrasi pada sesi ini.
 - Langkah berikutnya: lanjutkan validasi aplikasi CMS Pengumuman di lokal (typecheck, lint, unit test), kemudian uji permission/RLS dengan akun yang memiliki dan tidak memiliki `announcements:publish`. Jangan menganggap pengujian aplikasi sudah lulus sebelum hasilnya dikonfirmasi.
+
+
+## 2026-11-24 — Validasi CMS Pengumuman lulus
+- Pengguna mengonfirmasi pemeriksaan lokal setelah implementasi CMS Pengumuman: `pnpm typecheck`, `pnpm lint`, dan `pnpm test` semuanya **lolos**.
+- Konfirmasi ini mencakup pemeriksaan statis dan unit test yang dijalankan pengguna pada checkout lokal; asisten tidak menjalankan perintah tersebut secara independen.
+- Migrasi `20261124160000_announcement_publish_permission.sql` sudah tercatat sama pada Local dan Remote berdasarkan output `supabase migration list --remote` yang sebelumnya dibagikan pengguna.
+- Status CMS Pengumuman: implementasi awal dan pemeriksaan otomatis lulus. Pengujian fungsional UI, alur draft/publikasi/penjadwalan/kedaluwarsa, serta verifikasi RLS menggunakan akun dengan permission berbeda masih perlu dilakukan.
+- Catatan koreksi terhadap bagian historis di atas: beberapa paragraf lama masih menyebut migrasi konten dan permission Pengumuman berstatus pending, serta menyebut CMS Pengumuman belum diimplementasikan. Itu adalah status pada saat catatan lama dibuat dan **sudah digantikan** oleh bukti konfirmasi yang lebih baru pada bagian ini.
+- Langkah berikutnya: audit skema dan pola UI Galeri yang sudah ada, kemudian implementasikan CMS Galeri dengan server-side permission checks, validasi, activity log, RLS, dan pengelolaan gambar yang aman. Jangan mengubah migrasi yang sudah diterapkan; buat migrasi baru hanya jika audit membuktikan memang diperlukan.
