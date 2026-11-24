@@ -4,7 +4,7 @@
 
 ## Status saat ini
 
-- **Tahap terbaru:** CMS Fasilitas ditambahkan ke branch `main`; migrasi `20261124230000_public_facilities.sql` masih menunggu dry-run dan penerapan production. Pemeriksaan lokal setelah perubahan CMS Fasilitas belum dijalankan.
+- **Tahap terbaru:** CMS Fasilitas telah diimplementasikan di branch `main`; pengguna mengonfirmasi pnpm typecheck, pnpm lint, dan pnpm test lolos. Migrasi 20261124230000_public_facilities.sql telah diterapkan ke production dan Local/Remote terkonfirmasi sinkron pada 2026-11-24. Tahap berikutnya adalah uji fungsional CMS Fasilitas dan audit akses RLS/Storage.
 
 - **Branch:** `main`
 - **Tahap:** Fase 5 — Admin CRUD dan publikasi konten; modul Berita sudah diimplementasikan dan pemeriksaan lokal dikonfirmasi lolos oleh pengguna.
@@ -456,6 +456,17 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan query anon getPublicFacilities yang hanya membaca baris terbit, serta halaman publik fasilitas dengan kartu dan statistik jumlah per jenis yang dihitung otomatis dari data yang tampil.
 - Memperbarui README agar tabel facilities dan statistik fasilitas tercatat dalam dokumentasi.
 - Commit implementasi: migrasi 398abac95a70d4a8be9eae76789016c3f7cbf974; schema 43a9ebfb4612c72e049a790abe10cd2f20990eec dan penyesuaian schema f264023b17af7b697e3a2df236e2dc3a07dafdc3; test 3cd8bd1660d7ceda0d4c3857c8d3328b958804d8; actions ed3493698d367d5057ac701ec5e4a3aea4b2466f; editor 4e375355c1be55930a1f4cddd24816731a372c17; delete form 162e30f131f591a146378e16ef833820186375f7; admin list cc80cbf1383bd4c581a9bfbd608fbc72f76d0abc; create 5c74a4c474557a7e7ca187be999a9496c838132f; edit 7ae8b87a3b191c3764243e14b33e8ccfdcd7820d; public page fe03fa7c045f3e1117921076a31a49b1e939531f; public query 58029a782cc74358bff0375509c41c92f5e5fb57; admin nav 6f5e7abdee8674da62d0c4a5332cccfd74c5c720; public nav 22801b13af4e2dcc21267a51a8453eabaa3e3720; README 052dc8566889e552e8ea6fc387f95410e22ef2ef.
-- Status pengujian: belum dijalankan setelah implementasi Fasilitas. Setelah git pull origin main, jalankan pnpm typecheck, pnpm lint, dan pnpm test; jangan menganggap hasilnya lolos sebelum pengguna mengonfirmasi.
-- Status migrasi: 20261124230000_public_facilities.sql belum diterapkan. Jalankan dry-run dan pastikan hanya migrasi Fasilitas yang muncul (atau tinjau seluruh daftar jika ada migrasi lain), pastikan backup production tersedia, lalu push dan verifikasi Local/Remote dengan pnpm dlx supabase migration list --remote.
+- Status pengujian: pengguna mengonfirmasi pnpm typecheck, pnpm lint, dan pnpm test semuanya hijau setelah menarik implementasi CMS Fasilitas (2026-11-24). Asisten tidak menjalankan tes secara independen.
+- Status migrasi: 20261124230000_public_facilities.sql diterapkan ke Supabase production project nofznzznzjsvnkrmzpwx; pengguna mengonfirmasi pnpm dlx supabase db push --remote selesai dan seluruh daftar pnpm dlx supabase migration list --remote sesuai/sinkron pada 2026-11-24.
 - Tindak lanjut fungsional: uji tambah/edit/hapus, upload gambar valid/invalid, draft/publish, akun tanpa facilities:publish tidak dapat mengubah baris terbit, serta statistik publik yang berubah sesuai jumlah fasilitas terbit.
+
+
+## 2026-11-24 — Backup production dan penerapan CMS Fasilitas
+
+- Dry-run pnpm dlx supabase db push --remote --dry-run pada project production nofznzznzjsvnkrmzpwx menampilkan tepat satu migrasi pending: 20261124230000_public_facilities.sql.
+- Sebelum penerapan, pengguna membuat backup production melalui Supabase Session Pooler (host aws-1-ap-northeast-2.pooler.supabase.com, port 5432) menggunakan pg_dump --format=custom --no-owner --no-acl. Password tidak disimpan dalam dokumentasi.
+- Arsip backup: /home/kali/db-backups/web-sekolah-20261124-before-facilities.dump; ukuran 464 KB; format CUSTOM; 654 TOC entries; database source PostgreSQL 17.12; dibuat dengan pg_dump 18.6. pg_restore --list berhasil membaca arsip.
+- SHA-256 backup: ca15cc96c925a2343c822a7cf5820212b3c487d7f888303fda42b070443d7fa6.
+- Pengguna mengonfirmasi pnpm dlx supabase db push --remote berhasil dan seluruh daftar pnpm dlx supabase migration list --remote sudah sesuai. Dengan demikian migrasi 20261124230000_public_facilities.sql tercatat diterapkan pada production dan sinkron Local/Remote.
+- Status tes kode CMS Fasilitas: pengguna mengonfirmasi pnpm typecheck, pnpm lint, dan pnpm test semuanya hijau sebelum migrasi production.
+- Belum ada konfirmasi uji fungsional langsung pada production. Tindak lanjut: uji CRUD fasilitas, upload gambar valid/invalid, pembersihan foto lama, akses draft oleh staf berizin, visibilitas publik hanya untuk fasilitas terbit, serta pembatasan publikasi oleh permission facilities:publish. Pastikan uji dilakukan dengan akun/role yang sesuai dan jangan menguji penghapusan data penting.
