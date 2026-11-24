@@ -251,3 +251,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Reported SHA-256: `c4eeda6de6efb3aeb853a0e401d8dfb2cb0cb5fd9f7cf4e71901459948ae8fd2`.
 - File was stored outside the repository under `/home/kali/db-backups`; displayed mode was `-rw-rw----` and the containing directory was previously set to mode `700`. Recommend tightening the archive file itself to mode `600` with `chmod 600 "$BACKUP_FILE"`.
 - The six reviewed content migrations remain pending production application. Do not claim a restore test or migration execution occurred. Before applying, confirm the backup file and checksum remain available, then run the previously reviewed migration push and verify remote migration status.
+
+
+## 2026-11-24 — Migrasi konten production diterapkan (konfirmasi pengguna)
+- Pengguna mengonfirmasi bahwa perintah `pnpm dlx supabase db push --remote` dan verifikasi `pnpm dlx supabase migration list --remote` sudah dijalankan tanpa masalah.
+- Berdasarkan konfirmasi pengguna, keenam migrasi konten yang sebelumnya pending telah diterapkan ke Supabase production: `20261124100000`, `20261124110000`, `20261124120000`, `20261124130000`, `20261124140000`, dan `20261124150000`.
+- Catatan evidensi: output terminal lengkap tidak ditempel ulang pada percakapan ini; status dicatat sebagai konfirmasi langsung pengguna, bukan verifikasi independen oleh asisten.
+- Dampak skema yang diharapkan: fondasi tabel konten/akademik, Galeri, Prestasi, Agenda, default guru unpublished, permission publikasi, dan penguatan policy RLS publikasi.
+- Langkah berikutnya: audit implementasi CMS Pengumuman dan pola CMS Berita terkini pada branch `main`, lalu implementasikan Pengumuman dengan validasi, server-side permission checks, activity log, RLS, UI draft/publish/archive/scheduling, test, dan pembaruan progress.
