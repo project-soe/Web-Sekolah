@@ -340,3 +340,9 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memperbaiki `src/features/content/gallery-actions.ts`: saat update, action sekarang membaca status album yang ada dan mewajibkan `galleries:publish` jika album lama sudah published atau status baru akan published. Pemeriksaan dilakukan di server sebelum update database. Commit: `d767753977fe06e8dcc72c0e90683d5977b66a66`.
 - Status pengujian setelah hardening terakhir: belum dikonfirmasi. Jalankan ulang `pnpm typecheck`, `pnpm lint`, dan `pnpm test` setelah `git pull`.
 - Tindak lanjut: uji alur CRUD album, upload foto, hapus foto/album, dan pastikan akun tanpa `galleries:publish` tidak dapat mengubah album terbit melalui UI maupun Server Action; lalu verifikasi objek Storage benar-benar terhapus dan halaman publik ter-revalidate.
+
+
+## 2026-11-24 — Validasi hardening CMS Galeri lulus
+- Pengguna mengonfirmasi pemeriksaan lokal setelah commit hardening Galeri `d767753` aman/tanpa error. Dicatat sebagai konfirmasi pengguna bahwa `pnpm typecheck`, `pnpm lint`, dan `pnpm test` kembali lolos.
+- Konfirmasi tersebut berlaku setelah penambahan pemeriksaan status album lama pada `saveGallery`; asisten tidak menjalankan pemeriksaan secara independen.
+- Tindak lanjut: lanjutkan CMS Prestasi dengan pola validasi schema, server actions, RBAC/RLS, activity log, halaman admin, unit test, dan pembaruan dokumen ini.
