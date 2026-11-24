@@ -40,6 +40,7 @@ export const publicNav: NavItem[] = [
   { label: "Guru dan Tendik", href: "/guru" },
   { label: "Siswa", href: "/siswa" },
   { label: "Jurusan", href: "/jurusan" },
+  { label: "Fasilitas", href: "/fasilitas" },
   { label: "Berita", href: "/berita" },
   { label: "Pengumuman", href: "/pengumuman" },
   { label: "PPDB/SPMB", href: "/ppdb" },
