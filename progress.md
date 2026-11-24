@@ -359,3 +359,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - **Status pengujian CMS Prestasi:** belum dijalankan/dikonfirmasi oleh pengguna. Setelah menarik commit terbaru, jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test`; perbaiki setiap error sebelum menguji alur UI.
 - **Status database:** migrasi `20261124190000` masih pending. Lakukan dry-run, pastikan backup production tersedia, terapkan setelah review, lalu verifikasi Local dan Remote pada `supabase migration list --remote`.
 - Tindak lanjut pengujian fungsional: buat/edit/hapus prestasi; upload gambar valid dan tolak file invalid; jadwalkan publikasi; uji akun tanpa `achievements:publish` tidak dapat membuat atau mengubah prestasi terbit; pastikan gambar Storage ikut dibersihkan saat penghapusan.
+
+
+## 2026-11-24 — Validasi awal CMS Prestasi dan migrasi production
+- Pengguna mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos setelah implementasi awal CMS Prestasi.
+- Pengguna menjalankan dry-run `pnpm dlx supabase db push --remote --dry-run`; output hanya menampilkan satu migrasi yang akan didorong: `20261124190000_achievement_publication_storage_guard.sql`. Tidak ada migrasi lain yang tertunda.
+- Output `pnpm dlx supabase migration list --remote` yang dibagikan pengguna menunjukkan `20261124190000` tercatat sama pada kolom Local dan Remote dengan waktu UTC `2026-11-24 19:00:00`. Ini mengonfirmasi migrasi guard publikasi dan Storage Prestasi telah tercatat diterapkan pada production project `nofznzznzjsvnkrmzpwx`.
+- Pesan CLI tentang pnpm native binary, file `.gitkeep`, dan versi Supabase CLI baru merupakan peringatan/informasi; tidak menghalangi daftar migrasi.
+- Status: pemeriksaan otomatis kode dan riwayat migrasi production terkonfirmasi oleh pengguna. Asisten tidak menjalankan tes atau mengakses database secara independen.
+- Berikutnya: uji fungsional CMS Prestasi dan otorisasi menggunakan akun berbeda: create/edit draft, upload gambar valid/invalid, penjadwalan publikasi, pembatasan perubahan konten published untuk akun tanpa `achievements:publish`, penghapusan prestasi, dan verifikasi objek Storage benar-benar terhapus. Periksa juga halaman publik `/prestasi` dan detailnya.
