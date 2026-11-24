@@ -45,12 +45,13 @@
 
 | Migrasi | Isi | Status penerapan |
 |---|---|---|
-| `20261124100000_public_content_foundation.sql` | departments, teachers, news_categories, news, announcements | Pending — belum tercatat di remote |
-| `20261124110000_default_teacher_unpublished.sql` | Default guru tidak langsung tampil | Pending — belum tercatat di remote |
-| `20261124120000_public_galleries.sql` | galleries, gallery_images | Pending — belum tercatat di remote |
-| `20261124130000_public_achievements.sql` | achievements + permission publish | Pending — belum tercatat di remote |
-| `20261124140000_public_events.sql` | events + permission events:publish | Pending — belum tercatat di remote |
-| `20261124150000_content_publication_guard.sql` | Penguatan RLS publish News, Announcements, dan Galleries | Pending — belum tercatat di remote |
+| `20261124100000_public_content_foundation.sql` | departments, teachers, news_categories, news, announcements | Diterapkan — dikonfirmasi pengguna 2026-11-24 |
+| `20261124110000_default_teacher_unpublished.sql` | Default guru tidak langsung tampil | Diterapkan — dikonfirmasi pengguna 2026-11-24 |
+| `20261124120000_public_galleries.sql` | galleries, gallery_images | Diterapkan — dikonfirmasi pengguna 2026-11-24 |
+| `20261124130000_public_achievements.sql` | achievements + permission publish | Diterapkan — dikonfirmasi pengguna 2026-11-24 |
+| `20261124140000_public_events.sql` | events + permission events:publish | Diterapkan — dikonfirmasi pengguna 2026-11-24 |
+| `20261124150000_content_publication_guard.sql` | Penguatan RLS publish News, Announcements, dan Galleries | Diterapkan — dikonfirmasi pengguna 2026-11-24 |
+| `20261124160000_announcement_publish_permission.sql` | Mendaftarkan permission `announcements:publish` yang dipakai policy RLS | Pending — belum diterapkan |
 
 Semua konten publik mengikuti status publikasi dan waktu tayang. Operasi tulis harus mengikuti permission RBAC masing-masing modul.
 
