@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
 const TARGET_BYTES = 2.7 * 1024 * 1024;
@@ -77,7 +77,7 @@ export function CompressedImageInput({ name }: { name: string }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
     const original = input.files?.[0];
     if (!original) {
