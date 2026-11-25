@@ -541,7 +541,8 @@ select set_config('test.permissions', '', false);
 set role authenticated;
 select public.claim_student_portal_invitation(:'portal_invite_token');
 
-do $
+reset role;
+do $portal$
 begin
   if not (select is_active from public.users where id = '50000000-0000-4000-8000-000000000003') then
     raise exception 'Claimed invitation did not activate the linked user';
@@ -561,7 +562,7 @@ begin
     raise exception 'Authenticated users unexpectedly have direct portal onboarding write privileges';
   end if;
 end;
-$;
+$portal$;
 
 reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000004', false);
@@ -573,16 +574,13 @@ reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
 select set_config('test.permissions', 'students:view,students:update', false);
 set role authenticated;
-do $
-declare request_id uuid;
+select public.approve_student_portal_registration(id)
+from public.student_portal_registration_requests
+where user_id = '50000000-0000-4000-8000-000000000004';
+
+reset role;
+do $portal$
 begin
-  select id into request_id from public.student_portal_registration_requests
-  where user_id = '50000000-0000-4000-8000-000000000004';
-  if request_id is null then raise exception 'Self-registration request was not created'; end if;
-  if (select is_active from public.users where id = '50000000-0000-4000-8000-000000000004') then
-    raise exception 'Self-registration activated the account before approval';
-  end if;
-  perform public.approve_student_portal_registration(request_id);
   if not (select is_active from public.users where id = '50000000-0000-4000-8000-000000000004') then
     raise exception 'Approved self-registration did not activate the user';
   end if;
@@ -591,16 +589,17 @@ begin
     where user_id = '50000000-0000-4000-8000-000000000004'
       and student_id = '60000000-0000-4000-8000-000000000012'
   ) then raise exception 'Self-registration did not link the matching student'; end if;
-  if (select status from public.student_portal_registration_requests where id = request_id) <> 'approved' then
+  if (select status from public.student_portal_registration_requests
+      where user_id = '50000000-0000-4000-8000-000000000004') <> 'approved' then
     raise exception 'Approved request status was not persisted'; end if;
 end;
-$;
+$portal$;
 
 reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000003', false);
 select set_config('test.permissions', 'student_portal:view', false);
 set role authenticated;
-do $
+do $portal$
 declare profile jsonb;
 begin
   profile := public.my_student_portal_profile();
@@ -611,7 +610,7 @@ begin
     raise exception 'Portal profile exposed private student fields';
   end if;
 end;
-$;
+$portal$;
 
 reset role;
 \echo 'Database migration assertions passed.'

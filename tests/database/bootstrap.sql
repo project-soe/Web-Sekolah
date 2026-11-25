@@ -64,7 +64,8 @@ create table public.user_roles (
 );
 
 create table public.departments (
-  id uuid primary key
+  id uuid primary key,
+  name text
 );
 
 create table public.teachers (

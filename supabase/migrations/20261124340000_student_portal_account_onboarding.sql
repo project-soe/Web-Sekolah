@@ -132,8 +132,7 @@ begin
     raise exception 'Siswa sudah memiliki akun portal' using errcode = '23505';
   end if;
 
-  update public.student_portal_invitations
-  set expires_at = now()
+  delete from public.student_portal_invitations
   where student_id = p_student_id and claimed_at is null;
 
   v_token := encode(extensions.gen_random_bytes(32), 'hex');

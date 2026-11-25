@@ -1013,3 +1013,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Tahap ini baru fondasi database/RPC. UI pendaftaran, halaman antrean admin, undangan dari detail siswa, login routing khusus siswa, dan dashboard Portal Siswa belum dibuat.
 - Migrasi baru belum diterapkan oleh asisten ke Supabase production. Jangan jalankan migration push sebelum backup, pemeriksaan urutan remote, dan persetujuan eksplisit. Project Supabase kedua tidak disentuh.
 - Verifikasi CI untuk commit ini menunggu hasil GitHub Actions; belum ada klaim tes lokal.
+
+
+### Catatan CI #277 — penyesuaian skema fixture dan assertion onboarding
+
+- Database-tests CI #277 menemukan kolom `departments.name` tidak ada pada fixture minimal; skema production memang memiliki kolom tersebut. Fixture diperbarui agar fungsi profil dapat dikompilasi.
+- Memisahkan assertion administratif dari role `authenticated`; tes kini tetap memanggil RPC pada role yang sesuai, tetapi membaca tabel internal untuk assertion setelah reset role database.
+- Menghapus undangan lama yang belum diklaim sebelum menerbitkan token baru untuk siswa yang sama, sehingga indeks unik undangan aktif tidak menghalangi penerbitan ulang.
+- CI #277 database-tests gagal pada tahap pembuatan fungsi profil; tidak ada klaim kelulusan CI. Koreksi dikirim sebagai commit baru dan menunggu run berikutnya.
