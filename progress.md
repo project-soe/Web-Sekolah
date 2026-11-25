@@ -1122,3 +1122,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Jalur kode undangan tetap dapat digunakan tanpa checkbox daftar mandiri.
 - Memperbarui unit test schema untuk memastikan persetujuan wajib pada daftar mandiri dan tidak diwajibkan untuk jalur undangan.
 - Tidak mengubah migrasi atau database production. Belum ada klaim CI/lint/typecheck sampai workflow commit ini selesai.
+
+
+## 2026-11-25 — Perbaikan regresi unit test pendaftaran Portal Siswa
+
+- CI #290 (`45607411790`) gagal hanya pada satu unit test: `studentPortalSignupSchema` menolak tanggal lahir valid `2010-01-15`.
+- Akar masalah: regex validasi tanggal di `src/features/auth/schema.ts` memiliki escaping berlebih (`\\d` pada source), sehingga mencari karakter literal backslash dan huruf d, bukan digit tanggal.
+- Memperbaiki regex menjadi digit matcher TypeScript yang benar (`\d`) dan mempertahankan pemeriksaan tanggal kalender agar tanggal seperti 30 Februari tetap ditolak.
+- Database tests pada CI #290 sukses; lint dan typecheck juga sukses. Unit test dan build harus dijalankan ulang pada commit perbaikan ini.
+- Tidak ada perubahan migrasi atau database production.
