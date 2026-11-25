@@ -893,3 +893,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Mengganti delimiter khusus blok kelulusan menjadi pasangan `do $$` dan `$$;`, lalu memverifikasi pembuka dan penutup baru pada konten sebelum commit.
 - Job `check` CI #261 sukses; database-tests masih gagal sampai workflow baru menyelesaikan seluruh assertion.
 - Tidak ada migrasi yang diterapkan ke Supabase production dan project Supabase kedua tidak disentuh.
+
+
+## 2026-11-25 — CI #262 kelulusan massal hijau
+
+- GitHub Actions run #262 (`45545066948`) pada commit `c2765514f141cef1853172deaec34398043533f1` selesai dengan conclusion `success`.
+- Run ini memvalidasi job pemeriksaan aplikasi dan database-tests; koreksi delimiter PL/pgSQL pada blok uji kelulusan sudah lolos.
+- Migrasi `20261124290000_class_capacity_enrollment_guard.sql`, `20261124300000_bulk_class_promotion.sql`, dan `20261124310000_bulk_student_graduation.sql` tetap belum diterapkan ke Supabase production. CI menggunakan PostgreSQL disposable.
+- Belum ada klaim pengujian UI/browser lokal. Setelah pull, pengguna tetap perlu menguji form kelulusan kelas XII, tanggal, hasil status, dan riwayat sebelum deployment database.
+- Project Supabase Website Sekolah production maupun project Supabase kedua tidak disentuh.
