@@ -20,17 +20,12 @@ export async function GET(request: Request) {
   const metadata = data.user.user_metadata ?? {};
   const invitationToken = metadata.portal_invitation_token;
   if (typeof invitationToken === "string" && invitationToken.length > 0) {
-    const { error: claimError } = await supabase.rpc("claim_student_portal_invitation", {
-      p_token: invitationToken,
-    });
+    const { error: claimError } = await supabase.rpc("claim_student_portal_invitation", { p_token: invitationToken });
     if (claimError) {
-      console.error("[auth:portal] Invitation claim after confirmation failed:", claimError.code);
-      await supabase.auth.signOut();
+      console.error("[auth:portal] Invitation claim after confirmation failed:", { code: claimError.code, message: claimError.message });
       return redirectTo(requestUrl, "/portal/daftar?error=konfirmasi");
     }
-    await supabase.auth.updateUser({
-      data: { portal_invitation_token: null },
-    });
+    await supabase.auth.updateUser({ data: { portal_invitation_token: null } });
     return redirectTo(requestUrl, "/portal");
   }
 
@@ -41,9 +36,25 @@ export async function GET(request: Request) {
       p_birth_date: metadata.portal_registration_birth_date,
     });
     if (requestError && requestError.code !== "23505") {
-      console.error("[auth:portal] Registration submission after confirmation failed:", requestError.code);
-      await supabase.auth.signOut();
-      return redirectTo(requestUrl, "/portal/daftar?error=konfirmasi");
+      // Keep the confirmed session and metadata so the applicant can retry safely.
+      console.error("[auth:portal] Registration submission after confirmation failed:", {
+        code: requestError.code,
+        message: requestError.message,
+        details: requestError.details,
+        hint: requestError.hint,
+      });
+      return redirectTo(requestUrl, "/portal/daftar?error=lanjutkan");
+    }
+    if (requestError?.code === "23505") {
+      const { data: existingRequest, error: lookupError } = await supabase
+        .from("student_portal_registration_requests")
+        .select("id")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      if (lookupError || !existingRequest) {
+        console.error("[auth:portal] Duplicate registration was not confirmed as an existing request:", lookupError?.code ?? "not_found");
+        return redirectTo(requestUrl, "/portal/daftar?error=lanjutkan");
+      }
     }
     await supabase.auth.updateUser({
       data: {

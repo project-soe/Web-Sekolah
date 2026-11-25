@@ -13,7 +13,7 @@ export default async function StudentPortalSignupPage({ searchParams }: { search
       <CardHeader><CardTitle>Daftar Portal Siswa</CardTitle><p className="text-sm text-muted-foreground">{siteDefaults.name}</p></CardHeader>
       <CardContent className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">Gunakan undangan dari admin atau ajukan akun mandiri. Pendaftaran mandiri hanya aktif setelah data cocok dan disetujui sekolah.</p>
-        {params.error === "konfirmasi" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm">Konfirmasi email berhasil, tetapi pengajuan belum dapat disimpan. Silakan masuk kembali atau hubungi admin sekolah.</p>}
+        {params.error === "konfirmasi" || params.error === "lanjutkan" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm">Email berhasil dikonfirmasi. Lanjutkan penyimpanan pengajuan menggunakan tombol di bawah; jangan mendaftar ulang.</p>}
         <StudentPortalSignupForm />
         <Link href="/login" className="text-center text-sm text-muted-foreground hover:text-primary">Kembali ke halaman masuk</Link>
       </CardContent>

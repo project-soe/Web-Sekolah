@@ -178,6 +178,46 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
   }
 }
 
+export async function retryStudentPortalRegistration(
+  _prev: { error?: string; message?: string },
+): Promise<{ error?: string; message?: string }> {
+  const supabase = await createClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) return { error: "Sesi konfirmasi tidak ditemukan. Silakan masuk kembali." };
+
+  const metadata = authData.user.user_metadata ?? {};
+  if (metadata.portal_registration !== "student") {
+    return { error: "Data pendaftaran tidak ditemukan pada akun ini. Hubungi admin sekolah agar dapat diperiksa." };
+  }
+
+  const { error } = await supabase.rpc("submit_student_portal_registration", {
+    p_full_name: metadata.portal_registration_full_name,
+    p_nis: metadata.portal_registration_nis,
+    p_birth_date: metadata.portal_registration_birth_date,
+  });
+  if (error && error.code !== "23505") {
+    console.error("[auth:portal] Registration retry failed:", {
+      code: error.code, message: error.message, details: error.details, hint: error.hint,
+    });
+    return { error: `Pengajuan masih gagal disimpan (kode ${error.code ?? "unknown"}). Data akun tetap aman; silakan hubungi admin sekolah.` };
+  }
+  if (error?.code === "23505") {
+    const { data: existingRequest, error: lookupError } = await supabase
+      .from("student_portal_registration_requests")
+      .select("id")
+      .eq("user_id", authData.user.id)
+      .maybeSingle();
+    if (lookupError || !existingRequest) {
+      console.error("[auth:portal] Registration retry duplicate lookup failed:", lookupError?.code ?? "not_found");
+      return { error: "Pengajuan terdeteksi duplikat tetapi antrean belum dapat dipastikan. Hubungi admin sekolah." };
+    }
+  }
+
+  await clearPortalMetadata(supabase);
+  await supabase.auth.signOut();
+  redirect("/portal/menunggu");
+}
+
 export async function resendStudentPortalConfirmation(
   _prev: { error?: string; message?: string; email?: string },
   formData: FormData,

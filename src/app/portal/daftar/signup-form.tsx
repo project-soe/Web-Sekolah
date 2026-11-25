@@ -4,11 +4,12 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
-import { registerStudentPortal, resendStudentPortalConfirmation } from "@/features/auth/actions";
+import { registerStudentPortal, resendStudentPortalConfirmation, retryStudentPortalRegistration } from "@/features/auth/actions";
 
 export function StudentPortalSignupForm() {
   const [state, action, pending] = useActionState(registerStudentPortal, {});
   const [resendState, resendAction, resendPending] = useActionState(resendStudentPortalConfirmation, {});
+  const [retryState, retryAction, retryPending] = useActionState(retryStudentPortalRegistration, {});
   const [selfRegistrationEnabled, setSelfRegistrationEnabled] = useState(false);
 
   return <div className="flex flex-col gap-6">\n  <form action={action} className="flex flex-col gap-4">
@@ -44,6 +45,14 @@ export function StudentPortalSignupForm() {
     <Button type="submit" size="lg" loading={pending}>Buat akun Portal Siswa</Button>
     <p className="text-center text-sm text-muted-foreground">Sudah punya akun? <Link href="/login" className="font-medium text-primary hover:underline">Masuk</Link></p>
   </form>
+    <section className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-slate-900">
+      <h2 className="font-semibold">Email sudah dikonfirmasi, tetapi pengajuan belum tersimpan?</h2>
+      <p className="mt-1 text-sm">Gunakan tombol ini untuk melanjutkan penyimpanan dengan sesi akun yang sudah dikonfirmasi. Tidak perlu mendaftar ulang.</p>
+      <form action={retryAction} className="mt-3">
+        <Button type="submit" variant="secondary" loading={retryPending}>Lanjutkan pengajuan</Button>
+      </form>
+      {retryState.error && <p role="alert" className="mt-3 text-sm text-danger">{retryState.error}</p>}
+    </section>
     <section className="rounded-xl border border-border bg-muted/40 p-4">
       <h2 className="font-semibold">Email konfirmasi belum masuk?</h2>
       <p className="mt-1 text-sm text-muted-foreground">Jika sebelumnya sudah mendaftar tetapi belum menerima email, minta tautan konfirmasi baru di sini. Tidak perlu membuat akun ulang.</p>

@@ -1172,3 +1172,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 
 - Mengganti pemisah baris literal yang sempat tersimpan pada JSX dengan newline sebenarnya agar file dapat diparse oleh ESLint/TypeScript.
 - Menunggu hasil CI commit koreksi ini; CI sebelumnya mengidentifikasi parsing error pada file formulir, sementara database tests tetap sukses.
+
+
+## 2026-11-25 — Pemulihan pengajuan setelah konfirmasi email
+
+- Screenshot browser menunjukkan email sudah terkonfirmasi tetapi RPC penyimpanan pengajuan gagal; callback sebelumnya langsung sign-out sehingga metadata pendaftaran tidak bisa dipakai untuk retry dari halaman yang sama.
+- Callback kini mempertahankan sesi dan metadata ketika penyimpanan gagal, serta mencatat kode/pesan/detail error database pada log server untuk diagnosis tanpa menampilkan detail sensitif ke publik.
+- Menambahkan aksi Lanjutkan pengajuan yang mengulang RPC memakai metadata akun terkonfirmasi, tanpa membuat akun Auth baru. Duplikat hanya dianggap sukses jika antrean pengajuan milik akun benar-benar ditemukan.
+- Memperbaiki JSX formulir yang masih menyimpan karakter literal \\n di antara wrapper dan form.
+- Tidak mengubah migrasi atau database production. CI untuk commit ini perlu diverifikasi; pengujian browser perlu memastikan pengajuan masuk ke Verifikasi Portal Siswa.
