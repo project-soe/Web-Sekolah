@@ -7,6 +7,7 @@ import { can } from "@/lib/rbac/access";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { changeStudentLifecycle } from "@/features/students/student-actions";
+import { StudentPortalInvitationForm } from "@/features/students/student-portal-invitation-form";
 
 export const metadata: Metadata = { title: "Detail Siswa" };
 export const dynamic = "force-dynamic";
@@ -22,9 +23,12 @@ export default async function StudentDetailPage({ params, searchParams }: { para
   const { id } = await params;
   const query = await searchParams;
   const supabase = await createClient();
-  const [{ data: student, error }, { data: history }] = await Promise.all([
+  const [{ data: student, error }, { data: history }, { data: portalAccount }] = await Promise.all([
     supabase.from("students").select("id, nis, nisn, full_name, gender, birth_place, birth_date, address, guardian_name, guardian_phone, enrollment_year, status, graduation_date, notes, departments(name)").eq("id", id).maybeSingle(),
     supabase.from("student_status_history").select("id, old_status, new_status, changed_at").eq("student_id", id).order("changed_at", { ascending: false }).limit(50),
+    can(session.access, "students:update")
+      ? supabase.from("student_portal_accounts").select("user_id, linked_at").eq("student_id", id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
   if (error || !student) notFound();
   const department = Array.isArray(student.departments) ? student.departments[0] : student.departments;
@@ -44,6 +48,10 @@ export default async function StudentDetailPage({ params, searchParams }: { para
       <div className="sm:col-span-2"><p className="text-xs text-muted-foreground">Alamat</p><p className="mt-1 whitespace-pre-wrap font-medium">{student.address ?? "—"}</p></div>
       <div className="sm:col-span-2"><p className="text-xs text-muted-foreground">Catatan internal</p><p className="mt-1 whitespace-pre-wrap font-medium">{student.notes ?? "—"}</p></div>
     </CardContent></Card>
+    {can(session.access, "students:update") && student.status === "active" && <Card><CardContent className="flex flex-col gap-3">
+      <div><h2 className="font-semibold">Akun Portal Siswa</h2><p className="text-sm text-muted-foreground">Buat undangan khusus agar siswa dapat membuat akun dan terhubung dengan data induk ini.</p></div>
+      {portalAccount ? <p className="text-sm text-success">Siswa ini sudah terhubung ke akun Portal Siswa.</p> : <StudentPortalInvitationForm studentId={student.id} />}
+    </CardContent></Card>}
     {student.status === "active" && can(session.access, "students:update") && can(session.access, "classes:view") && can(session.access, "classes:update") && <Card><CardContent className="flex flex-col gap-3">
       <div><h2 className="font-semibold">Proses status akademik</h2><p className="text-sm text-muted-foreground">Gunakan hanya jika siswa benar-benar pindah sekolah atau mengundurkan diri. Penempatan pada tahun ajaran aktif akan ditutup, kapasitas kelas dibebaskan, dan riwayat tetap disimpan.</p></div>
       <div className="flex flex-wrap gap-3">

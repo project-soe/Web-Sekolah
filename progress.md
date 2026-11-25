@@ -1031,3 +1031,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pemisahan guard server: `requireAdmin` tidak menerima role siswa, sedangkan `requireStudent` hanya menerima role siswa.
 - UI halaman pendaftaran, antrean verifikasi admin, undangan detail siswa, dan dashboard Portal Siswa akan ditambahkan pada commit lanjutan. CI untuk perubahan autentikasi ini menunggu workflow baru.
 - Migrasi 3400 belum diterapkan ke Supabase production; project Supabase kedua tidak disentuh.
+
+
+## 2026-11-25 — UI onboarding dan dashboard awal Portal Siswa
+
+- Menambahkan halaman `/portal/daftar` dengan dua jalur: pendaftaran memakai kode undangan admin atau pendaftaran mandiri memakai nama, NIS, tanggal lahir, email, dan password.
+- Menambahkan halaman `/portal/menunggu` untuk status pengajuan mandiri yang belum disetujui.
+- Menambahkan dashboard awal `/portal` melalui RPC profil terbatas; role siswa tidak membaca langsung tabel privat `students`.
+- Menambahkan halaman admin `/admin/akses-siswa` untuk meninjau, menyetujui, atau menolak pengajuan. Approval mensyaratkan NIS, nama, tanggal lahir, dan status siswa aktif cocok persis.
+- Detail siswa menyediakan pembuatan token undangan sekali pakai; token hanya ditampilkan kepada admin saat dibuat dan harus dibagikan secara pribadi.
+- Jalur undangan adalah undangan admin, bukan pembuatan password/Auth user secara langsung. Siswa menetapkan password sendiri. Pembuatan Auth user langsung oleh admin memerlukan Auth Admin API secret terpisah yang belum dikonfigurasi dan tidak ditambahkan.
+- UI dan auth flow menunggu CI baru serta uji browser pengguna. Migrasi 3400 belum diterapkan ke Supabase production; project Supabase kedua tidak disentuh.
