@@ -874,3 +874,8 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Runner database CI memuat migrasi 3100 dan assertion untuk penolakan permission, penolakan kelas non-XII, rollback penuh saat tanggal tidak valid pada salah satu siswa, kelulusan tiga siswa, penyimpanan tanggal, pencatatan tiga riwayat status, dan penolakan proses ulang.
 - Migrasi 3100 belum diterapkan ke Supabase production. Urutan deployment untuk fitur kapasitas, kenaikan, dan kelulusan adalah 2900 → 3000 → 3100 setelah fondasi 2500–2800 yang sudah dikonfirmasi pengguna diterapkan. Project Supabase kedua tidak disentuh.
 - Status verifikasi: menunggu GitHub Actions dan uji UI pengguna. Tidak ada klaim pengujian lokal.
+
+
+### Catatan CI kelulusan — perbaikan fixture
+- Run #45541329118: job `check` sukses, tetapi `database-tests` gagal saat menyiapkan fixture siswa karena test session tidak menyertakan permission `students:create`. Ini adalah kekurangan permission pada fixture CI, bukan hasil kegagalan RPC kelulusan.
+- Memperbarui permission fixture untuk menyertakan `students:create` sebelum membuat tiga data calon lulusan. Commit perbaikan memicu CI ulang; status akhir belum diklaim sampai run terbaru selesai.
