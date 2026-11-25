@@ -6,6 +6,7 @@ const links = [
   { label: "Profil Sekolah", href: "/profil" },
   { label: "Berita", href: "/berita" },
   { label: "PPDB/SPMB", href: "/ppdb" },
+  { label: "Portal Siswa", href: "/portal/daftar" },
   { label: "Kontak", href: "/kontak" },
 ];
 

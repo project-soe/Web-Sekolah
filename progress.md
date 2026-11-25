@@ -1142,3 +1142,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Antrean ini memang terpisah dari `/admin/siswa`: data induk siswa tidak dibuat ulang. Admin memverifikasi dan menautkan akun pendaftar ke siswa aktif yang sudah ada.
 - Tidak mengubah migrasi, skema, atau database production. Konfigurasi Supabase Auth URL Configuration tetap harus mengizinkan domain production dengan path callback `/auth/callback`; Site URL sebaiknya disetel ke domain production agar tautan fallback tidak memakai localhost.
 - CI #291 untuk perbaikan regex sebelumnya selesai dengan status sukses. Status CI perubahan callback dan navigasi ini menunggu workflow commit terbaru.
+
+
+## 2026-11-25 — Visibilitas Portal Siswa pada navigasi publik
+
+- Menambahkan Portal Siswa ke daftar navigasi publik di dekat Beranda agar tampil pada menu desktop, dropdown, dan menu mobile.
+- Menonjolkan tautan Portal Siswa dengan warna amber pada menu desktop dan mobile; tautan penting di footer juga ditambahkan.
+- Menghapus tombol Portal Siswa terpisah pada header agar tidak ada duplikasi tautan.
+- Tidak mengubah migrasi atau database production. CI untuk perubahan ini menunggu workflow commit terbaru.
