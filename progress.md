@@ -807,3 +807,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Review ini hanya inspeksi kode dan hasil CI. Tidak ada browser/preview Worker yang dijalankan, sehingga rendering aktual dan keberadaan record kelas `X TKJ 1` belum terverifikasi.
 - Tidak ada perubahan kode, migrasi, atau data Supabase. Production dan project Supabase kedua tidak disentuh.
 - Langkah verifikasi berikutnya: pengguna pull commit `14c55c1`, jalankan aplikasi/preview, buka `/admin/kelas`, cari kelas `X TKJ 1`, lalu buka detailnya. Uji akun dengan `classes:view + students:view` dan akun dengan `classes:view` tanpa `students:view`; kirim screenshot atau hasilnya untuk review tampilan responsif dan state kosong/permission.
+
+
+## 2026-11-25 — Pemeriksaan push terbaru dan CI #247
+
+- Pemeriksaan riwayat commit branch `main` pada 2026-11-25 menemukan head terbaru `d58ab308ae9bca5449019a0c626057b435312e4a` (`docs(progress): record CI 246 and class detail review`). Commit tersebut hanya mengubah `progress.md`; README tidak berubah.
+- Pengguna mengonfirmasi CI #247 hijau. Pemeriksaan workflow run untuk commit head melalui konektor GitHub tidak mengembalikan run, sehingga status ini dicatat sebagai konfirmasi pengguna, bukan verifikasi independen; detail job/run ID belum tersedia.
+- Pengguna menyampaikan bahwa penerapan migrasi production telah selesai. Namun, bukti pemeriksaan terakhir yang tersedia di percakapan masih menunjukkan versi `20261124260000`–`20261124280000` belum tercatat pada kolom Remote dan query `to_regclass` mengembalikan `null` untuk `academic_years` serta `class_groups`. Karena itu status production belum boleh ditandai terverifikasi sampai pengguna mengirim hasil pemeriksaan terbaru yang menunjukkan ketiga versi Local/Remote cocok dan kedua tabel tersedia.
+- Tidak ada perubahan kode, migrasi, konfigurasi, atau tindakan terhadap Supabase dalam pemeriksaan GitHub ini. Project Supabase kedua tidak disentuh.
+- Langkah berikutnya: minta hasil terbaru `pnpm dlx supabase migration list --remote` dan query read-only `to_regclass`; setelah konsisten, uji halaman `/admin/kelas` dan catat bukti penerapan production.
