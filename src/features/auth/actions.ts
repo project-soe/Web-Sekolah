@@ -9,6 +9,32 @@ import { loginSchema, studentPortalSignupSchema } from "./schema";
 export type LoginState = { error?: string; email?: string };
 export type SignupState = { error?: string; message?: string; email?: string };
 
+function getSignupErrorMessage(code: string | undefined, message: string | undefined): string {
+  switch (code) {
+    case "user_already_exists":
+    case "email_exists":
+      return "Email ini sudah terdaftar. Silakan masuk atau gunakan email lain.";
+    case "email_address_invalid":
+      return "Alamat email tidak valid. Periksa kembali penulisannya.";
+    case "weak_password":
+      return "Password terlalu lemah. Gunakan minimal 8 karakter dengan kombinasi yang lebih kuat.";
+    case "over_email_send_rate_limit":
+    case "over_request_rate_limit":
+      return "Terlalu banyak percobaan pendaftaran. Tunggu beberapa saat sebelum mencoba lagi.";
+    case "signup_disabled":
+      return "Pendaftaran akun sedang dinonaktifkan. Hubungi admin sekolah.";
+    case "email_provider_disabled":
+      return "Pendaftaran dengan email sedang tidak tersedia. Hubungi admin sekolah.";
+    case "validation_failed":
+      return "Data akun ditolak oleh layanan autentikasi. Periksa format email dan ketentuan password.";
+    default:
+      if (message?.toLowerCase().includes("database error saving new user")) {
+        return "Layanan gagal menyiapkan profil akun di database. Data siswa belum diproses; silakan hubungi admin sekolah.";
+      }
+      return "Layanan autentikasi menolak pendaftaran. Periksa apakah email sudah digunakan, lalu coba kembali beberapa saat lagi.";
+  }
+}
+
 async function clearPortalMetadata(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { error } = await supabase.auth.updateUser({
     data: {
@@ -103,8 +129,8 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
       options: { data: metadata },
     });
     if (error) {
-      console.error("[auth:portal] Signup failed:", error.message);
-      return { error: "Pendaftaran akun gagal. Periksa email dan password, lalu coba kembali.", email: input.email };
+      console.error("[auth:portal] Signup failed:", { code: error.code ?? "unknown", status: error.status ?? null });
+      return { error: getSignupErrorMessage(error.code, error.message), email: input.email };
     }
     if (!data.session) {
       return {

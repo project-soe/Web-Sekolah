@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -8,6 +8,8 @@ import { registerStudentPortal } from "@/features/auth/actions";
 
 export function StudentPortalSignupForm() {
   const [state, action, pending] = useActionState(registerStudentPortal, {});
+  const [selfRegistrationEnabled, setSelfRegistrationEnabled] = useState(false);
+
   return <form action={action} className="flex flex-col gap-4">
     <Field id="full_name" label="Nama lengkap sesuai data sekolah" required><Input id="full_name" name="full_name" autoComplete="name" required maxLength={150} /></Field>
     <Field id="email" label="Email aktif" required><Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required /></Field>
@@ -19,10 +21,21 @@ export function StudentPortalSignupForm() {
     </div>
     <div className="rounded-lg border border-border p-3">
       <p className="text-sm font-semibold">Atau daftar mandiri</p>
-      <p className="mt-1 text-xs text-muted-foreground">Isi NIS dan tanggal lahir sesuai data sekolah. Akun akan menunggu verifikasi admin.</p>
+      <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="self_registration_consent"
+          value="true"
+          checked={selfRegistrationEnabled}
+          onChange={(event) => setSelfRegistrationEnabled(event.target.checked)}
+          className="mt-0.5 size-4 shrink-0 accent-primary"
+        />
+        <span>Saya menyetujui pengajuan akun mandiri dan bersedia menunggu verifikasi admin sekolah.</span>
+      </label>
+      <p className="mt-2 text-xs text-muted-foreground">Centang persetujuan di atas untuk membuka formulir. Data NIS, nama, dan tanggal lahir akan dicocokkan admin sebelum akun diaktifkan.</p>
       <div className="mt-3 flex flex-col gap-3">
-        <Field id="nis" label="NIS"><Input id="nis" name="nis" maxLength={30} autoComplete="off" /></Field>
-        <Field id="birth_date" label="Tanggal lahir"><Input id="birth_date" name="birth_date" type="date" /></Field>
+        <Field id="nis" label="NIS"><Input id="nis" name="nis" maxLength={30} autoComplete="off" disabled={!selfRegistrationEnabled} required={selfRegistrationEnabled} /></Field>
+        <Field id="birth_date" label="Tanggal lahir"><Input id="birth_date" name="birth_date" type="date" disabled={!selfRegistrationEnabled} required={selfRegistrationEnabled} /></Field>
       </div>
     </div>
     {state.error && <p role="alert" className="text-sm text-danger">{state.error}</p>}

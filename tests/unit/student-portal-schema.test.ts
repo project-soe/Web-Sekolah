@@ -6,17 +6,19 @@ const valid = {
   email: "siswa@example.test",
   password: "Aman12345",
   invitation_token: "",
+  self_registration_consent: "true",
   nis: "2026001",
   birth_date: "2010-01-15",
 };
 
 describe("studentPortalSignupSchema", () => {
-  it("menerima pendaftaran mandiri dengan identitas lengkap", () => {
+  it("menerima pendaftaran mandiri hanya dengan persetujuan eksplisit", () => {
     expect(studentPortalSignupSchema.safeParse(valid).success).toBe(true);
+    expect(studentPortalSignupSchema.safeParse({ ...valid, self_registration_consent: "" }).success).toBe(false);
   });
-  it("menerima pendaftaran menggunakan token undangan 64 karakter", () => {
+  it("menerima pendaftaran menggunakan token undangan tanpa persetujuan mandiri", () => {
     expect(studentPortalSignupSchema.safeParse({
-      ...valid, invitation_token: "a".repeat(64), nis: "", birth_date: "",
+      ...valid, invitation_token: "a".repeat(64), self_registration_consent: "", nis: "", birth_date: "",
     }).success).toBe(true);
   });
   it("menolak token undangan dengan format salah", () => {

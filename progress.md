@@ -1112,3 +1112,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Route pendaftaran tetap menggunakan halaman yang sama; tidak membuat formulir atau endpoint duplikat. Jalur mandiri tetap memerlukan persetujuan admin sebelum akun diaktifkan.
 - Perubahan ini hanya pada navigasi/penemuan halaman publik. Tidak mengubah skema database, migrasi, atau data production.
 - CI untuk commit navigasi ini menunggu hasil GitHub Actions; browser QA publik masih perlu dilakukan setelah deployment aplikasi.
+
+
+## 2026-11-25 — Perbaikan pendaftaran Portal Siswa dan persetujuan daftar mandiri
+
+- Audit alur browser menunjukkan pesan `Pendaftaran akun gagal. Periksa email dan password...` berasal dari kegagalan `supabase.auth.signUp()`, sebelum RPC pencocokan NIS/nama/tanggal lahir dijalankan. Jadi pesan tersebut tidak membuktikan bahwa data siswa di database tidak cocok.
+- Mengganti pesan generik untuk kegagalan Auth dengan penjelasan berdasarkan kode error yang aman ditampilkan (email sudah terdaftar, format email, password lemah, pembatasan percobaan, signup dinonaktifkan, dan kegagalan pembuatan profil database). Log server hanya mencatat kode/status, bukan email atau password.
+- Menambahkan persetujuan eksplisit pada jalur daftar mandiri. Field NIS dan tanggal lahir terkunci sampai checkbox dicentang; validasi server juga menolak permohonan daftar mandiri tanpa nilai persetujuan, sehingga tidak hanya mengandalkan kontrol browser.
+- Jalur kode undangan tetap dapat digunakan tanpa checkbox daftar mandiri.
+- Memperbarui unit test schema untuk memastikan persetujuan wajib pada daftar mandiri dan tidak diwajibkan untuk jalur undangan.
+- Tidak mengubah migrasi atau database production. Belum ada klaim CI/lint/typecheck sampai workflow commit ini selesai.
