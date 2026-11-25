@@ -473,7 +473,7 @@ values
   ('60000000-0000-4000-8000-000000000009', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006'),
   ('60000000-0000-4000-8000-000000000010', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006');
 
-do $
+do $transfer_test$
 declare closed integer; actor_id uuid := '50000000-0000-4000-8000-000000000001';
 begin
   if has_column_privilege('authenticated', 'public.student_class_enrollments', 'ended_at', 'UPDATE')
@@ -513,7 +513,7 @@ begin
     raise exception 'Student status history was not recorded';
   end if;
 end;
-$;
+$transfer_test$;
 
 reset role;
 \echo 'Database migration assertions passed.'
