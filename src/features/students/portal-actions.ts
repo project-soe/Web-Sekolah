@@ -38,7 +38,7 @@ export async function approveStudentPortalRegistration(formData: FormData): Prom
     console.error("[admin:student-portal] Approval failed:", error?.code ?? "invalid_result");
     redirect("/admin/akses-siswa?error=" + (error?.code === "P0002" ? "cocok" : error?.code === "23505" ? "duplikat" : "proses"));
   }
-  await logActivity(supabase, { action: "approve", module: "student_portal", entityType: "student", entityId: studentId, summary: "Menyetujui pendaftaran mandiri Portal Siswa" });
+  await logActivity(supabase, { action: "verify", module: "student_portal", entityType: "student", entityId: studentId, summary: "Menyetujui pendaftaran mandiri Portal Siswa" });
   revalidatePath("/admin/akses-siswa");
   revalidatePath("/admin/siswa/" + studentId);
   redirect("/admin/akses-siswa?saved=approved");
@@ -56,7 +56,7 @@ export async function rejectStudentPortalRegistration(formData: FormData): Promi
     console.error("[admin:student-portal] Rejection failed:", error.code);
     redirect("/admin/akses-siswa?error=proses");
   }
-  await logActivity(supabase, { action: "reject", module: "student_portal", entityType: "registration_request", entityId: requestId, summary: "Menolak pendaftaran mandiri Portal Siswa" });
+  await logActivity(supabase, { action: "verify", module: "student_portal", entityType: "registration_request", entityId: requestId, summary: "Menolak pendaftaran mandiri Portal Siswa" });
   revalidatePath("/admin/akses-siswa");
   redirect("/admin/akses-siswa?saved=rejected");
 }

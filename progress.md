@@ -1056,3 +1056,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Review kode setelah penambahan unit test menemukan pola tanggal tersimpan dengan escape ganda sehingga regex tidak mengenali digit tanggal.
 - Mengoreksi pola menjadi digit regex standar dan mempertahankan validasi kalender ISO.
 - Unit test baru akan memverifikasi koreksi ini pada CI berikutnya.
+
+
+### Catatan CI #280 — tipe activity action
+
+- CI #280 pada commit `4c0544ef`: lint sukses, database-tests sukses, tetapi typecheck gagal karena union `ActivityAction` tidak memiliki nilai `approve` dan `reject`.
+- Menggunakan action `verify` yang memang tersedia pada tipe activity log untuk kedua keputusan verifikasi; ringkasan log tetap membedakan persetujuan dan penolakan.
+- CI #281/#282 akan memverifikasi koreksi ini beserta validasi tanggal pendaftaran yang diperbaiki.
