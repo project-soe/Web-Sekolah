@@ -1093,3 +1093,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Job `check`: lint, typecheck, unit test, dan build seluruhnya sukses.
 - Job `database-tests`: migrasi 2500–3500, assertion onboarding, penolakan akun Auth yang sudah aktif, serta tes konkurensi aktivasi tahun ajaran dan kapasitas kelas seluruhnya sukses.
 - Hasil ini hanya memverifikasi CI pada database fixture terisolasi. Migrasi 3400 dan 3500 belum diterapkan ke Supabase production; jangan jalankan `db push` sebelum migration list remote, pemeriksaan backup/permission, dan persetujuan deployment.
+
+
+## 2026-11-25 — Pemulihan migrasi hardening Portal Siswa
+
+- Pemeriksaan setelah pengguna menjalankan `git pull origin main` menemukan commit dokumentasi `9435460c9c91ae08104c6a96a25f36855240ae23` secara tidak sengaja menghapus file migrasi `20261124350000_student_portal_onboarding_account_state_guard.sql` dan 81 baris assertion hardening dari `tests/database/run.sql`.
+- Memulihkan migrasi 3500 dan runner database lengkap dari commit tervalidasi sebelumnya `30f818ff0a46f2667244cf54eede4dca397c96e7`; migrasi 3400 tetap tidak diubah.
+- CI #286 memang hijau pada commit sebelum penghapusan, tetapi tidak memvalidasi keadaan branch setelah penghapusan. CI wajib dijalankan ulang pada commit pemulihan sebelum deployment.
+- Pemeriksaan Supabase production menunjukkan migrasi 3400 belum diterapkan; 3500 tidak tercantum di remote karena belum ada di repository lokal/branch saat pemeriksaan. Backup pengguna berukuran 562.928 byte dengan permission `600`.
+- Tidak ada `db push`, perubahan database production, atau perubahan pada project Supabase kedua. Deployment tetap menunggu CI baru dan persetujuan eksplisit pengguna.
