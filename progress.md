@@ -990,3 +990,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Kegagalan database-tests pada CI #271–#273 menjadi umpan balik iteratif: #271/#272/#273 menangkap bahwa trigger guard mutasi harus tetap mempertahankan reservasi kapasitas saat perpindahan kelas biasa; koreksi di commit `896c10f` mengembalikan mekanisme lock dan reservasi atomik. CI #274 memvalidasi koreksi tersebut.
 - Status fitur mutasi siswa: CI hijau. Uji UI/browser oleh pengguna masih diperlukan setelah pull.
 - Migrasi `20261124330000_student_transfer_withdrawal.sql` belum diterapkan ke Supabase production. Penerapan production tidak dilakukan oleh asisten; project Supabase kedua tidak disentuh. Ikuti urutan migrasi yang tercatat dan lakukan backup serta verifikasi target sebelum deployment dengan persetujuan eksplisit pengguna.
+
+## 2026-11-25 — Verifikasi browser mutasi siswa: transfer berhasil
+
+- Pengguna mengonfirmasi ada perubahan/migrasi yang sebelumnya belum di-push; setelah melakukan push, pengujian melalui browser diterima sistem.
+- Pengguna berhasil mengubah status seorang siswa menjadi `transferred` melalui alur detail siswa. Ini mengonfirmasi jalur UI → server action → RPC `transition_student_status` dapat dijalankan pada environment yang diuji.
+- Hasil ini melengkapi CI #274 yang sebelumnya hijau untuk lint, typecheck, unit test, build, dan database-tests termasuk transfer/withdrawal, pelepasan kapasitas, serta retensi riwayat.
+- Pengujian browser yang dikonfirmasi secara eksplisit baru mencakup status `transferred`; alur `withdrawn` belum dikonfirmasi oleh pengguna.
+- Status penerapan migration: pengguna melaporkan push yang tertinggal telah dilakukan dan alur transfer browser berhasil. Asisten tidak menjalankan atau mengubah database production.
+- Project Supabase kedua tidak disentuh.
+
