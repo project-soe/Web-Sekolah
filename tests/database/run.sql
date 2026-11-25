@@ -13,6 +13,7 @@
 \i supabase/migrations/20261124310000_bulk_student_graduation.sql
 \i supabase/migrations/20261124320000_student_lifecycle_column_guards.sql
 \i supabase/migrations/20261124330000_student_transfer_withdrawal.sql
+\i supabase/migrations/20261124340000_student_portal_account_onboarding.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -515,5 +516,103 @@ begin
 end;
 $transfer_test$;
 
+
+\echo '11. Verify student portal invitations, self-registration approval, and isolated profile access'
+reset role;
+insert into public.users (id, email, full_name) values
+  ('50000000-0000-4000-8000-000000000003', 'student-invite@example.test', 'Siswa Undangan'),
+  ('50000000-0000-4000-8000-000000000004', 'student-self@example.test', 'Siswa Mandiri');
+insert into auth.users (id, email) values
+  ('50000000-0000-4000-8000-000000000003', 'student-invite@example.test'),
+  ('50000000-0000-4000-8000-000000000004', 'student-self@example.test');
+insert into public.students (id, nis, full_name, gender, birth_date, enrollment_year)
+values
+  ('60000000-0000-4000-8000-000000000011', 'PORTAL-INVITE', 'Siswa Undangan', 'male', '2009-01-02', 2026),
+  ('60000000-0000-4000-8000-000000000012', 'PORTAL-SELF', 'Siswa Mandiri', 'female', '2009-03-04', 2026);
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'students:view,students:update', false);
+set role authenticated;
+select public.create_student_portal_invitation('60000000-0000-4000-8000-000000000011') as portal_invite_token \gset
+
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000003', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+select public.claim_student_portal_invitation(:'portal_invite_token');
+
+do $
+begin
+  if not (select is_active from public.users where id = '50000000-0000-4000-8000-000000000003') then
+    raise exception 'Claimed invitation did not activate the linked user';
+  end if;
+  if not exists (
+    select 1 from public.student_portal_accounts
+    where user_id = '50000000-0000-4000-8000-000000000003'
+      and student_id = '60000000-0000-4000-8000-000000000011'
+  ) then raise exception 'Invitation did not link the expected student'; end if;
+  if not exists (
+    select 1 from public.user_roles ur join public.roles r on r.id = ur.role_id
+    where ur.user_id = '50000000-0000-4000-8000-000000000003' and r.slug = 'siswa'
+  ) then raise exception 'Invitation did not assign the restricted student role'; end if;
+  if has_table_privilege('authenticated', 'public.student_portal_accounts', 'insert')
+    or has_table_privilege('authenticated', 'public.student_portal_registration_requests', 'insert')
+    or has_table_privilege('authenticated', 'public.student_portal_invitations', 'insert') then
+    raise exception 'Authenticated users unexpectedly have direct portal onboarding write privileges';
+  end if;
+end;
+$;
+
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000004', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+select public.submit_student_portal_registration('Siswa Mandiri', 'PORTAL-SELF', '2009-03-04');
+
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'students:view,students:update', false);
+set role authenticated;
+do $
+declare request_id uuid;
+begin
+  select id into request_id from public.student_portal_registration_requests
+  where user_id = '50000000-0000-4000-8000-000000000004';
+  if request_id is null then raise exception 'Self-registration request was not created'; end if;
+  if (select is_active from public.users where id = '50000000-0000-4000-8000-000000000004') then
+    raise exception 'Self-registration activated the account before approval';
+  end if;
+  perform public.approve_student_portal_registration(request_id);
+  if not (select is_active from public.users where id = '50000000-0000-4000-8000-000000000004') then
+    raise exception 'Approved self-registration did not activate the user';
+  end if;
+  if not exists (
+    select 1 from public.student_portal_accounts
+    where user_id = '50000000-0000-4000-8000-000000000004'
+      and student_id = '60000000-0000-4000-8000-000000000012'
+  ) then raise exception 'Self-registration did not link the matching student'; end if;
+  if (select status from public.student_portal_registration_requests where id = request_id) <> 'approved' then
+    raise exception 'Approved request status was not persisted'; end if;
+end;
+$;
+
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000003', false);
+select set_config('test.permissions', 'student_portal:view', false);
+set role authenticated;
+do $
+declare profile jsonb;
+begin
+  profile := public.my_student_portal_profile();
+  if profile ->> 'nis' <> 'PORTAL-INVITE' or profile ->> 'full_name' <> 'Siswa Undangan' then
+    raise exception 'Portal profile did not return the linked student safe fields';
+  end if;
+  if profile ? 'address' or profile ? 'guardian_phone' or profile ? 'notes' or profile ? 'birth_date' then
+    raise exception 'Portal profile exposed private student fields';
+  end if;
+end;
+$;
+
 reset role;
 \echo 'Database migration assertions passed.'
+

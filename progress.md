@@ -1000,3 +1000,16 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Status penerapan migration: pengguna melaporkan push yang tertinggal telah dilakukan dan alur transfer browser berhasil. Asisten tidak menjalankan atau mengubah database production.
 - Project Supabase kedua tidak disentuh.
 
+
+
+## 2026-11-25 — Fondasi onboarding akun Portal Siswa
+
+- Keputusan produk: dua jalur berjalan berdampingan, yaitu undangan yang dibuat admin untuk satu data siswa dan pendaftaran mandiri yang wajib diverifikasi admin.
+- Menambahkan migrasi `20261124340000_student_portal_account_onboarding.sql`: relasi satu-ke-satu akun Auth ↔ data siswa, antrean pendaftaran mandiri, undangan sekali pakai dengan token acak 256-bit yang disimpan sebagai hash SHA-256, role terbatas `siswa`, serta permission `student_portal:view`.
+- Pembuatan undangan mensyaratkan `students:view` dan `students:update`, hanya untuk siswa aktif tanpa akun portal, dan token berlaku tujuh hari. Token mentah hanya dikembalikan saat RPC membuat undangan; database hanya menyimpan hash.
+- Klaim undangan menghubungkan akun Auth yang sudah dibuat, mengaktifkan profil, dan memberikan role siswa secara atomik. Pendaftaran mandiri tetap nonaktif tanpa role sampai admin menyetujui; persetujuan mencocokkan NIS, nama, tanggal lahir, dan status siswa aktif secara persis.
+- Fungsi profil Portal Siswa hanya mengembalikan nama, NIS/NISN, status, tahun masuk, jurusan, kelas, dan tahun ajaran; tidak membuka alamat, tanggal lahir, telepon wali, atau catatan internal. Tidak ada policy SELECT umum untuk tabel students bagi role siswa.
+- Pengujian PostgreSQL disposable ditambah untuk klaim undangan, aktivasi tertunda pendaftaran mandiri, pencocokan data saat approval, role terbatas, larangan direct write, dan pembatasan kolom profil.
+- Tahap ini baru fondasi database/RPC. UI pendaftaran, halaman antrean admin, undangan dari detail siswa, login routing khusus siswa, dan dashboard Portal Siswa belum dibuat.
+- Migrasi baru belum diterapkan oleh asisten ke Supabase production. Jangan jalankan migration push sebelum backup, pemeriksaan urutan remote, dan persetujuan eksplisit. Project Supabase kedua tidak disentuh.
+- Verifikasi CI untuk commit ini menunggu hasil GitHub Actions; belum ada klaim tes lokal.
