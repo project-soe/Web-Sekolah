@@ -80,7 +80,7 @@ export async function createClassGroup(formData: FormData): Promise<void> {
   await logActivity(supabase, {
     action: "create", module: "classes", entityType: "class_group",
     entityId: data.id, summary: "Menambahkan rombongan belajar",
-    changes: { grade_level: parsed.data.grade_level },
+    changes: { grade_level: parsed.data.grade_level, capacity: parsed.data.capacity },
   });
   revalidatePath("/admin/kelas");
   redirect("/admin/kelas?saved=kelas");
@@ -101,6 +101,7 @@ export async function updateClassGroup(formData: FormData): Promise<void> {
   const { error } = await supabase.from("class_groups").update({
     name: parsed.data.name,
     grade_level: parsed.data.grade_level,
+    capacity: parsed.data.capacity,
     department_id: parsed.data.department_id || null,
     homeroom_teacher_id: parsed.data.homeroom_teacher_id || null,
   }).eq("id", id);

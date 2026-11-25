@@ -99,7 +99,7 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
       <div><p className="text-xs text-muted-foreground">Wali kelas</p><p className="mt-1 font-semibold">{teacher?.full_name ?? "Belum ditentukan"}</p></div>
       <div><p className="text-xs text-muted-foreground">Tahun ajaran</p><p className="mt-1 font-semibold">{year?.name ?? "Tidak tersedia"}</p></div>
       <div><p className="text-xs text-muted-foreground">Periode</p><p className="mt-1 font-semibold">{year ? year.start_date + " – " + year.end_date : "—"}</p></div>
-      <div><p className="text-xs text-muted-foreground">Kapasitas kelas</p><p className="mt-1 font-semibold">{canViewStudents ? (placementsError || studentsError ? classGroup.enrolled_count : students?.length ?? classGroup.enrolled_count) : classGroup.capacity} / {classGroup.capacity} siswa</p></div>
+      <div><p className="text-xs text-muted-foreground">Kapasitas kelas</p><p className="mt-1 font-semibold">{canViewStudents ? (placementsError || studentsError ? classGroup.enrolled_count : students?.length ?? classGroup.enrolled_count) + " / " + classGroup.capacity + " siswa" : "Maksimal " + classGroup.capacity + " siswa"}</p></div>
     </CardContent></Card>
 
     <section className="flex flex-col gap-3">

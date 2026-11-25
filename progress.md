@@ -835,7 +835,8 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Setiap rombel memiliki kapasitas yang dapat diatur (default 36, rentang 1–60) dan counter penempatan yang dipelihara oleh trigger database.
 - Penempatan baru dan perpindahan kelas memesan slot secara atomik melalui conditional UPDATE pada baris rombel. Permintaan bersamaan ke kelas yang sama diserialkan PostgreSQL sehingga kapasitas tidak dapat terlampaui.
 - Trigger mengunci dua rombel secara berurutan saat transfer, mengurangi counter kelas asal setelah transfer/penghapusan, dan menolak penurunan kapasitas di bawah jumlah siswa yang sudah ditempatkan.
-- Form tambah/edit rombel menerima kapasitas; daftar kelas dan detail kelas menampilkan jumlah siswa dibanding kapasitas. Server action menerjemahkan penolakan kapasitas menjadi pesan yang dapat dipahami.
+- Form tambah/edit rombel menerima dan menyimpan kapasitas; daftar kelas dan detail kelas menampilkan jumlah siswa dibanding kapasitas hanya bila akun memiliki permission `students:view`, sedangkan akun tanpa permission hanya melihat batas maksimum. Server action menerjemahkan penolakan kapasitas menjadi pesan yang dapat dipahami.
+- Assertion tambahan memastikan counter tidak dapat dipalsukan melalui UPDATE langsung oleh klien.
 - Fixture PostgreSQL disposable CI diperluas untuk menguji counter transfer, penolakan penempatan melebihi kapasitas, penolakan pengurangan kapasitas, serta dua penempatan bersamaan yang berebut satu slot.
 - Tidak ada SQL yang dijalankan terhadap Supabase production dan tidak ada perubahan pada project Supabase kedua. Migrasi baru belum diterapkan ke database mana pun.
 - Status verifikasi: menunggu CI untuk lint, typecheck, unit test, build, migrasi/assertion PostgreSQL, dan uji konkurensi kapasitas. Setelah CI hijau, pengguna pull commit dan uji UI tambah/edit kelas serta penempatan saat kelas penuh.

@@ -169,6 +169,12 @@ begin
     raise exception 'Rejected over-capacity operations changed the counter';
   end if;
 
+  update public.class_groups set enrolled_count = 0
+  where id = '20000000-0000-4000-8000-000000000002';
+  if (select enrolled_count from public.class_groups where id = '20000000-0000-4000-8000-000000000002') <> 2 then
+    raise exception 'Direct client update unexpectedly changed the protected enrollment counter';
+  end if;
+
   begin
     update public.student_class_enrollments
     set student_id = '60000000-0000-4000-8000-000000000003'
