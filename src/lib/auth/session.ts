@@ -12,12 +12,10 @@ export async function fetchAccess(supabase: SupabaseClient): Promise<Access | nu
   return parsed.success ? parsed.data : null;
 }
 
-/** Sesi valid = akun terautentikasi (divalidasi server Auth), aktif, dan punya minimal satu role. */
+/** Sesi valid = akun terautentikasi, aktif, dan punya minimal satu role. */
 export const getSession = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   const access = await fetchAccess(supabase);
   if (!access || access.roles.length === 0) return null;
@@ -27,6 +25,14 @@ export const getSession = cache(async () => {
 export async function requireAdmin() {
   const session = await getSession();
   if (!session) redirect("/login");
+  if (session.access.roles.includes("siswa") && !session.access.is_super_admin) redirect("/portal");
+  return session;
+}
+
+export async function requireStudent() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (!session.access.roles.includes("siswa") || session.access.is_super_admin) redirect("/admin");
   return session;
 }
 

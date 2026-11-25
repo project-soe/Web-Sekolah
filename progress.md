@@ -1021,3 +1021,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memisahkan assertion administratif dari role `authenticated`; tes kini tetap memanggil RPC pada role yang sesuai, tetapi membaca tabel internal untuk assertion setelah reset role database.
 - Menghapus undangan lama yang belum diklaim sebelum menerbitkan token baru untuk siswa yang sama, sehingga indeks unik undangan aktif tidak menghalangi penerbitan ulang.
 - CI #277 database-tests gagal pada tahap pembuatan fungsi profil; tidak ada klaim kelulusan CI. Koreksi dikirim sebagai commit baru dan menunggu run berikutnya.
+
+
+## 2026-11-25 — Alur autentikasi Portal Siswa
+
+- Menambahkan validasi pendaftaran Portal Siswa: email, password minimal delapan karakter, nama, serta NIS/tanggal lahir untuk jalur mandiri atau token 64 karakter untuk jalur undangan.
+- Server action menggunakan Supabase Auth sign-up. Metadata onboarding diproses setelah sesi tersedia; bila konfirmasi email diaktifkan, pemrosesan ditunda sampai login pertama setelah verifikasi email.
+- Login memproses klaim undangan atau pengajuan mandiri yang tertunda, lalu mengarahkan role `siswa` ke `/portal`; akun tanpa role tetap ditolak dan di-sign-out.
+- Pemisahan guard server: `requireAdmin` tidak menerima role siswa, sedangkan `requireStudent` hanya menerima role siswa.
+- UI halaman pendaftaran, antrean verifikasi admin, undangan detail siswa, dan dashboard Portal Siswa akan ditambahkan pada commit lanjutan. CI untuk perubahan autentikasi ini menunggu workflow baru.
+- Migrasi 3400 belum diterapkan ke Supabase production; project Supabase kedua tidak disentuh.

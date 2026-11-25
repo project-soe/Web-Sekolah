@@ -13,7 +13,7 @@ export default function LoginPage() {
     <main className="grid min-h-dvh place-items-center bg-muted p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Masuk Dashboard</CardTitle>
+          <CardTitle>Masuk</CardTitle>
           <p className="text-sm text-muted-foreground">{siteDefaults.name}</p>
         </CardHeader>
         <CardContent>
