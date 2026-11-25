@@ -922,3 +922,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Tidak menerapkan migrasi production pada sesi ini. Sebelum deployment, pengguna perlu menyelesaikan smoke test UI (kapasitas, penempatan dengan/tanpa `students:view`, kenaikan massal, dan kelulusan kelas XII), memastikan backup production tersedia, lalu memeriksa `supabase migration list --remote` pada project Website Sekolah yang benar. Jangan menyentuh project Supabase kedua.
 - Jika riwayat remote menunjukkan hanya migrasi 2900–3100 yang tertunda dan backup sudah dipastikan, jalankan penerapan berurutan 2900 → 3000 → 3100, lalu verifikasi ulang daftar migrasi remote dan alur aplikasi. Hentikan bila ada versi tak dikenal atau ketidaksesuaian riwayat.
 - Belum ada pengujian browser/local yang diklaim dan tidak ada SQL yang dijalankan terhadap Supabase production.
+
+
+## 2026-11-25 — Pengamanan perubahan status melalui form data induk
+
+- Audit alur CRUD siswa menemukan form umum tambah/edit mengizinkan pemilihan status `active`, `graduated`, `transferred`, atau `withdrawn` dan pengisian tanggal kelulusan secara langsung.
+- Ini berpotensi melewati aturan proses akademik khusus, misalnya kelulusan massal yang hanya boleh dilakukan untuk rombel XII pada tahun ajaran aktif, serta membuat status/tanggal kelulusan tidak sinkron dengan riwayat.
+- Form umum sekarang hanya mengelola data induk. Siswa baru selalu dibuat dengan status `active` dan `graduation_date = null`; saat edit, server action tidak mengirim kolom status/tanggal kelulusan sehingga nilai lifecycle yang sudah ada tetap dipertahankan.
+- Menghapus field status dan tanggal kelulusan dari schema/form generik. UI memberi keterangan bahwa perubahan status harus melalui proses akademik khusus. Detail siswa tetap menampilkan status dan tanggal kelulusan.
+- Perubahan ini tidak mengubah migrasi atau database production. Proses khusus untuk status `transferred` dan `withdrawn` masih perlu dirancang terpisah; fitur kelulusan XII tetap memakai RPC khusus.
+- Status verifikasi: menunggu CI dan uji pengguna. Tidak ada pengujian lokal yang diklaim; tidak ada project Supabase yang disentuh.

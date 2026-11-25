@@ -20,13 +20,7 @@ export const studentInputSchema = z.object({
   guardian_phone: z.string().trim().max(30).regex(/^[0-9+().\-\s]*$/, "Nomor telepon tidak valid").optional().default(""),
   department_id: z.string().uuid().optional().or(z.literal("")),
   enrollment_year: z.coerce.number().int().min(2000).max(2200),
-  status: z.enum(["active", "graduated", "transferred", "withdrawn"]),
-  graduation_date: dateOnly.optional().default(""),
   notes: z.string().trim().max(2000).optional().default(""),
-}).superRefine((v, ctx) => {
-  if (v.birth_date && v.graduation_date && v.graduation_date < v.birth_date) {
-    ctx.addIssue({ code: "custom", path: ["graduation_date"], message: "Tanggal lulus tidak boleh sebelum tanggal lahir" });
-  }
 });
 
 export type StudentInput = z.infer<typeof studentInputSchema>;

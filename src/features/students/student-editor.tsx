@@ -8,8 +8,7 @@ export type StudentEditorValues = {
   id?: string; nis?: string; nisn?: string | null; full_name?: string; gender?: "male" | "female";
   birth_place?: string | null; birth_date?: string | null; address?: string | null;
   guardian_name?: string | null; guardian_phone?: string | null; department_id?: string | null;
-  enrollment_year?: number; status?: "active" | "graduated" | "transferred" | "withdrawn";
-  graduation_date?: string | null; notes?: string | null;
+  enrollment_year?: number; notes?: string | null;
 };
 type Department = { id: string; name: string };
 
@@ -31,10 +30,9 @@ export function StudentEditor({ initial = {}, departments }: { initial?: Student
       <Field id="guardian_phone" label="Nomor telepon wali"><Input id="guardian_phone" name="guardian_phone" type="tel" maxLength={30} defaultValue={initial.guardian_phone ?? ""} /></Field>
       <div className="sm:col-span-2"><Field id="address" label="Alamat"><Textarea id="address" name="address" rows={3} maxLength={1000} defaultValue={initial.address ?? ""} /></Field></div>
     </CardContent></Card>
-    <Card><CardContent className="grid gap-5 sm:grid-cols-2">
-      <Field id="status" label="Status siswa" required><Select id="status" name="status" required defaultValue={initial.status ?? "active"}><option value="active">Aktif</option><option value="graduated">Lulus</option><option value="transferred">Pindah</option><option value="withdrawn">Keluar</option></Select></Field>
-      <Field id="graduation_date" label="Tanggal lulus"><Input id="graduation_date" name="graduation_date" type="date" defaultValue={initial.graduation_date ?? ""} /></Field>
-      <div className="sm:col-span-2"><Field id="notes" label="Catatan internal"><Textarea id="notes" name="notes" rows={3} maxLength={2000} defaultValue={initial.notes ?? ""} /></Field></div>
+    <Card><CardContent className="grid gap-5">
+      <div><Field id="notes" label="Catatan internal"><Textarea id="notes" name="notes" rows={3} maxLength={2000} defaultValue={initial.notes ?? ""} /></Field></div>
+      <p className="text-xs text-muted-foreground">Status dan tanggal kelulusan dikelola melalui proses akademik khusus agar riwayat siswa tetap konsisten.</p>
     </CardContent></Card>
     <div className="flex flex-wrap gap-3"><Button type="submit" size="lg">Simpan data siswa</Button><Link href={initial.id ? "/admin/siswa/" + initial.id : "/admin/siswa"} className="inline-flex min-h-12 items-center rounded-lg border border-border px-5 text-sm font-medium hover:bg-muted">Batal</Link></div>
   </form>;

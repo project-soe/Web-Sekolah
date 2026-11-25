@@ -18,11 +18,9 @@ export async function saveStudent(formData: FormData): Promise<void> {
   if (!can(session.access, editing ? "students:update" : "students:create")) redirect("/admin/siswa?error=akses");
 
   const supabase = await createClient();
-  let previousStatus: string | null = null;
   if (editing) {
-    const existing = await supabase.from("students").select("status").eq("id", input.id!).maybeSingle();
+    const existing = await supabase.from("students").select("id").eq("id", input.id!).maybeSingle();
     if (existing.error || !existing.data) redirect("/admin/siswa?error=tidak_ditemukan");
-    previousStatus = existing.data.status;
   }
   const payload = {
     nis: input.nis,
@@ -36,8 +34,6 @@ export async function saveStudent(formData: FormData): Promise<void> {
     guardian_phone: input.guardian_phone || null,
     department_id: input.department_id || null,
     enrollment_year: input.enrollment_year,
-    status: input.status,
-    graduation_date: input.graduation_date || null,
     notes: input.notes || null,
   };
 
@@ -50,19 +46,18 @@ export async function saveStudent(formData: FormData): Promise<void> {
         .maybeSingle()
     : await supabase
         .from("students")
-        .insert({ ...payload, created_by: session.userId })
+        .insert({ ...payload, status: "active", graduation_date: null, created_by: session.userId })
         .select("id")
         .single();
   if (result.error || !result.data) {
     console.error("admin_students_save_failed", result.error?.code ?? "no_rows");
     redirect("/admin/siswa?error=" + (result.error?.code === "23505" ? "duplikat" : "simpan"));
   }
-  const statusChanged = editing && previousStatus !== input.status;
   await logActivity(supabase, {
-    action: statusChanged ? "status_change" : editing ? "update" : "create",
+    action: editing ? "update" : "create",
     module: "students", entityType: "student", entityId: result.data.id,
     summary: editing ? "Memperbarui data siswa" : "Menambahkan data siswa",
-    changes: { status: input.status, enrollment_year: input.enrollment_year },
+    changes: { enrollment_year: input.enrollment_year },
   });
   revalidatePath("/admin/siswa");
   revalidatePath("/admin/siswa/" + result.data.id);
