@@ -1181,3 +1181,9 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan aksi Lanjutkan pengajuan yang mengulang RPC memakai metadata akun terkonfirmasi, tanpa membuat akun Auth baru. Duplikat hanya dianggap sukses jika antrean pengajuan milik akun benar-benar ditemukan.
 - Memperbaiki JSX formulir yang masih menyimpan karakter literal \\n di antara wrapper dan form.
 - Tidak mengubah migrasi atau database production. CI untuk commit ini perlu diverifikasi; pengujian browser perlu memastikan pengajuan masuk ke Verifikasi Portal Siswa.
+
+
+### Koreksi akhir tampilan pemulihan
+
+- Memastikan urutan kondisi pesan pemulihan memakai grouping boolean yang benar untuk kedua parameter error.
+- Koreksi literal pemisah baris JSX divalidasi terhadap isi file pada branch sebelum commit.
