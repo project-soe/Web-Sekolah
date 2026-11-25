@@ -911,3 +911,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Server action memverifikasi bahwa kelas tujuan berada pada tahun ajaran aktif, menolak pemilihan kelas yang sama dengan penempatan saat ini, serta menampilkan pesan sukses/error khusus penempatan.
 - Perubahan hanya pada halaman admin dan server action serta dokumentasi. Tidak ada perubahan migrasi atau data Supabase; migrasi 2900–3100 tetap belum diterapkan ke production dan project Supabase kedua tidak disentuh.
 - Status verifikasi: menunggu CI; belum ada klaim uji browser/local.
+
+
+## 2026-11-25 — CI #264 hijau dan keputusan deployment database
+
+- GitHub Actions run #264 (`45546928971`) pada commit `97bc9b619561201d43c59395555da6956056c435` selesai dengan conclusion `success`; job `check` dan `database-tests` keduanya hijau.
+- Job `check` meliputi install dependency, lint, typecheck, unit test, dan build. Job `database-tests` berhasil menjalankan migrasi serta assertion PostgreSQL disposable, termasuk tes konkurensi kapasitas kelas.
+- Hasil CI memverifikasi kode dan migrasi dalam lingkungan tes terisolasi; bukan penerapan atau verifikasi langsung pada Supabase production.
+- Audit ulang status deployment: migrasi `20261124290000_class_capacity_enrollment_guard.sql`, `20261124300000_bulk_class_promotion.sql`, dan `20261124310000_bulk_student_graduation.sql` masih pending di production. Fondasi 2500–2800 sebelumnya telah dikonfirmasi pengguna diterapkan.
+- Tidak menerapkan migrasi production pada sesi ini. Sebelum deployment, pengguna perlu menyelesaikan smoke test UI (kapasitas, penempatan dengan/tanpa `students:view`, kenaikan massal, dan kelulusan kelas XII), memastikan backup production tersedia, lalu memeriksa `supabase migration list --remote` pada project Website Sekolah yang benar. Jangan menyentuh project Supabase kedua.
+- Jika riwayat remote menunjukkan hanya migrasi 2900–3100 yang tertunda dan backup sudah dipastikan, jalankan penerapan berurutan 2900 → 3000 → 3100, lalu verifikasi ulang daftar migrasi remote dan alur aplikasi. Hentikan bila ada versi tak dikenal atau ketidaksesuaian riwayat.
+- Belum ada pengujian browser/local yang diklaim dan tidak ada SQL yang dijalankan terhadap Supabase production.
