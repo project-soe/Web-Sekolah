@@ -16,6 +16,17 @@ describe("studentInputSchema", () => {
     expect(studentInputSchema.safeParse({ ...validStudent, nis: " " }).success).toBe(false);
   });
   it("menolak tanggal kalender yang tidak valid", () => expect(studentInputSchema.safeParse({ ...validStudent, birth_date: "2026-02-30" }).success).toBe(false));
-  it("menolak tanggal lulus sebelum tanggal lahir", () => expect(studentInputSchema.safeParse({ ...validStudent, graduation_date: "2009-01-01" }).success).toBe(false));
+  it("mengabaikan field status dan tanggal lulus di luar schema data induk", () => {
+    const result = studentInputSchema.safeParse({
+      ...validStudent,
+      status: "graduated",
+      graduation_date: "2009-01-01",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("status");
+      expect(result.data).not.toHaveProperty("graduation_date");
+    }
+  });
   it("menerima UUID saat edit", () => expect(studentInputSchema.safeParse({ ...validStudent, id: "00000000-0000-4000-8000-000000000000" }).success).toBe(true));
 });

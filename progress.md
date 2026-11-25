@@ -932,3 +932,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menghapus field status dan tanggal kelulusan dari schema/form generik. UI memberi keterangan bahwa perubahan status harus melalui proses akademik khusus. Detail siswa tetap menampilkan status dan tanggal kelulusan.
 - Perubahan ini tidak mengubah migrasi atau database production. Proses khusus untuk status `transferred` dan `withdrawn` masih perlu dirancang terpisah; fitur kelulusan XII tetap memakai RPC khusus.
 - Status verifikasi: menunggu CI dan uji pengguna. Tidak ada pengujian lokal yang diklaim; tidak ada project Supabase yang disentuh.
+
+## 2026-11-25 — Perbaikan CI #266: test schema lifecycle siswa
+
+- GitHub Actions run #45548734154 (CI #266) gagal hanya pada job `check`, langkah `pnpm test`; job `database-tests` berhasil.
+- Log menunjukkan satu unit test lama di `tests/unit/student-schema.test.ts` masih mengharapkan schema form data induk menolak tanggal kelulusan sebelum tanggal lahir.
+- Ekspektasi tersebut sudah tidak sesuai dengan desain terbaru: `status` dan `graduation_date` sengaja dikeluarkan dari schema umum agar perubahan lifecycle hanya melalui alur akademik khusus. Zod mengabaikan properti asing secara default.
+- Memperbarui unit test agar memverifikasi bahwa payload legacy yang memuat status/tanggal kelulusan tidak menyebabkan schema umum gagal dan kedua properti tersebut tidak masuk ke hasil parse.
+- Tidak mengembalikan field lifecycle ke form umum, tidak mengubah migrasi/database, dan tidak menyentuh Supabase production maupun project kedua.
+- Status verifikasi: perubahan test dan dokumentasi didorong ke branch `main`; menunggu CI baru. Jangan menyatakan CI hijau sebelum run baru selesai.
