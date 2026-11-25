@@ -1069,7 +1069,7 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 
 - GitHub Actions run #283 (`45566247613`) pada commit `93402b9aa5c0762ec825dc6d7def7cfc7f3285c4` selesai dengan conclusion `success`.
 - Job `check`: lint, typecheck, unit test (termasuk schema pendaftaran Portal Siswa), dan build seluruhnya sukses.
-- Job `database-tests`: migrasi 2500–3500 yang tersedia pada runner sampai 3400 serta seluruh assertion onboarding lulus; tes konkurensi aktivasi tahun ajaran dan kapasitas kelas juga sukses.
+- Job `database-tests`: migrasi 2500–3400 serta seluruh assertion onboarding lulus; tes konkurensi aktivasi tahun ajaran dan kapasitas kelas juga sukses.
 - Perbaikan yang ditangkap CI selama iterasi: fixture jurusan harus menyertakan `departments.name`; delimiter PL/pgSQL dan assertion role database disesuaikan; activity log menggunakan enum `verify`; regex tanggal pendaftaran diperbaiki.
 - Fitur onboarding dan dashboard awal sudah tersedia di branch `main`; belum ada uji browser yang dikonfirmasi untuk alur Portal Siswa.
 - Migrasi `20261124340000_student_portal_account_onboarding.sql` belum diterapkan oleh asisten ke Supabase production. Lakukan pemeriksaan migration list remote, backup, dan persetujuan sebelum deployment. Project Supabase kedua tidak disentuh.
