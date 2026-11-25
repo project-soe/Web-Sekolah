@@ -20,9 +20,16 @@ begin
     if new.ended_at is not null or new.ended_by is not null then
       raise exception 'Penempatan baru harus berstatus aktif' using errcode = '23514';
     end if;
-    select cg.academic_year_id into target_year from public.class_groups cg where cg.id = new.class_group_id;
-    if target_year is null or target_year <> new.academic_year_id then
-      raise exception 'Kelas tidak sesuai dengan tahun ajaran' using errcode = '23514';
+    update public.class_groups set enrolled_count = enrolled_count + 1
+    where id = new.class_group_id and academic_year_id = new.academic_year_id
+      and enrolled_count < capacity
+    returning academic_year_id into target_year;
+    if target_year is null then
+      if not exists (select 1 from public.class_groups
+        where id = new.class_group_id and academic_year_id = new.academic_year_id) then
+        raise exception 'Kelas tidak sesuai dengan tahun ajaran' using errcode = '23514';
+      end if;
+      raise exception 'Kapasitas kelas sudah penuh' using errcode = '23514';
     end if;
     select s.status into student_status from public.students s where s.id = new.student_id;
     if student_status is distinct from 'active' then
@@ -54,9 +61,19 @@ begin
   end if;
 
   if new.class_group_id is distinct from old.class_group_id then
-    select cg.academic_year_id into target_year from public.class_groups cg where cg.id = new.class_group_id;
-    if target_year is null or target_year <> new.academic_year_id then
-      raise exception 'Kelas tidak sesuai dengan tahun ajaran' using errcode = '23514';
+    perform cg.id from public.class_groups cg
+    where cg.id in (old.class_group_id, new.class_group_id)
+    order by cg.id for update;
+    update public.class_groups set enrolled_count = enrolled_count + 1
+    where id = new.class_group_id and academic_year_id = new.academic_year_id
+      and enrolled_count < capacity
+    returning academic_year_id into target_year;
+    if target_year is null then
+      if not exists (select 1 from public.class_groups
+        where id = new.class_group_id and academic_year_id = new.academic_year_id) then
+        raise exception 'Kelas tidak sesuai dengan tahun ajaran' using errcode = '23514';
+      end if;
+      raise exception 'Kapasitas kelas sudah penuh' using errcode = '23514';
     end if;
     select s.status into student_status from public.students s where s.id = new.student_id;
     if student_status is distinct from 'active' then

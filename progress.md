@@ -973,3 +973,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Daftar roster kelas dan penempatan tahun ajaran aktif hanya menampilkan enrollment yang belum ditutup. Server action perpindahan kelas tidak lagi mengirim metadata audit yang dilindungi.
 - Runner PostgreSQL disposable ditambah assertion privilege, transfer, withdrawal, pengurangan counter kapasitas, dan retensi riwayat penempatan/status.
 - Status verifikasi implementasi: menunggu CI. Tes lokal tidak dijalankan oleh asisten. Migrasi 3300 belum diterapkan ke Supabase production; project Supabase kedua tidak disentuh. Jangan menjalankan migrasi production tanpa persetujuan eksplisit, backup, dan pemeriksaan urutan.
+
+
+### Catatan verifikasi awal migrasi mutasi siswa
+
+- CI #271 menunjukkan bahwa penggantian trigger guard awal belum mempertahankan reservasi kapasitas kelas tujuan saat perpindahan kelas biasa. Job aplikasi (lint, typecheck, unit test, build) lolos; database-tests berhenti pada assertion counter perpindahan.
+- Memulihkan mekanisme reservasi slot atomik dan penguncian rombel dari migrasi kapasitas 2900 di dalam trigger guard baru, sambil tetap menambahkan validasi penutupan enrollment. Koreksi ini mempertahankan perilaku perpindahan kelas yang sudah ada.
+- CI #272 sedang berjalan pada revisi test delimiter sebelumnya; CI #273 berjalan untuk delimiter eksplisit. Verifikasi akhir menunggu run setelah koreksi trigger ini.
