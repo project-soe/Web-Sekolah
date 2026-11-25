@@ -879,3 +879,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 ### Catatan CI kelulusan — perbaikan fixture
 - Run #45541329118: job `check` sukses, tetapi `database-tests` gagal saat menyiapkan fixture siswa karena test session tidak menyertakan permission `students:create`. Ini adalah kekurangan permission pada fixture CI, bukan hasil kegagalan RPC kelulusan.
 - Memperbarui permission fixture untuk menyertakan `students:create` sebelum membuat tiga data calon lulusan. Commit perbaikan memicu CI ulang; status akhir belum diklaim sampai run terbaru selesai.
+
+## 2026-11-25 — Perbaikan CI #260: delimiter blok kelulusan
+
+- GitHub Actions run #45541600801 (CI #260) menunjukkan job `check` sukses, tetapi `database-tests` gagal saat parsing `tests/database/run.sql:349` dengan `syntax error at or near "$"`.
+- Akar masalah: blok PL/pgSQL pengujian kelulusan massal memakai delimiter `do $` dan penutup `$;`, bukan pasangan dollar-quote `do $$` dan `$$;`. Memperbaiki kedua delimiter tanpa mengubah assertion atau migrasi.
+- Job `check` pada run tersebut tetap sukses; database-tests harus dijalankan ulang pada commit perbaikan sebelum fitur dinyatakan lolos CI.
+- Perubahan hanya pada runner pengujian dan dokumentasi. Tidak ada migrasi yang diterapkan ke Supabase production; project Supabase kedua tidak disentuh.
