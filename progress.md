@@ -1049,3 +1049,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan unit test schema pendaftaran untuk kedua jalur (token undangan dan mandiri), format token, tanggal kalender, email, serta panjang password.
 - Memperbaiki pola validasi tanggal agar memeriksa digit tahun/bulan/hari dengan benar.
 - Perubahan UI Portal Siswa di commit sebelumnya menunggu hasil CI; verifikasi browser belum dilakukan.
+
+
+### Koreksi pola tanggal pada schema pendaftaran
+
+- Review kode setelah penambahan unit test menemukan pola tanggal tersimpan dengan escape ganda sehingga regex tidak mengenali digit tanggal.
+- Mengoreksi pola menjadi digit regex standar dan mempertahankan validasi kalender ISO.
+- Unit test baru akan memverifikasi koreksi ini pada CI berikutnya.
