@@ -784,3 +784,15 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memperbaiki kedua sesi tes agar menggunakan permission `classes:view,classes:update`. Tidak mengubah migrasi atau kode aplikasi; hanya memperbaiki konteks permission pada fixture pengujian agar sesuai dengan RLS.
 - Belum mengklaim CI hijau; workflow baru harus menyelesaikan ulang job `database-tests` dan `check`.
 - Perubahan hanya pada skrip tes dan dokumentasi. Tidak ada koneksi atau perubahan pada Supabase production maupun project Supabase kedua.
+
+## 2026-11-25 — CI #245 hijau dan detail rombongan belajar
+
+- GitHub Actions run #245 (`45504395360`) pada commit `5acd253aaa8863b9a5e2e50c31e64e8ec5c06f01` selesai dengan conclusion `success` untuk kedua job: `check` dan `database-tests`.
+- Job `check`: dependency install, lint, typecheck, unit test, dan build berhasil.
+- Job `database-tests`: bootstrap PostgreSQL 17 disposable, penerapan migrasi `20261124250000`–`20261124280000`, seluruh assertion database, dan tes konkurensi aktivasi tahun ajaran berhasil.
+- Hasil ini membuktikan migrasi tersebut lolos pada fixture PostgreSQL terisolasi di CI; bukan bukti migrasi sudah diterapkan pada Supabase production. Fixture permission `has_permission()` tetap simulasi dan bukan replika penuh RBAC Supabase.
+- Menambahkan halaman detail rombongan belajar `/admin/kelas/[id]`. Dari daftar kelas, nama kelas dapat dibuka untuk melihat tingkat, jurusan, wali kelas, tahun ajaran, serta roster siswa bila akun juga memiliki `students:view`.
+- Halaman detail hanya membaca data; tidak menambah/mengubah data siswa atau kelas. Validasi ID, `classes:view`, dan pembatasan roster dengan `students:view` tetap diterapkan.
+- Tidak ada migrasi database baru dan tidak ada koneksi/perubahan ke Supabase production maupun project Supabase kedua.
+- Status verifikasi fitur detail: menunggu CI baru setelah commit. Pengujian browser/preview Worker belum dilakukan.
+- Langkah berikutnya: tunggu CI perubahan detail kelas; setelah hijau, pengguna pull `main` dan verifikasi halaman `/admin/kelas` serta detail kelas di preview. Pengelolaan edit/hapus kelas, kapasitas, dan kenaikan kelas massal tetap belum termasuk.
