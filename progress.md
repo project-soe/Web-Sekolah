@@ -1102,3 +1102,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - CI #286 memang hijau pada commit sebelum penghapusan, tetapi tidak memvalidasi keadaan branch setelah penghapusan. CI wajib dijalankan ulang pada commit pemulihan sebelum deployment.
 - Pemeriksaan Supabase production menunjukkan migrasi 3400 belum diterapkan; 3500 tidak tercantum di remote karena belum ada di repository lokal/branch saat pemeriksaan. Backup pengguna berukuran 562.928 byte dengan permission `600`.
 - Tidak ada `db push`, perubahan database production, atau perubahan pada project Supabase kedua. Deployment tetap menunggu CI baru dan persetujuan eksplisit pengguna.
+
+
+## 2026-11-25 — Mempermudah akses publik pendaftaran Portal Siswa
+
+- Audit repository memastikan halaman publik `/portal/daftar` dan formulir pendaftaran dua jalur (kode undangan atau mandiri) sebenarnya sudah tersedia; tautan pendaftaran juga sudah ada di formulir login.
+- Temuan UX: halaman pendaftaran belum cukup terlihat dari website publik, sehingga pengunjung dapat mengira formulir belum tersedia.
+- Menambahkan tautan **Portal Siswa** pada header desktop dan CTA **Daftar Portal Siswa** pada hero beranda agar siswa/orang tua dapat menemukan formulir tanpa harus membuka halaman login terlebih dahulu.
+- Route pendaftaran tetap menggunakan halaman yang sama; tidak membuat formulir atau endpoint duplikat. Jalur mandiri tetap memerlukan persetujuan admin sebelum akun diaktifkan.
+- Perubahan ini hanya pada navigasi/penemuan halaman publik. Tidak mengubah skema database, migrasi, atau data production.
+- CI untuk commit navigasi ini menunggu hasil GitHub Actions; browser QA publik masih perlu dilakukan setelah deployment aplikasi.

@@ -65,6 +65,12 @@ export async function SiteHeader() {
           >
             Daftar PPDB
           </Link>
+          <Link
+            href="/portal/daftar"
+            className={buttonVariants({ size: "md", variant: "outline", className: "hidden md:inline-flex" })}
+          >
+            Portal Siswa
+          </Link>
           <MobileMenu items={publicNav} />
         </div>
       </div>

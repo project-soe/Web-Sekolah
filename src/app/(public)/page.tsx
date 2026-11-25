@@ -104,6 +104,16 @@ export default async function HomePage() {
               >
                 Informasi PPDB
               </Link>
+              <Link
+                href="/portal/daftar"
+                className={buttonVariants({
+                  size: "lg",
+                  variant: "ghost",
+                  className: "text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground",
+                })}
+              >
+                Daftar Portal Siswa
+              </Link>
             </div>
           </div>
 
