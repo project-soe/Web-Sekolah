@@ -28,6 +28,7 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
       </form>
     </section>
     ) : (
+    <>
     <form action={action} className="flex flex-col gap-4">
       <Field id="full_name" label="Nama lengkap sesuai data sekolah" required><Input id="full_name" name="full_name" autoComplete="name" required maxLength={150} /></Field>
       <Field id="email" label="Email aktif" required><Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required /></Field>
@@ -51,6 +52,7 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
       {resendState.error && <p role="alert" className="mt-3 text-sm text-danger">{resendState.error}</p>}
       {resendState.message && <p role="status" className="mt-3 rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{resendState.message}</p>}
     </section>
+    </>
     )}
   </div>;
 }

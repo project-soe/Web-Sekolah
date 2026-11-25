@@ -1208,3 +1208,6 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Dalam mode pemulihan, formulir signup baru dan resend email disembunyikan agar pengguna tidak membuat akun baru atau mengirim email lagi secara tidak perlu.
 - Pesan `error=konfirmasi` diperjelas agar tidak mengklaim email berhasil dikonfirmasi jika pertukaran kode gagal.
 - Tidak ada perubahan database/migrasi. CI dan uji browser setelah deployment masih diperlukan.
+
+
+- CI #301 menemukan parsing error ESLint: cabang ternary mode pendaftaran menghasilkan dua elemen sibling tanpa fragment. Membungkus formulir signup dan bagian kirim ulang email dalam React Fragment; mode pemulihan tetap satu section. Database tests CI #301 lulus.
