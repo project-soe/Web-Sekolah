@@ -371,6 +371,20 @@ begin
   exception when check_violation then null;
   end;
 
+  update public.students set birth_date = '2027-06-01'
+  where id = '60000000-0000-4000-8000-000000000008';
+  begin
+    perform public.graduate_class_students('20000000-0000-4000-8000-000000000006', '2027-05-15');
+    raise exception 'Expected invalid graduation date to roll back the whole class';
+  exception when check_violation then null;
+  end;
+  select count(*) into still_active from public.students
+  where id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
+    and status = 'active' and graduation_date is null;
+  if still_active <> 3 then raise exception 'Failed graduation partially changed student records'; end if;
+  update public.students set birth_date = null
+  where id = '60000000-0000-4000-8000-000000000008';
+
   graduated := public.graduate_class_students('20000000-0000-4000-8000-000000000006', '2027-05-15');
   if graduated <> 3 then raise exception 'Expected 3 graduated students, got %', graduated; end if;
   select count(*) into still_active from public.students

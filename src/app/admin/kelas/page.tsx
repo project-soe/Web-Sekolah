@@ -109,7 +109,7 @@ export default async function AdminClassesPage({ searchParams }: {
       <p className="text-xs text-muted-foreground">Kelas XII tidak ikut proses ini karena harus ditangani melalui proses kelulusan.</p>
     </section>}
 
-    {activeYear && can(session.access, "classes:update") && can(session.access, "students:update") && <section className="flex flex-col gap-3">
+    {activeYear && can(session.access, "classes:update") && can(session.access, "students:view") && can(session.access, "students:update") && <section className="flex flex-col gap-3">
       <div><h2 className="text-lg font-semibold">Kelulusan kelas XII</h2><p className="text-sm text-muted-foreground">Proses seluruh siswa aktif pada satu rombel kelas XII di tahun ajaran aktif. Status dan tanggal kelulusan diperbarui sekaligus, serta riwayat status dicatat otomatis.</p></div>
       {(() => {
         const graduationClasses = (classes ?? []).filter((item) => item.academic_year_id === activeYear.id && item.grade_level === 12).map((item) => {
