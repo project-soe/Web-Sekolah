@@ -1063,3 +1063,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - CI #280 pada commit `4c0544ef`: lint sukses, database-tests sukses, tetapi typecheck gagal karena union `ActivityAction` tidak memiliki nilai `approve` dan `reject`.
 - Menggunakan action `verify` yang memang tersedia pada tipe activity log untuk kedua keputusan verifikasi; ringkasan log tetap membedakan persetujuan dan penolakan.
 - CI #281/#282 akan memverifikasi koreksi ini beserta validasi tanggal pendaftaran yang diperbaiki.
+
+
+## Verifikasi akhir onboarding Portal Siswa — CI #283 hijau
+
+- GitHub Actions run #283 (`45566247613`) pada commit `93402b9aa5c0762ec825dc6d7def7cfc7f3285c4` selesai dengan conclusion `success`.
+- Job `check`: lint, typecheck, unit test (termasuk schema pendaftaran Portal Siswa), dan build seluruhnya sukses.
+- Job `database-tests`: migrasi 2500–3500 yang tersedia pada runner sampai 3400 serta seluruh assertion onboarding lulus; tes konkurensi aktivasi tahun ajaran dan kapasitas kelas juga sukses.
+- Perbaikan yang ditangkap CI selama iterasi: fixture jurusan harus menyertakan `departments.name`; delimiter PL/pgSQL dan assertion role database disesuaikan; activity log menggunakan enum `verify`; regex tanggal pendaftaran diperbaiki.
+- Fitur onboarding dan dashboard awal sudah tersedia di branch `main`; belum ada uji browser yang dikonfirmasi untuk alur Portal Siswa.
+- Migrasi `20261124340000_student_portal_account_onboarding.sql` belum diterapkan oleh asisten ke Supabase production. Lakukan pemeriksaan migration list remote, backup, dan persetujuan sebelum deployment. Project Supabase kedua tidak disentuh.
+- Uji browser berikutnya: buat undangan dari detail siswa aktif, daftar menggunakan token, login ke `/portal`; lalu uji pendaftaran mandiri, pastikan akun tetap tertahan, setujui di `/admin/akses-siswa`, dan login kembali. Uji juga token kedaluwarsa/salah, data identitas tidak cocok, serta akun siswa yang sudah terhubung.
