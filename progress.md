@@ -1042,3 +1042,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Detail siswa menyediakan pembuatan token undangan sekali pakai; token hanya ditampilkan kepada admin saat dibuat dan harus dibagikan secara pribadi.
 - Jalur undangan adalah undangan admin, bukan pembuatan password/Auth user secara langsung. Siswa menetapkan password sendiri. Pembuatan Auth user langsung oleh admin memerlukan Auth Admin API secret terpisah yang belum dikonfigurasi dan tidak ditambahkan.
 - UI dan auth flow menunggu CI baru serta uji browser pengguna. Migrasi 3400 belum diterapkan ke Supabase production; project Supabase kedua tidak disentuh.
+
+
+### Catatan validasi UI Portal Siswa
+
+- Menambahkan unit test schema pendaftaran untuk kedua jalur (token undangan dan mandiri), format token, tanggal kalender, email, serta panjang password.
+- Memperbaiki pola validasi tanggal agar memeriksa digit tahun/bulan/hari dengan benar.
+- Perubahan UI Portal Siswa di commit sebelumnya menunggu hasil CI; verifikasi browser belum dilakukan.
