@@ -979,4 +979,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 
 - CI #271 menunjukkan bahwa penggantian trigger guard awal belum mempertahankan reservasi kapasitas kelas tujuan saat perpindahan kelas biasa. Job aplikasi (lint, typecheck, unit test, build) lolos; database-tests berhenti pada assertion counter perpindahan.
 - Memulihkan mekanisme reservasi slot atomik dan penguncian rombel dari migrasi kapasitas 2900 di dalam trigger guard baru, sambil tetap menambahkan validasi penutupan enrollment. Koreksi ini mempertahankan perilaku perpindahan kelas yang sudah ada.
-- CI #272 sedang berjalan pada revisi test delimiter sebelumnya; CI #273 berjalan untuk delimiter eksplisit. Verifikasi akhir menunggu run setelah koreksi trigger ini.
+- CI #272 dan #273 gagal pada revisi sebelum koreksi trigger kapasitas; hasil dan perbaikannya dicatat pada bagian verifikasi akhir di bawah.
+
+
+### Verifikasi akhir mutasi siswa — CI #274 hijau
+
+- GitHub Actions run #274 (`45562790576`) pada commit `896c10f647c44a2dc8cc29628425176c9fa71550` selesai dengan conclusion `success`.
+- Job `check`: lint, typecheck, unit test, dan build seluruhnya sukses.
+- Job `database-tests`: seluruh migrasi dan assertion PostgreSQL sukses, termasuk tes transfer dan pengunduran diri, privilege penutupan enrollment, pelepasan kapasitas, retensi riwayat, konkurensi aktivasi tahun ajaran, serta konkurensi kapasitas kelas.
+- Kegagalan database-tests pada CI #271–#273 menjadi umpan balik iteratif: #271/#272/#273 menangkap bahwa trigger guard mutasi harus tetap mempertahankan reservasi kapasitas saat perpindahan kelas biasa; koreksi di commit `896c10f` mengembalikan mekanisme lock dan reservasi atomik. CI #274 memvalidasi koreksi tersebut.
+- Status fitur mutasi siswa: CI hijau. Uji UI/browser oleh pengguna masih diperlukan setelah pull.
+- Migrasi `20261124330000_student_transfer_withdrawal.sql` belum diterapkan ke Supabase production. Penerapan production tidak dilakukan oleh asisten; project Supabase kedua tidak disentuh. Ikuti urutan migrasi yang tercatat dan lakukan backup serta verifikasi target sebelum deployment dengan persetujuan eksplisit pengguna.
