@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { z } from "zod";
 import { logActivity } from "@/lib/activity/log";
 import { fetchAccess } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -174,6 +175,46 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
     if (error && typeof error === "object" && "digest" in error) throw error;
     console.error("[auth:portal] Unexpected signup error:", error instanceof Error ? error.message : "Unknown");
     return { error: "Layanan pendaftaran sedang bermasalah. Silakan coba beberapa saat lagi.", email: input.email };
+  }
+}
+
+export async function resendStudentPortalConfirmation(
+  _prev: { error?: string; message?: string; email?: string },
+  formData: FormData,
+): Promise<{ error?: string; message?: string; email?: string }> {
+  const parsed = z.email("Masukkan alamat email yang valid").safeParse(String(formData.get("email") ?? "").trim());
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Email tidak valid." };
+
+  try {
+    const requestHeaders = await headers();
+    const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+    if (!host) return { error: "Alamat website tidak dapat ditentukan. Silakan coba kembali." };
+    const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
+    const protocol = forwardedProtocol ?? (host.startsWith("localhost") ? "http" : "https");
+    const emailRedirectTo = `${protocol}://${host}/auth/callback?next=/portal/menunggu`;
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: parsed.data,
+      options: { emailRedirectTo },
+    });
+    if (error) {
+      console.error("[auth:portal] Confirmation resend failed:", { code: error.code ?? "unknown", status: error.status ?? null });
+      if (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit") {
+        return { error: "Permintaan email terlalu sering. Tunggu beberapa menit sebelum meminta tautan baru.", email: parsed.data };
+      }
+      if (error.code === "email_not_confirmed") {
+        return { error: "Akun ini sudah terkonfirmasi. Silakan langsung masuk ke Portal Siswa.", email: parsed.data };
+      }
+      return { error: "Tautan belum dapat dikirim. Pastikan email benar dan akun masih menunggu konfirmasi, atau hubungi admin sekolah.", email: parsed.data };
+    }
+    return {
+      message: "Permintaan tautan konfirmasi berhasil dikirim jika akun masih menunggu verifikasi. Periksa kotak masuk dan folder spam.",
+      email: parsed.data,
+    };
+  } catch (error) {
+    console.error("[auth:portal] Confirmation resend unexpected error:", error instanceof Error ? error.message : "Unknown");
+    return { error: "Layanan email sedang bermasalah. Silakan coba beberapa saat lagi." };
   }
 }
 

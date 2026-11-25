@@ -44,19 +44,16 @@ export async function SiteHeader() {
         </Link>
 
         <nav aria-label="Menu utama" className="ml-auto hidden items-center gap-1 lg:flex">
-          {primary.map((item) => {
-            const isPortal = item.href === "/portal/daftar";
-            return (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                className={isPortal ? "inline-flex min-h-10 items-center rounded-lg bg-amber-500 px-3 text-sm font-semibold text-slate-950 shadow-sm hover:bg-amber-400" : "inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted"}
-                activeClassName={isPortal ? "ring-2 ring-amber-600 ring-offset-1" : "bg-secondary text-secondary-foreground"}
-              >
-                {item.label}
-              </NavLink>
-            );
-          })}
+          {primary.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted"
+              activeClassName="bg-secondary text-secondary-foreground"
+            >
+              {item.label}
+            </NavLink>
+          ))}
           <NavDropdown label="Lainnya" items={more} />
         </nav>
 
@@ -67,6 +64,12 @@ export async function SiteHeader() {
             className={buttonVariants({ size: "md", className: "hidden sm:inline-flex" })}
           >
             Daftar PPDB
+          </Link>
+          <Link
+            href="/portal/daftar"
+            className={buttonVariants({ size: "md", variant: "outline", className: "hidden md:inline-flex" })}
+          >
+            Portal Siswa
           </Link>
           <MobileMenu items={publicNav} />
         </div>

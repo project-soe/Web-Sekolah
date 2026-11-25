@@ -1150,3 +1150,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menonjolkan tautan Portal Siswa dengan warna amber pada menu desktop dan mobile; tautan penting di footer juga ditambahkan.
 - Menghapus tombol Portal Siswa terpisah pada header agar tidak ada duplikasi tautan.
 - Tidak mengubah migrasi atau database production. CI untuk perubahan ini menunggu workflow commit terbaru.
+
+
+## 2026-11-25 — Pengiriman ulang email konfirmasi Portal Siswa
+
+- Menambahkan aksi server untuk meminta ulang email konfirmasi melalui Supabase Auth resend dengan tipe signup. URL callback memakai host website yang sedang diakses agar tautan kembali ke domain website, bukan localhost.
+- Menambahkan formulir Email konfirmasi belum masuk pada halaman pendaftaran. Pendaftar dapat meminta tautan baru tanpa mencoba membuat akun ulang; UI menampilkan pesan untuk pembatasan laju dan akun yang sudah terkonfirmasi.
+- Pengiriman ulang tidak membuat akun baru. Fitur ini hanya ditujukan bagi akun yang masih menunggu konfirmasi; akun yang sudah terkonfirmasi harus langsung masuk.
+- Tidak mengubah migrasi atau database production. CI untuk commit sebelumnya #292 dikonfirmasi hijau semua; CI untuk perubahan ini menunggu workflow terbaru. Pengujian email nyata tetap diperlukan.

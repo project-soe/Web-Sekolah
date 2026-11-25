@@ -36,7 +36,6 @@ export type AdminNavGroup = { group: string; items: AdminNavItem[] };
 
 export const publicNav: NavItem[] = [
   { label: "Beranda", href: "/" },
-  { label: "Portal Siswa", href: "/portal/daftar" },
   { label: "Profil Sekolah", href: "/profil" },
   { label: "Guru dan Tendik", href: "/guru" },
   { label: "Siswa", href: "/siswa" },
