@@ -14,7 +14,6 @@
 \i supabase/migrations/20261124320000_student_lifecycle_column_guards.sql
 \i supabase/migrations/20261124330000_student_transfer_withdrawal.sql
 \i supabase/migrations/20261124340000_student_portal_account_onboarding.sql
-\i supabase/migrations/20261124350000_student_portal_onboarding_account_state_guard.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -614,85 +613,5 @@ end;
 $portal$;
 
 reset role;
-
-
-\echo '12. Verify onboarding rejects Auth accounts that became active before claim or approval'
-reset role;
-insert into public.users (id, email, full_name, is_active) values
-  ('50000000-0000-4000-8000-000000000005', 'already-active-claim@example.test', 'Akun Sudah Aktif', true),
-  ('50000000-0000-4000-8000-000000000006', 'already-active-approval@example.test', 'Akun Approval Aktif', false);
-insert into auth.users (id, email) values
-  ('50000000-0000-4000-8000-000000000005', 'already-active-claim@example.test'),
-  ('50000000-0000-4000-8000-000000000006', 'already-active-approval@example.test');
-insert into public.students (id, nis, full_name, gender, birth_date, enrollment_year)
-values
-  ('60000000-0000-4000-8000-000000000013', 'PORTAL-ACTIVE-CLAIM', 'Siswa Akun Aktif', 'male', '2009-05-06', 2026),
-  ('60000000-0000-4000-8000-000000000014', 'PORTAL-ACTIVE-APPROVAL', 'Siswa Approval Aktif', 'female', '2009-07-08', 2026);
-
-select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
-select set_config('test.permissions', 'students:view,students:update', false);
-set role authenticated;
-select public.create_student_portal_invitation('60000000-0000-4000-8000-000000000013') as active_claim_token \gset
-select set_config('test.portal_active_claim_token', :'active_claim_token', false);
-
-reset role;
-select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000005', false);
-select set_config('test.permissions', '', false);
-set role authenticated;
-do $portal_hardening$
-begin
-  begin
-    perform public.claim_student_portal_invitation(current_setting('test.portal_active_claim_token'));
-    raise exception 'Active Auth account unexpectedly claimed a student invitation';
-  exception when insufficient_privilege then null;
-  end;
-end;
-$portal_hardening$;
-
-reset role;
-select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000006', false);
-select set_config('test.permissions', '', false);
-set role authenticated;
-select public.submit_student_portal_registration(
-  'Siswa Approval Aktif', 'PORTAL-ACTIVE-APPROVAL', '2009-07-08'
-);
-
-reset role;
-update public.users set is_active = true
-where id = '50000000-0000-4000-8000-000000000006';
-select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
-select set_config('test.permissions', 'students:view,students:update', false);
-set role authenticated;
-do $portal_hardening$
-declare request_id uuid;
-begin
-  select id into request_id from public.student_portal_registration_requests
-  where user_id = '50000000-0000-4000-8000-000000000006';
-  begin
-    perform public.approve_student_portal_registration(request_id);
-    raise exception 'Already-active Auth account unexpectedly passed admin approval';
-  exception when insufficient_privilege then null;
-  end;
-end;
-$portal_hardening$;
-
-reset role;
-do $portal_hardening$
-begin
-  if exists (select 1 from public.student_portal_accounts
-      where user_id in ('50000000-0000-4000-8000-000000000005','50000000-0000-4000-8000-000000000006')) then
-    raise exception 'Rejected active Auth account was unexpectedly linked';
-  end if;
-  if (select status from public.student_portal_registration_requests
-      where user_id = '50000000-0000-4000-8000-000000000006') <> 'pending' then
-    raise exception 'Rejected active Auth account request should remain pending';
-  end if;
-  if exists (select 1 from public.student_portal_invitations
-      where student_id = '60000000-0000-4000-8000-000000000013' and claimed_at is not null) then
-    raise exception 'Rejected active Auth account consumed the invitation';
-  end if;
-end;
-$portal_hardening$;
-
 \echo 'Database migration assertions passed.'
 

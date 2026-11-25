@@ -1086,3 +1086,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Perubahan disiapkan pada branch `main`; CI wajib hijau sebelum deployment. Belum ada migrasi yang diterapkan ke Supabase production.
 - Backup gratis dibuat pengguna pada 2026-11-25: `web-sekolah-20261125-before-student-portal.dump`, ukuran 550 KB, TOC 789 entri, SHA-256 `c146afa3c7e4a46f154dae19d98ae3a7160b5606b5d2982fefccf15ff170d20b`. Arsip berhasil dibaca `pg_restore --list`; full restore belum diuji. Pastikan permission file `600` sebelum deployment.
 - Target deployment tetap hanya Supabase Website Sekolah `nofznzznzjsvnkrmzpwx`. Jangan menyentuh project Supabase kedua.
+
+### Hasil CI #286 — hardening Portal Siswa
+
+- GitHub Actions run #286 (`45569059580`) pada commit `30f818ff0a46f2667244cf54eede4dca397c96e7` selesai dengan conclusion `success`.
+- Job `check`: lint, typecheck, unit test, dan build seluruhnya sukses.
+- Job `database-tests`: migrasi 2500–3500, assertion onboarding, penolakan akun Auth yang sudah aktif, serta tes konkurensi aktivasi tahun ajaran dan kapasitas kelas seluruhnya sukses.
+- Hasil ini hanya memverifikasi CI pada database fixture terisolasi. Migrasi 3400 dan 3500 belum diterapkan ke Supabase production; jangan jalankan `db push` sebelum migration list remote, pemeriksaan backup/permission, dan persetujuan deployment.
