@@ -1074,3 +1074,15 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Fitur onboarding dan dashboard awal sudah tersedia di branch `main`; belum ada uji browser yang dikonfirmasi untuk alur Portal Siswa.
 - Migrasi `20261124340000_student_portal_account_onboarding.sql` belum diterapkan oleh asisten ke Supabase production. Lakukan pemeriksaan migration list remote, backup, dan persetujuan sebelum deployment. Project Supabase kedua tidak disentuh.
 - Uji browser berikutnya: buat undangan dari detail siswa aktif, daftar menggunakan token, login ke `/portal`; lalu uji pendaftaran mandiri, pastikan akun tetap tertahan, setujui di `/admin/akses-siswa`, dan login kembali. Uji juga token kedaluwarsa/salah, data identitas tidak cocok, serta akun siswa yang sudah terhubung.
+
+## 2026-11-25 — Hardening status akun Portal Siswa (migrasi 3500)
+
+- Review sebelum deployment menemukan bahwa RPC klaim undangan dan approval pendaftaran belum secara eksplisit memverifikasi status akun `public.users` saat proses aktivasi.
+- Menambahkan migrasi baru `20261124350000_student_portal_onboarding_account_state_guard.sql`; migrasi 3400 tidak diubah agar tetap immutable.
+- `claim_student_portal_invitation` kini mengunci row akun dan hanya menerima akun yang masih `is_active = false` serta `deleted_at IS NULL`. Pemeriksaan dilakukan sebelum token dikonsumsi atau relasi akun dibuat.
+- `approve_student_portal_registration` menerapkan pemeriksaan yang sama setelah mengunci request dan row akun, sebelum penautan siswa.
+- Menambahkan assertion database untuk menolak klaim undangan dari akun aktif dan menolak approval jika akun menjadi aktif setelah pendaftaran. Pengujian memastikan token tidak dikonsumsi, relasi tidak dibuat, dan request tetap pending.
+- `tests/database/run.sql` menerapkan migrasi 3500 setelah 3400 dan menjalankan skenario regresi tambahan.
+- Perubahan disiapkan pada branch `main`; CI wajib hijau sebelum deployment. Belum ada migrasi yang diterapkan ke Supabase production.
+- Backup gratis dibuat pengguna pada 2026-11-25: `web-sekolah-20261125-before-student-portal.dump`, ukuran 550 KB, TOC 789 entri, SHA-256 `c146afa3c7e4a46f154dae19d98ae3a7160b5606b5d2982fefccf15ff170d20b`. Arsip berhasil dibaca `pg_restore --list`; full restore belum diuji. Pastikan permission file `600` sebelum deployment.
+- Target deployment tetap hanya Supabase Website Sekolah `nofznzznzjsvnkrmzpwx`. Jangan menyentuh project Supabase kedua.
