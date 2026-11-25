@@ -1187,3 +1187,5 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 
 - Memastikan urutan kondisi pesan pemulihan memakai grouping boolean yang benar untuk kedua parameter error.
 - Koreksi literal pemisah baris JSX divalidasi terhadap isi file pada branch sebelum commit.
+
+- Pemeriksaan isi file memastikan karakter backslash-n literal di awal form diganti menjadi baris baru JSX yang sebenarnya.

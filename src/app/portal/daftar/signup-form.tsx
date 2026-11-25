@@ -12,7 +12,8 @@ export function StudentPortalSignupForm() {
   const [retryState, retryAction, retryPending] = useActionState(retryStudentPortalRegistration, {});
   const [selfRegistrationEnabled, setSelfRegistrationEnabled] = useState(false);
 
-  return <div className="flex flex-col gap-6">\n  <form action={action} className="flex flex-col gap-4">
+  return <div className="flex flex-col gap-6">
+  <form action={action} className="flex flex-col gap-4">
     <Field id="full_name" label="Nama lengkap sesuai data sekolah" required><Input id="full_name" name="full_name" autoComplete="name" required maxLength={150} /></Field>
     <Field id="email" label="Email aktif" required><Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required /></Field>
     <Field id="password" label="Buat password (minimal 8 karakter)" required><Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} maxLength={72} required /></Field>
