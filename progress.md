@@ -1211,3 +1211,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 
 
 - CI #301 menemukan parsing error ESLint: cabang ternary mode pendaftaran menghasilkan dua elemen sibling tanpa fragment. Membungkus formulir signup dan bagian kirim ulang email dalam React Fragment; mode pemulihan tetap satu section. Database tests CI #301 lulus.
+
+
+## 2026-11-25 — Countdown pengiriman ulang email konfirmasi
+
+- CI #302 pada commit `d7515f94acfdffe5f5de495fb2eb60f0dc0fc189` dikonfirmasi hijau oleh pengguna.
+- Menambahkan countdown 60 detik pada tombol kirim ulang email konfirmasi. Setelah signup berhasil mengirim email, timer langsung terlihat; setiap percobaan kirim ulang juga memulai jeda 60 detik berikutnya.
+- Tombol dinonaktifkan selama countdown untuk mengurangi klik berulang. Batas ini hanya UX; Supabase tetap menjadi enforcement server-side.
+- Menambahkan catatan bahwa layanan email bawaan Supabase memiliki batas 2 email per jam untuk seluruh project (bukan per pengguna). Karena itu countdown 60 detik adalah jeda minimum dan tidak menjamin kuota project sudah tersedia.
+- Referensi resmi Supabase: Auth Rate Limits (cooldown signup 60 detik; built-in email provider 2 email/jam), Testing Auth Flows, dan Send Custom SMTP. Tidak ada perubahan SMTP, Auth config, database, atau migrasi.
+- Menunggu CI untuk commit countdown ini dan uji browser setelah deployment.

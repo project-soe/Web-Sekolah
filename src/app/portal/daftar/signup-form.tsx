@@ -1,10 +1,36 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { registerStudentPortal, resendStudentPortalConfirmation, retryStudentPortalRegistration } from "@/features/auth/actions";
+
+function ResendCooldownButton({ pending, startCooldown }: { pending: boolean; startCooldown: boolean }) {
+  const [remaining, setRemaining] = useState(startCooldown ? 60 : 0);
+
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const timer = window.setInterval(() => {
+      setRemaining((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [remaining > 0]);
+
+  return (
+    <Button
+      type="submit"
+      variant="secondary"
+      loading={pending}
+      disabled={pending || remaining > 0}
+      onClick={() => setRemaining(60)}
+    >
+      {remaining > 0
+        ? `Kirim ulang tersedia dalam 00:${String(remaining).padStart(2, "0")}`
+        : "Kirim ulang tautan"}
+    </Button>
+  );
+}
 
 export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode?: boolean }) {
   const [state, action, pending] = useActionState(registerStudentPortal, {});
@@ -47,8 +73,9 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
     </form>
     <section className="rounded-xl border border-border bg-muted/40 p-4">
       <h2 className="font-semibold">Email konfirmasi belum masuk?</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Jika sebelumnya sudah mendaftar tetapi belum menerima email, minta tautan konfirmasi baru di sini. Tidak perlu membuat akun ulang.</p>
-      <form action={resendAction} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end"><div className="min-w-0 flex-1"><Field id="resend_email" label="Email yang digunakan saat mendaftar" required><Input id="resend_email" name="email" type="email" autoComplete="email" defaultValue={state.email} required /></Field></div><Button type="submit" variant="secondary" loading={resendPending}>Kirim ulang tautan</Button></form>
+      <p className="mt-1 text-sm text-muted-foreground">Jika sebelumnya sudah mendaftar tetapi belum menerima email, minta tautan konfirmasi baru di sini. Tidak perlu membuat akun ulang. Setelah permintaan, tunggu minimal 60 detik sebelum mencoba lagi.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Catatan: layanan email bawaan Supabase dibatasi hingga 2 email per jam untuk seluruh project sekolah. Countdown hanya menunjukkan jeda minimum; jika kuota project habis, email tetap belum dapat dikirim sampai kuota tersedia kembali.</p>
+      <form action={resendAction} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end"><div className="min-w-0 flex-1"><Field id="resend_email" label="Email yang digunakan saat mendaftar" required><Input id="resend_email" name="email" type="email" autoComplete="email" defaultValue={state.email} required /></Field></div><ResendCooldownButton key={state.message || resendState.message || "ready"} pending={resendPending} startCooldown={Boolean(state.message || resendState.message)} /></form>
       {resendState.error && <p role="alert" className="mt-3 text-sm text-danger">{resendState.error}</p>}
       {resendState.message && <p role="status" className="mt-3 rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{resendState.message}</p>}
     </section>
