@@ -85,6 +85,38 @@ export async function createClassGroup(formData: FormData): Promise<void> {
   redirect("/admin/kelas?saved=kelas");
 }
 
+
+export async function updateClassGroup(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) redirect("/admin/kelas?error=validasi");
+  const parsed = classGroupSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) redirect("/admin/kelas/" + id + "?error=validasi");
+  await requireClassPermission("classes:update");
+  const supabase = await createClient();
+  const { data: current, error: currentError } = await supabase.from("class_groups")
+    .select("id, academic_year_id").eq("id", id).maybeSingle();
+  if (currentError || !current) redirect("/admin/kelas?error=kelas");
+  if (current.academic_year_id !== parsed.data.academic_year_id) redirect("/admin/kelas/" + id + "?error=validasi");
+  const { error } = await supabase.from("class_groups").update({
+    name: parsed.data.name,
+    grade_level: parsed.data.grade_level,
+    department_id: parsed.data.department_id || null,
+    homeroom_teacher_id: parsed.data.homeroom_teacher_id || null,
+  }).eq("id", id);
+  if (error) {
+    console.error("admin_class_group_update_failed", error.code);
+    redirect("/admin/kelas/" + id + "?error=" + (error.code === "23505" ? "duplikat" : "simpan"));
+  }
+  await logActivity(supabase, {
+    action: "update", module: "classes", entityType: "class_group",
+    entityId: id, summary: "Memperbarui data rombongan belajar",
+    changes: { grade_level: parsed.data.grade_level },
+  });
+  revalidatePath("/admin/kelas");
+  revalidatePath("/admin/kelas/" + id);
+  redirect("/admin/kelas/" + id + "?saved=kelas");
+}
+
 export async function assignStudentToClass(formData: FormData): Promise<void> {
   const parsed = classAssignmentSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) fail("validasi");

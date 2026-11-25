@@ -816,3 +816,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pengguna menegaskan pada 2026-11-25 bahwa penerapan migrasi production `20261124260000`–`20261124280000` sudah selesai dan telah dipastikan 100% olehnya. Catat sebagai konfirmasi langsung pengguna; hasil verifikasi terbaru tidak ditempelkan kembali dalam percakapan, sehingga asisten tidak mengklaim telah memeriksa database secara independen. Jangan meminta pemeriksaan migrasi berulang tanpa alasan baru.
 - Tidak ada perubahan kode, migrasi, konfigurasi, atau tindakan terhadap Supabase dalam pemeriksaan GitHub ini. Project Supabase kedua tidak disentuh.
 - Langkah berikutnya: lanjutkan validasi fitur kelas melalui browser/preview Worker pada `/admin/kelas` dan `/admin/kelas/[id]`; periksa daftar tahun ajaran, daftar kelas, detail, roster sesuai permission, serta tampilan responsif. Setelah QA, rencanakan fitur lanjutan seperti edit/hapus kelas, kapasitas, dan kenaikan kelas massal.
+
+
+## 2026-11-25 — Fitur edit rombongan belajar
+
+- Menambahkan server action `updateClassGroup` dengan validasi Zod, pemeriksaan permission `classes:update`, verifikasi ID kelas, dan pembatasan agar tahun ajaran asal tidak dapat diganti melalui form edit.
+- Perubahan yang dapat dilakukan: nama kelas, tingkat X/XI/XII, jurusan, dan wali kelas.
+- Perubahan disimpan melalui Supabase dengan RLS tetap berlaku; konflik nama kelas ditangani sebagai pesan duplikat.
+- Aktivitas perubahan dicatat ke activity log dan daftar/detail kelas direvalidasi.
+- Menambahkan form edit pada halaman detail `/admin/kelas/[id]`; hanya akun dengan permission `classes:update` yang melihat form.
+- Tidak ada migrasi database baru dan tidak ada perubahan data langsung di Supabase. Project production dan project Supabase kedua tidak disentuh oleh pekerjaan kode ini.
+- Status verifikasi: perubahan belum dijalankan lokal; CI baru menunggu. Setelah CI hijau, uji edit nama/tingkat/jurusan/wali kelas, konflik nama, akun tanpa permission, dan tampilan mobile.

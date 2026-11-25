@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { can } from "@/lib/rbac/access";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { Field, Input, Select } from "@/components/ui/field";
+import { updateClassGroup } from "@/features/students/class-actions";
 
 export const metadata: Metadata = { title: "Detail Rombongan Belajar" };
 export const dynamic = "force-dynamic";
@@ -19,9 +21,11 @@ const statusLabels: Record<string, string> = {
 
 export default async function ClassGroupDetailPage({ params }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
   const session = await requirePermission("classes:view");
   const { id } = await params;
+  const query = await searchParams;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const supabase = await createClient();
@@ -33,7 +37,7 @@ export default async function ClassGroupDetailPage({ params }: {
 
   if (error || !classGroup) notFound();
 
-  const [{ data: year }, { data: department }, { data: teacher }] = await Promise.all([
+  const [{ data: year }, { data: department }, { data: teacher }, { data: departments }, { data: teachers }] = await Promise.all([
     supabase.from("academic_years").select("name, start_date, end_date, is_active")
       .eq("id", classGroup.academic_year_id).maybeSingle(),
     classGroup.department_id
@@ -42,6 +46,8 @@ export default async function ClassGroupDetailPage({ params }: {
     classGroup.homeroom_teacher_id
       ? supabase.from("teachers").select("full_name").eq("id", classGroup.homeroom_teacher_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.from("departments").select("id, name").order("name"),
+    supabase.from("teachers").select("id, full_name").order("full_name"),
   ]);
 
   const canViewStudents = can(session.access, "students:view");
@@ -71,7 +77,22 @@ export default async function ClassGroupDetailPage({ params }: {
       </div>
     </header>
 
-    <Card><CardContent className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+    {query.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{query.error === "duplikat" ? "Nama kelas sudah digunakan pada tahun ajaran ini." : query.error === "validasi" ? "Data tidak valid. Periksa kembali isian." : "Perubahan kelas gagal disimpan."}</p>}
+    {query.saved === "kelas" && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Data kelas berhasil diperbarui.</p>}
+    {can(session.access, "classes:update") && <Card><CardContent className="flex flex-col gap-4">
+      <h2 className="font-semibold">Edit data kelas</h2>
+      <form action={updateClassGroup} className="grid gap-3 sm:grid-cols-2">
+        <input type="hidden" name="id" value={classGroup.id}/>
+        <input type="hidden" name="academic_year_id" value={classGroup.academic_year_id}/>
+        <Field id="edit_class_name" label="Nama kelas"><Input id="edit_class_name" name="name" defaultValue={classGroup.name} minLength={3} maxLength={80} required/></Field>
+        <Field id="edit_grade_level" label="Tingkat"><Select id="edit_grade_level" name="grade_level" defaultValue={String(classGroup.grade_level)} required><option value="10">X</option><option value="11">XI</option><option value="12">XII</option></Select></Field>
+        <Field id="edit_department" label="Jurusan"><Select id="edit_department" name="department_id" defaultValue={classGroup.department_id ?? ""}><option value="">Tidak ditentukan</option>{(departments ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></Field>
+        <Field id="edit_teacher" label="Wali kelas"><Select id="edit_teacher" name="homeroom_teacher_id" defaultValue={classGroup.homeroom_teacher_id ?? ""}><option value="">Belum ditentukan</option>{(teachers ?? []).map((item) => <option key={item.id} value={item.id}>{item.full_name}</option>)}</Select></Field>
+        <button className="w-fit rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground sm:col-span-2">Simpan perubahan</button>
+      </form>
+    </CardContent></Card>}
+\n    <Card><CardContent className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <div><p className="text-xs text-muted-foreground">Tingkat</p><p className="mt-1 font-semibold">{gradeLabels[classGroup.grade_level] ?? classGroup.grade_level}</p></div>
       <div><p className="text-xs text-muted-foreground">Jurusan</p><p className="mt-1 font-semibold">{department?.name ?? "Belum ditentukan"}</p></div>
       <div><p className="text-xs text-muted-foreground">Wali kelas</p><p className="mt-1 font-semibold">{teacher?.full_name ?? "Belum ditentukan"}</p></div>
