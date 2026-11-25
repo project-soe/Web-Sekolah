@@ -49,8 +49,18 @@ export function StudentPortalSignupForm() {
     <section className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-slate-900">
       <h2 className="font-semibold">Email sudah dikonfirmasi, tetapi pengajuan belum tersimpan?</h2>
       <p className="mt-1 text-sm">Gunakan tombol ini untuk melanjutkan penyimpanan dengan sesi akun yang sudah dikonfirmasi. Tidak perlu mendaftar ulang.</p>
-      <form action={retryAction} className="mt-3">
-        <Button type="submit" variant="secondary" loading={retryPending}>Lanjutkan pengajuan</Button>
+      <form action={retryAction} className="mt-3 flex flex-col gap-3">
+        <p className="text-sm">Jika data otomatis tidak tersedia, isi kembali data berikut. Pastikan sama dengan data siswa di sekolah.</p>
+        <Field id="retry_full_name" label="Nama lengkap sesuai data sekolah" required>
+          <Input id="retry_full_name" name="full_name" autoComplete="name" minLength={2} maxLength={150} required />
+        </Field>
+        <Field id="retry_nis" label="NIS" required>
+          <Input id="retry_nis" name="nis" maxLength={30} required />
+        </Field>
+        <Field id="retry_birth_date" label="Tanggal lahir" required>
+          <Input id="retry_birth_date" name="birth_date" type="date" required />
+        </Field>
+        <div><Button type="submit" variant="secondary" loading={retryPending}>Lanjutkan pengajuan</Button></div>
       </form>
       {retryState.error && <p role="alert" className="mt-3 text-sm text-danger">{retryState.error}</p>}
     </section>

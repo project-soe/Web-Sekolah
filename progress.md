@@ -1189,3 +1189,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Koreksi literal pemisah baris JSX divalidasi terhadap isi file pada branch sebelum commit.
 
 - Pemeriksaan isi file memastikan karakter backslash-n literal di awal form diganti menjadi baris baru JSX yang sebenarnya.
+
+
+## 2026-11-25 — Pemulihan pendaftaran tanpa metadata dan salin kode undangan
+
+- Hasil uji pengguna: CI #299 hijau; callback konfirmasi sudah berhasil, tetapi aksi pemulihan menampilkan metadata pendaftaran tidak ditemukan. Ini menunjukkan data identitas pendaftaran tidak tersedia pada user metadata di sesi pemulihan. Penyebab historis persisnya belum dapat dipastikan dari bukti yang tersedia.
+- Memperbaiki aksi pemulihan agar tetap dapat mengirim pengajuan ketika metadata tidak tersedia: pendaftar dapat mengisi ulang nama lengkap, NIS, dan tanggal lahir saat masih login dengan akun terkonfirmasi. Validasi dilakukan di server; RPC database tetap menjadi penjaga bahwa akun harus belum aktif dan belum terhubung.
+- Jika metadata masih tersedia, data metadata diprioritaskan. Jika RPC mendeteksi duplikat, sistem hanya melanjutkan bila antrean untuk user yang sama benar-benar ditemukan.
+- Menambahkan tombol **Salin kode undangan** pada detail siswa admin. Menggunakan Clipboard API pada HTTPS, menyediakan fallback instruksi salin manual, dan mempertahankan kode agar dapat dipilih/disalin dengan tekan lama.
+- Pengiriman ulang email tidak mencoba melewati batas Supabase Auth. Rate limit provider tetap dihormati; pengguna diarahkan menunggu jika batas pengiriman tercapai. Pengujian email nyata diperlukan setelah deployment.
+- Tidak mengubah migrasi atau database production. Menunggu CI commit ini.

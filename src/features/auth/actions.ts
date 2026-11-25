@@ -180,20 +180,34 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
 
 export async function retryStudentPortalRegistration(
   _prev: { error?: string; message?: string },
+  formData: FormData,
 ): Promise<{ error?: string; message?: string }> {
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) return { error: "Sesi konfirmasi tidak ditemukan. Silakan masuk kembali." };
 
   const metadata = authData.user.user_metadata ?? {};
-  if (metadata.portal_registration !== "student") {
-    return { error: "Data pendaftaran tidak ditemukan pada akun ini. Hubungi admin sekolah agar dapat diperiksa." };
+  const metadataAvailable = metadata.portal_registration === "student"
+    && typeof metadata.portal_registration_full_name === "string"
+    && typeof metadata.portal_registration_nis === "string"
+    && typeof metadata.portal_registration_birth_date === "string";
+  const submitted = z.object({
+    full_name: z.string().trim().min(2).max(150),
+    nis: z.string().trim().min(1).max(30),
+    birth_date: z.iso.date(),
+  }).safeParse({
+    full_name: metadataAvailable ? metadata.portal_registration_full_name : formData.get("full_name"),
+    nis: metadataAvailable ? metadata.portal_registration_nis : formData.get("nis"),
+    birth_date: metadataAvailable ? metadata.portal_registration_birth_date : formData.get("birth_date"),
+  });
+  if (!submitted.success) {
+    return { error: "Data pendaftaran tidak tersimpan di sesi. Isi kembali nama lengkap, NIS, dan tanggal lahir pada formulir pemulihan." };
   }
 
   const { error } = await supabase.rpc("submit_student_portal_registration", {
-    p_full_name: metadata.portal_registration_full_name,
-    p_nis: metadata.portal_registration_nis,
-    p_birth_date: metadata.portal_registration_birth_date,
+    p_full_name: submitted.data.full_name,
+    p_nis: submitted.data.nis,
+    p_birth_date: submitted.data.birth_date,
   });
   if (error && error.code !== "23505") {
     console.error("[auth:portal] Registration retry failed:", {
