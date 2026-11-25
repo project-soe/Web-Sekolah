@@ -43,5 +43,20 @@ export function StudentPortalSignupForm() {
     {state.message && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{state.message}</p>}
     <Button type="submit" size="lg" loading={pending}>Buat akun Portal Siswa</Button>
     <p className="text-center text-sm text-muted-foreground">Sudah punya akun? <Link href="/login" className="font-medium text-primary hover:underline">Masuk</Link></p>
-  </form>;
+  </form>
+    <section className="rounded-xl border border-border bg-muted/40 p-4">
+      <h2 className="font-semibold">Email konfirmasi belum masuk?</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Jika sebelumnya sudah mendaftar tetapi belum menerima email, minta tautan konfirmasi baru di sini. Tidak perlu membuat akun ulang.</p>
+      <form action={resendAction} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="min-w-0 flex-1">
+          <Field id="resend_email" label="Email yang digunakan saat mendaftar" required>
+            <Input id="resend_email" name="email" type="email" autoComplete="email" defaultValue={state.email} required />
+          </Field>
+        </div>
+        <Button type="submit" variant="secondary" loading={resendPending}>Kirim ulang tautan</Button>
+      </form>
+      {resendState.error && <p role="alert" className="mt-3 text-sm text-danger">{resendState.error}</p>}
+      {resendState.message && <p role="status" className="mt-3 rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{resendState.message}</p>}
+    </section>
+  </div>;
 }

@@ -1158,3 +1158,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan formulir Email konfirmasi belum masuk pada halaman pendaftaran. Pendaftar dapat meminta tautan baru tanpa mencoba membuat akun ulang; UI menampilkan pesan untuk pembatasan laju dan akun yang sudah terkonfirmasi.
 - Pengiriman ulang tidak membuat akun baru. Fitur ini hanya ditujukan bagi akun yang masih menunggu konfirmasi; akun yang sudah terkonfirmasi harus langsung masuk.
 - Tidak mengubah migrasi atau database production. CI untuk commit sebelumnya #292 dikonfirmasi hijau semua; CI untuk perubahan ini menunggu workflow terbaru. Pengujian email nyata tetap diperlukan.
+
+
+## 2026-11-25 — Perapian navigasi Portal Siswa dan formulir kirim ulang
+
+- Memastikan Portal Siswa tampil sebagai item tersendiri di daftar menu publik desktop dan mobile dengan warna amber yang kontras.
+- Menambahkan tautan Portal Siswa ke footer dan menghindari tombol duplikat pada header.
+- Menambahkan UI permintaan ulang email konfirmasi pada halaman pendaftaran agar pengguna tidak mencoba signup berulang.
+- Tidak ada perubahan database atau migrasi. CI terbaru perlu diverifikasi sebelum menyatakan pemeriksaan lulus.

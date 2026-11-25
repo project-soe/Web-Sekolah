@@ -36,18 +36,21 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
           className="absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-border bg-background p-3 shadow-lg"
         >
           <ul className="flex flex-col gap-1">
-            {items.map((item) => (
-              <li key={item.href}>
-                <NavLink
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-11 items-center rounded-lg px-3 text-base hover:bg-muted"
-                  activeClassName="bg-secondary font-semibold"
-                >
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
+            {items.map((item) => {
+              const isPortal = item.href === "/portal/daftar";
+              return (
+                <li key={item.href}>
+                  <NavLink
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className={isPortal ? "flex min-h-11 items-center rounded-lg bg-amber-500 px-3 text-base font-semibold text-slate-950 hover:bg-amber-400" : "flex min-h-11 items-center rounded-lg px-3 text-base hover:bg-muted"}
+                    activeClassName={isPortal ? "ring-2 ring-amber-600 ring-offset-1" : "bg-secondary font-semibold"}
+                  >
+                    {item.label}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       )}
