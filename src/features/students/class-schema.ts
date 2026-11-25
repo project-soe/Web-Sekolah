@@ -29,5 +29,10 @@ export const classAssignmentSchema = z.object({
   class_group_id: uuid,
 });
 
+export const classGraduationSchema = z.object({
+  source_class_id: uuid,
+  graduation_date: dateOnly,
+});
+
 export type AcademicYearInput = z.infer<typeof academicYearSchema>;
 export type ClassGroupInput = z.infer<typeof classGroupSchema>;

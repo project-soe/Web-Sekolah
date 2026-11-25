@@ -863,3 +863,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Project Supabase Website Sekolah production dan project Supabase kedua tidak disentuh.
 - Status fitur kenaikan kelas massal: CI hijau; menunggu pull dan uji UI oleh pengguna. Uji harus menggunakan tahun ajaran berikutnya dan kelas target yang kapasitasnya memadai; kelas XII tidak muncul sebagai kelas asal.
 - Kandidat pekerjaan lanjutan setelah QA: alur kelulusan siswa kelas XII yang mengubah status siswa menjadi `graduated`, mengisi tanggal kelulusan, dan mempertahankan riwayat status. Aturan tanggal dan cakupan kelulusan perlu dipastikan sebelum implementasi.
+
+
+## 2026-11-25 — Kelulusan massal siswa kelas XII
+
+- Menambahkan migrasi baru `20261124310000_bulk_student_graduation.sql` dengan RPC `graduate_class_students` berkarakteristik SECURITY INVOKER. Fungsi memeriksa permission `classes:view`, `students:view`, `classes:update`, dan `students:update`; mengunci rombel serta tahun ajaran; hanya menerima kelas XII pada tahun ajaran aktif; lalu mengubah semua siswa aktif yang terdaftar menjadi `graduated` dan mengisi tanggal kelulusan dalam satu transaksi.
+- Trigger `record_student_status_change` yang sudah ada mencatat perubahan status secara otomatis. Siswa yang bukan aktif tidak diubah. Pengulangan proses ketika tidak ada siswa aktif ditolak, dan kegagalan constraint membatalkan seluruh batch.
+- Menambahkan validasi Zod dan server action yang menerapkan permission, memanggil RPC, mencatat activity log, serta merevalidasi halaman kelas dan siswa.
+- Menambahkan bagian UI Kelulusan kelas XII di `/admin/kelas`, dengan daftar rombel XII pada tahun aktif, jumlah siswa aktif berdasarkan penempatan, dan input tanggal kelulusan per rombel. Bagian hanya tampil untuk akun dengan permission yang diperlukan.
+- Runner database CI memuat migrasi 3100 dan assertion untuk penolakan permission, penolakan kelas non-XII, kelulusan tiga siswa, penyimpanan tanggal, pencatatan tiga riwayat status, dan penolakan proses ulang.
+- Migrasi 3100 belum diterapkan ke Supabase production. Urutan deployment untuk fitur kapasitas, kenaikan, dan kelulusan adalah 2900 → 3000 → 3100 setelah fondasi 2500–2800 yang sudah dikonfirmasi pengguna diterapkan. Project Supabase kedua tidak disentuh.
+- Status verifikasi: menunggu GitHub Actions dan uji UI pengguna. Tidak ada klaim pengujian lokal.

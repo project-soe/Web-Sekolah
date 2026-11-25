@@ -10,6 +10,7 @@
 \i supabase/migrations/20261124280000_atomic_academic_year_activation.sql
 \i supabase/migrations/20261124290000_class_capacity_enrollment_guard.sql
 \i supabase/migrations/20261124300000_bulk_class_promotion.sql
+\i supabase/migrations/20261124310000_bulk_student_graduation.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -327,6 +328,73 @@ begin
   end;
 end;
 $$;
+
+
+\echo '9. Verify atomic bulk graduation for active grade-XII classes'
+insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity)
+values ('20000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000002', 'XII TKJ 1', 12,
+        '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 36);
+insert into public.students (id, nis, nisn, full_name, gender, department_id, enrollment_year, status, created_by)
+values
+  ('60000000-0000-4000-8000-000000000006', 'NIS-006', '1234567895', 'Calon Lulusan Satu', 'male', '30000000-0000-4000-8000-000000000001', 2025, 'active', '50000000-0000-4000-8000-000000000001'),
+  ('60000000-0000-4000-8000-000000000007', 'NIS-007', '1234567896', 'Calon Lulusan Dua', 'female', '30000000-0000-4000-8000-000000000001', 2025, 'active', '50000000-0000-4000-8000-000000000001'),
+  ('60000000-0000-4000-8000-000000000008', 'NIS-008', '1234567897', 'Calon Lulusan Tiga', 'male', '30000000-0000-4000-8000-000000000001', 2025, 'active', '50000000-0000-4000-8000-000000000001');
+insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
+values
+  ('60000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006'),
+  ('60000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006'),
+  ('60000000-0000-4000-8000-000000000008', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006');
+
+do $
+declare graduated integer; history_count integer; still_active integer;
+begin
+  select count(*) into still_active from public.students
+  where id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
+    and status = 'active';
+  if still_active <> 3 then raise exception 'Graduation fixture must start with 3 active students'; end if;
+
+  perform set_config('test.permissions', 'classes:view,students:view,classes:update', false);
+  begin
+    perform public.graduate_class_students('20000000-0000-4000-8000-000000000006', '2027-05-15');
+    raise exception 'Expected graduation without students:update to be rejected';
+  exception when insufficient_privilege then null;
+  end;
+  select count(*) into still_active from public.students
+  where id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
+    and status = 'active';
+  if still_active <> 3 then raise exception 'Permission denial changed student statuses'; end if;
+
+  perform set_config('test.permissions', 'classes:view,students:view,classes:update,students:update', false);
+  begin
+    perform public.graduate_class_students('20000000-0000-4000-8000-000000000004', '2027-05-15');
+    raise exception 'Expected a non-XII class to be rejected';
+  exception when check_violation then null;
+  end;
+
+  graduated := public.graduate_class_students('20000000-0000-4000-8000-000000000006', '2027-05-15');
+  if graduated <> 3 then raise exception 'Expected 3 graduated students, got %', graduated; end if;
+  select count(*) into still_active from public.students
+  where id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
+    and status = 'active';
+  if still_active <> 0 then raise exception 'Some active students were not graduated'; end if;
+  select count(*) into history_count from public.student_status_history
+  where student_id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
+    and new_status = 'graduated' and changed_by = '50000000-0000-4000-8000-000000000001';
+  if history_count <> 3 then raise exception 'Expected 3 graduation status-history rows, got %', history_count; end if;
+  if (select count(*) from public.students
+      where id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
+        and graduation_date = '2027-05-15') <> 3 then
+    raise exception 'Graduation date was not saved for every student';
+  end if;
+
+  begin
+    perform public.graduate_class_students('20000000-0000-4000-8000-000000000006', '2027-05-15');
+    raise exception 'Expected repeat graduation with no active students to be rejected';
+  exception when no_data_found then null;
+  end;
+end;
+$;
+
 
 reset role;
 \echo 'Database migration assertions passed.'

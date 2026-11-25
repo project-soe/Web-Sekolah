@@ -6,7 +6,7 @@ import { logActivity } from "@/lib/activity/log";
 import { getSession } from "@/lib/auth/session";
 import { can } from "@/lib/rbac/access";
 import { createClient } from "@/lib/supabase/server";
-import { academicYearSchema, classAssignmentSchema, classGroupSchema } from "./class-schema";
+import { academicYearSchema, classAssignmentSchema, classGraduationSchema, classGroupSchema } from "./class-schema";
 
 function fail(code: string): never {
   redirect("/admin/kelas?error=" + code);
@@ -141,6 +141,30 @@ export async function promoteClassStudents(formData: FormData): Promise<void> {
   revalidatePath("/admin/kelas");
   revalidatePath("/admin/siswa");
   redirect("/admin/kelas?saved=kenaikan&jumlah=" + count);
+}
+
+export async function graduateClassStudents(formData: FormData): Promise<void> {
+  const parsed = classGraduationSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) fail("validasi");
+  const session = await requireClassPermission("classes:update");
+  if (!can(session.access, "students:update")) fail("akses");
+  const supabase = await createClient();
+  const { data: count, error } = await supabase.rpc("graduate_class_students", {
+    p_source_class_id: parsed.data.source_class_id,
+    p_graduation_date: parsed.data.graduation_date,
+  });
+  if (error || typeof count !== "number" || count < 1) {
+    console.error("admin_class_graduation_failed", error?.code ?? "invalid_result");
+    fail(error?.code === "42501" ? "akses" : error?.code === "23514" ? "kelulusan_validasi" : error?.code === "P0002" ? "kelulusan_kosong" : "kelulusan");
+  }
+  await logActivity(supabase, {
+    action: "status_change", module: "students", entityType: "class_group",
+    entityId: parsed.data.source_class_id, summary: "Meluluskan siswa kelas XII secara massal",
+    changes: { source_class_id: parsed.data.source_class_id, graduation_date: parsed.data.graduation_date, graduated_count: count },
+  });
+  revalidatePath("/admin/kelas");
+  revalidatePath("/admin/siswa");
+  redirect("/admin/kelas?saved=kelulusan&jumlah=" + count);
 }
 
 export async function assignStudentToClass(formData: FormData): Promise<void> {

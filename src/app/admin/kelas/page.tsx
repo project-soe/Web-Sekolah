@@ -5,7 +5,7 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/rbac/access";
-import { activateAcademicYear, assignStudentToClass, createAcademicYear, createClassGroup, promoteClassStudents } from "@/features/students/class-actions";
+import { activateAcademicYear, assignStudentToClass, createAcademicYear, createClassGroup, graduateClassStudents, promoteClassStudents } from "@/features/students/class-actions";
 
 export const metadata: Metadata = { title: "Tahun Ajaran dan Kelas" };
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export default async function AdminClassesPage({ searchParams }: {
     .select("id, name, grade_level, capacity, enrolled_count, academic_year_id, departments(name), teachers(full_name)")
     .order("grade_level").order("name");
   const { data: placements } = await supabase.from("student_class_enrollments")
-    .select("id, student_id, class_group_id, academic_year_id, students(full_name, nis), class_groups(name)")
+    .select("id, student_id, class_group_id, academic_year_id, students(full_name, nis, status), class_groups(name)")
     .eq("academic_year_id", activeYear?.id ?? "00000000-0000-0000-0000-000000000000");
   const errorMessage: Record<string, string> = {
     akses: "Akun tidak memiliki permission yang dibutuhkan.",
@@ -41,6 +41,9 @@ export default async function AdminClassesPage({ searchParams }: {
     kenaikan: "Kenaikan kelas gagal. Pastikan kelas tujuan tersedia dan kapasitasnya cukup.",
     kenaikan_duplikat: "Sebagian siswa sudah memiliki penempatan pada tahun ajaran tujuan.",
     kenaikan_validasi: "Kelas asal/tujuan tidak sesuai atau kelas XII harus diproses melalui kelulusan.",
+    kelulusan: "Kelulusan gagal diproses. Periksa tanggal dan coba lagi.",
+    kelulusan_kosong: "Tidak ada siswa aktif yang dapat diluluskan pada kelas tersebut.",
+    kelulusan_validasi: "Kelulusan hanya dapat dilakukan untuk kelas XII pada tahun ajaran aktif.",
   };
   return <div className="flex flex-col gap-6">
     <header>
@@ -48,7 +51,7 @@ export default async function AdminClassesPage({ searchParams }: {
       <p className="mt-1 text-sm text-muted-foreground">Kelola tahun ajaran, rombongan belajar, wali kelas, dan penempatan siswa. Contoh nama kelas: X TKJ 1.</p>
     </header>
     {params.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{errorMessage[params.error] ?? "Terjadi kesalahan."}</p>}
-    {params.saved && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{params.saved === "kenaikan" ? "Kenaikan kelas berhasil. " + (params.jumlah ?? "0") + " siswa dipindahkan." : "Perubahan berhasil disimpan."}</p>}
+    {params.saved && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{params.saved === "kenaikan" ? "Kenaikan kelas berhasil. " + (params.jumlah ?? "0") + " siswa dipindahkan." : params.saved === "kelulusan" ? (params.jumlah ?? "0") + " siswa berhasil diluluskan." : "Perubahan berhasil disimpan."}</p>}
 
     <section className="grid gap-5 lg:grid-cols-2">
       <Card><CardContent className="flex flex-col gap-4">
@@ -104,6 +107,30 @@ export default async function AdminClassesPage({ searchParams }: {
               })}</div>;
       })()}
       <p className="text-xs text-muted-foreground">Kelas XII tidak ikut proses ini karena harus ditangani melalui proses kelulusan.</p>
+    </section>}
+
+    {activeYear && can(session.access, "classes:update") && can(session.access, "students:update") && <section className="flex flex-col gap-3">
+      <div><h2 className="text-lg font-semibold">Kelulusan kelas XII</h2><p className="text-sm text-muted-foreground">Proses seluruh siswa aktif pada satu rombel kelas XII di tahun ajaran aktif. Status dan tanggal kelulusan diperbarui sekaligus, serta riwayat status dicatat otomatis.</p></div>
+      {(() => {
+        const graduationClasses = (classes ?? []).filter((item) => item.academic_year_id === activeYear.id && item.grade_level === 12).map((item) => {
+          const eligibleCount = (placements ?? []).filter((placement) => {
+            const student = Array.isArray(placement.students) ? placement.students[0] : placement.students;
+            return placement.class_group_id === item.id && student?.status === "active";
+          }).length;
+          return { ...item, eligibleCount };
+        }).filter((item) => item.eligibleCount > 0);
+        return !graduationClasses.length
+          ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada siswa aktif yang ditempatkan pada kelas XII di tahun ajaran aktif.</p>
+          : <div className="grid gap-3">{graduationClasses.map((source) => <Card key={source.id}><CardContent className="flex flex-col gap-3">
+              <div><p className="font-semibold">{source.name}</p><p className="text-sm text-muted-foreground">{source.eligibleCount} siswa aktif · {activeYear.name}</p></div>
+              <form action={graduateClassStudents} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                <input type="hidden" name="source_class_id" value={source.id}/>
+                <Field id={"graduation-date-" + source.id} label="Tanggal kelulusan"><Input id={"graduation-date-input-" + source.id} name="graduation_date" type="date" required /></Field>
+                <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Luluskan seluruh kelas</button>
+              </form>
+            </CardContent></Card>)}</div>;
+      })()}
+      <p className="text-xs text-muted-foreground">Siswa yang sudah tidak berstatus aktif tidak akan diubah. Setiap rombel diproses dalam satu transaksi; jika satu pembaruan gagal, seluruh proses batal.</p>
     </section>}
 
     {activeYear && <section className="flex flex-col gap-3">
