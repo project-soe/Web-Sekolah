@@ -853,3 +853,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Urutan database: migrasi 20261124290000 harus diterapkan sebelum 20261124300000. Keduanya belum diterapkan ke Supabase production; jangan jalankan SQL production otomatis.
 - Tidak ada perubahan atau koneksi pada project Supabase kedua.
 - Status verifikasi fitur kenaikan massal: menunggu CI baru dan pengujian UI pengguna.
+
+
+## 2026-11-25 — CI kenaikan kelas massal hijau
+
+- GitHub Actions run #45533769210 pada commit `e584a3d9fb30e4d7b36b483700fa52648542bc93` selesai dengan conclusion `success`; job `check` dan `database-tests` keduanya lulus.
+- Job `check` mencakup lint, typecheck, unit test, dan build. Job `database-tests` berhasil menerapkan migrasi pada PostgreSQL disposable dan menjalankan assertion, termasuk rollback batch saat kapasitas tidak cukup, promosi penuh beserta riwayat, serta penolakan promosi duplikat.
+- Ini adalah verifikasi CI pada database disposable, bukan penerapan ke Supabase production. Migrasi `20261124290000_class_capacity_enrollment_guard.sql` dan `20261124300000_bulk_class_promotion.sql` tetap belum diterapkan ke production.
+- Project Supabase Website Sekolah production dan project Supabase kedua tidak disentuh.
+- Status fitur kenaikan kelas massal: CI hijau; menunggu pull dan uji UI oleh pengguna. Uji harus menggunakan tahun ajaran berikutnya dan kelas target yang kapasitasnya memadai; kelas XII tidak muncul sebagai kelas asal.
+- Kandidat pekerjaan lanjutan setelah QA: alur kelulusan siswa kelas XII yang mengubah status siswa menjadi `graduated`, mengisi tanggal kelulusan, dan mempertahankan riwayat status. Aturan tanggal dan cakupan kelulusan perlu dipastikan sebelum implementasi.
