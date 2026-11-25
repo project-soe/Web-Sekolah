@@ -1199,3 +1199,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan tombol **Salin kode undangan** pada detail siswa admin. Menggunakan Clipboard API pada HTTPS, menyediakan fallback instruksi salin manual, dan mempertahankan kode agar dapat dipilih/disalin dengan tekan lama.
 - Pengiriman ulang email tidak mencoba melewati batas Supabase Auth. Rate limit provider tetap dihormati; pengguna diarahkan menunggu jika batas pengiriman tercapai. Pengujian email nyata diperlukan setelah deployment.
 - Tidak mengubah migrasi atau database production. Menunggu CI commit ini.
+
+
+## 2026-11-25 — Tombol pemulihan langsung terlihat setelah konfirmasi
+
+- Temuan pengguna: pesan callback meminta menekan tombol di bawah, tetapi tombol pemulihan berada setelah formulir pendaftaran dan kirim ulang email yang panjang.
+- Route `/portal/daftar?error=lanjutkan` kini mengaktifkan mode pemulihan khusus dan menampilkan formulir pemulihan tepat di bawah pesan konfirmasi, di bagian atas halaman.
+- Dalam mode pemulihan, formulir signup baru dan resend email disembunyikan agar pengguna tidak membuat akun baru atau mengirim email lagi secara tidak perlu.
+- Pesan `error=konfirmasi` diperjelas agar tidak mengklaim email berhasil dikonfirmasi jika pertukaran kode gagal.
+- Tidak ada perubahan database/migrasi. CI dan uji browser setelah deployment masih diperlukan.
