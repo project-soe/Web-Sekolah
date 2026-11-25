@@ -902,3 +902,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Migrasi `20261124290000_class_capacity_enrollment_guard.sql`, `20261124300000_bulk_class_promotion.sql`, dan `20261124310000_bulk_student_graduation.sql` tetap belum diterapkan ke Supabase production. CI menggunakan PostgreSQL disposable.
 - Belum ada klaim pengujian UI/browser lokal. Setelah pull, pengguna tetap perlu menguji form kelulusan kelas XII, tanggal, hasil status, dan riwayat sebelum deployment database.
 - Project Supabase Website Sekolah production maupun project Supabase kedua tidak disentuh.
+
+
+## 2026-11-25 — Pengamanan privasi dan penempatan siswa individual
+
+- Audit halaman `/admin/kelas` menemukan query data induk siswa dan roster penempatan dijalankan tanpa memeriksa `students:view`, sementara tabel roster juga dirender untuk semua akun dengan `classes:view`. Memperbaiki agar query siswa/roster hanya dijalankan dan ditampilkan bila akun memiliki `students:view`.
+- Form penempatan individual sekarang hanya tersedia dalam area yang dilindungi `students:view`; server action juga memeriksa `classes:view`, `classes:update`, `students:view`, dan `students:update` sehingga tidak bergantung pada visibilitas UI.
+- Server action memverifikasi bahwa kelas tujuan berada pada tahun ajaran aktif, menolak pemilihan kelas yang sama dengan penempatan saat ini, serta menampilkan pesan sukses/error khusus penempatan.
+- Perubahan hanya pada halaman admin dan server action serta dokumentasi. Tidak ada perubahan migrasi atau data Supabase; migrasi 2900–3100 tetap belum diterapkan ke production dan project Supabase kedua tidak disentuh.
+- Status verifikasi: menunggu CI; belum ada klaim uji browser/local.

@@ -16,27 +16,34 @@ export default async function AdminClassesPage({ searchParams }: {
   const session = await requirePermission("classes:view");
   const params = await searchParams;
   const supabase = await createClient();
-  const [{ data: years, error: yearsError }, { data: departments }, { data: teachers }, { data: students }] = await Promise.all([
+  const canViewStudents = can(session.access, "students:view");
+  const [{ data: years, error: yearsError }, { data: departments }, { data: teachers }] = await Promise.all([
     supabase.from("academic_years").select("id, name, start_date, end_date, is_active").order("start_date", { ascending: false }),
     supabase.from("departments").select("id, name").order("name"),
     supabase.from("teachers").select("id, full_name").order("full_name"),
-    supabase.from("students").select("id, nis, full_name").eq("status", "active").order("full_name").limit(500),
   ]);
+  const { data: students } = canViewStudents
+    ? await supabase.from("students").select("id, nis, full_name").eq("status", "active").order("full_name").limit(500)
+    : { data: null };
   const activeYear = years?.find((year) => year.is_active) ?? null;
   const { data: classes, error: classesError } = await supabase.from("class_groups")
     .select("id, name, grade_level, capacity, enrolled_count, academic_year_id, departments(name), teachers(full_name)")
     .order("grade_level").order("name");
-  const { data: placements } = await supabase.from("student_class_enrollments")
-    .select("id, student_id, class_group_id, academic_year_id, students(full_name, nis, status), class_groups(name)")
-    .eq("academic_year_id", activeYear?.id ?? "00000000-0000-0000-0000-000000000000");
+  const { data: placements } = canViewStudents
+    ? await supabase.from("student_class_enrollments")
+        .select("id, student_id, class_group_id, academic_year_id, students(full_name, nis, status), class_groups(name)")
+        .eq("academic_year_id", activeYear?.id ?? "00000000-0000-0000-0000-000000000000")
+    : { data: null };
   const errorMessage: Record<string, string> = {
     akses: "Akun tidak memiliki permission yang dibutuhkan.",
     validasi: "Data tidak valid. Periksa kembali isian.",
     duplikat: "Tahun ajaran atau nama kelas tersebut sudah ada.",
     simpan: "Data gagal disimpan. Periksa relasi dan coba lagi.",
     kelas: "Kelas tujuan tidak ditemukan.",
+    tahun_ajaran: "Penempatan hanya dapat dilakukan pada tahun ajaran yang sedang aktif.",
     siswa: "Siswa tidak ditemukan atau statusnya bukan aktif.",
     penempatan: "Penempatan siswa gagal disimpan.",
+    penempatan_sama: "Siswa tersebut sudah berada di kelas yang dipilih.",
     kapasitas: "Kapasitas kelas sudah penuh atau tidak boleh lebih kecil dari jumlah siswa saat ini.",
     kenaikan: "Kenaikan kelas gagal. Pastikan kelas tujuan tersedia dan kapasitasnya cukup.",
     kenaikan_duplikat: "Sebagian siswa sudah memiliki penempatan pada tahun ajaran tujuan.",
@@ -51,7 +58,7 @@ export default async function AdminClassesPage({ searchParams }: {
       <p className="mt-1 text-sm text-muted-foreground">Kelola tahun ajaran, rombongan belajar, wali kelas, dan penempatan siswa. Contoh nama kelas: X TKJ 1.</p>
     </header>
     {params.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{errorMessage[params.error] ?? "Terjadi kesalahan."}</p>}
-    {params.saved && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{params.saved === "kenaikan" ? "Kenaikan kelas berhasil. " + (params.jumlah ?? "0") + " siswa dipindahkan." : params.saved === "kelulusan" ? (params.jumlah ?? "0") + " siswa berhasil diluluskan." : "Perubahan berhasil disimpan."}</p>}
+    {params.saved && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{params.saved === "kenaikan" ? "Kenaikan kelas berhasil. " + (params.jumlah ?? "0") + " siswa dipindahkan." : params.saved === "kelulusan" ? (params.jumlah ?? "0") + " siswa berhasil diluluskan." : params.saved === "penempatan" ? "Penempatan siswa berhasil disimpan." : "Perubahan berhasil disimpan."}</p>}
 
     <section className="grid gap-5 lg:grid-cols-2">
       <Card><CardContent className="flex flex-col gap-4">
@@ -133,7 +140,7 @@ export default async function AdminClassesPage({ searchParams }: {
       <p className="text-xs text-muted-foreground">Siswa yang sudah tidak berstatus aktif tidak akan diubah. Setiap rombel diproses dalam satu transaksi; jika satu pembaruan gagal, seluruh proses batal.</p>
     </section>}
 
-    {activeYear && <section className="flex flex-col gap-3">
+    {activeYear && canViewStudents && <section className="flex flex-col gap-3">
       <div><h2 className="text-lg font-semibold">Penempatan siswa — {activeYear.name}</h2><p className="text-sm text-muted-foreground">Setiap siswa hanya memiliki satu kelas per tahun ajaran. Perpindahan kelas dicatat otomatis.</p></div>
       {can(session.access, "classes:update") && can(session.access, "students:update") && <Card><CardContent><form action={assignStudentToClass} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <Field id="placement_student" label="Siswa"><Select id="placement_student" name="student_id" required defaultValue=""><option value="" disabled>Pilih siswa aktif</option>{(students ?? []).map((student) => <option key={student.id} value={student.id}>{student.nis} — {student.full_name}</option>)}</Select></Field>
