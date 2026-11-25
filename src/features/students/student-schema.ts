@@ -24,3 +24,9 @@ export const studentInputSchema = z.object({
 });
 
 export type StudentInput = z.infer<typeof studentInputSchema>;
+
+
+export const studentLifecycleSchema = z.object({
+  student_id: z.string().uuid(),
+  new_status: z.enum(["transferred", "withdrawn"]),
+});

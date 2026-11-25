@@ -12,6 +12,7 @@
 \i supabase/migrations/20261124300000_bulk_class_promotion.sql
 \i supabase/migrations/20261124310000_bulk_student_graduation.sql
 \i supabase/migrations/20261124320000_student_lifecycle_column_guards.sql
+\i supabase/migrations/20261124330000_student_transfer_withdrawal.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -459,6 +460,60 @@ begin
 end;
 $$;
 
+
+
+\echo '10. Verify transfer/withdrawal closes active placement without deleting history'
+select set_config('test.permissions', 'students:view,students:create,students:update,classes:view,classes:update', false);
+insert into public.students (id, nis, nisn, full_name, gender, department_id, enrollment_year)
+values
+  ('60000000-0000-4000-8000-000000000009', 'NIS-009', '1234567898', 'Siswa Pindah', 'male', '30000000-0000-4000-8000-000000000001', 2026),
+  ('60000000-0000-4000-8000-000000000010', 'NIS-010', '1234567899', 'Siswa Mengundurkan Diri', 'female', '30000000-0000-4000-8000-000000000001', 2026);
+insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
+values
+  ('60000000-0000-4000-8000-000000000009', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006'),
+  ('60000000-0000-4000-8000-000000000010', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006');
+
+do $
+declare closed integer; actor_id uuid := '50000000-0000-4000-8000-000000000001';
+begin
+  if has_column_privilege('authenticated', 'public.student_class_enrollments', 'ended_at', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.student_class_enrollments', 'ended_by', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.student_class_enrollments', 'updated_by', 'UPDATE') then
+    raise exception 'Authenticated clients unexpectedly have direct enrollment closure/audit privileges';
+  end if;
+  if not has_column_privilege('authenticated', 'public.student_class_enrollments', 'class_group_id', 'UPDATE') then
+    raise exception 'Authenticated clients lost permission to move active class placements';
+  end if;
+  begin
+    update public.student_class_enrollments set ended_at = now()
+    where student_id = '60000000-0000-4000-8000-000000000009';
+    raise exception 'Direct enrollment closure unexpectedly succeeded';
+  exception when insufficient_privilege then null;
+  end;
+  closed := public.transition_student_status('60000000-0000-4000-8000-000000000009', 'transferred');
+  if closed <> 1 then raise exception 'Expected one closed placement for transfer, got %', closed; end if;
+  closed := public.transition_student_status('60000000-0000-4000-8000-000000000010', 'withdrawn');
+  if closed <> 1 then raise exception 'Expected one closed placement for withdrawal, got %', closed; end if;
+  if (select count(*) from public.student_class_enrollments
+      where student_id in ('60000000-0000-4000-8000-000000000009','60000000-0000-4000-8000-000000000010')
+        and ended_at is not null and ended_by = actor_id) <> 2 then
+    raise exception 'Transfer/withdrawal did not close both placements with trusted actor metadata';
+  end if;
+  if (select enrolled_count from public.class_groups where id = '20000000-0000-4000-8000-000000000006') <> 3 then
+    raise exception 'Closed placements did not release exactly two class slots';
+  end if;
+  if (select count(*) from public.student_class_history
+      where student_id in ('60000000-0000-4000-8000-000000000009','60000000-0000-4000-8000-000000000010')) <> 2 then
+    raise exception 'Placement history was deleted or not retained';
+  end if;
+  if (select count(*) from public.student_status_history
+      where student_id = '60000000-0000-4000-8000-000000000009' and new_status = 'transferred') <> 1
+    or (select count(*) from public.student_status_history
+      where student_id = '60000000-0000-4000-8000-000000000010' and new_status = 'withdrawn') <> 1 then
+    raise exception 'Student status history was not recorded';
+  end if;
+end;
+$;
 
 reset role;
 \echo 'Database migration assertions passed.'

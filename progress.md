@@ -961,3 +961,15 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memperbaiki migrasi `20261124320000_student_lifecycle_column_guards.sql` dengan memberikan privilege INSERT kolom `id` kepada role authenticated. Kolom lifecycle (`status`, `graduation_date`) dan audit (`created_by`, `updated_by`) tetap tidak dapat ditulis langsung; privilege UPDATE untuk `id` juga tetap tidak diberikan.
 - Perbaikan mempertahankan pembatasan lifecycle di database dan mendukung fixture serta klien yang menentukan UUID saat INSERT. Tidak mengubah RPC kelulusan atau kebijakan RLS.
 - Belum ada klaim CI ulang berhasil sampai workflow pada commit perbaikan selesai. Migrasi 3200 tetap belum diterapkan ke Supabase production; project Supabase kedua tidak disentuh.
+
+
+## 2026-11-25 — Mutasi siswa: pindah dan mengundurkan diri
+
+- Pengguna mengonfirmasi aturan domain: ketika siswa pindah atau mengundurkan diri, penempatan kelas pada tahun ajaran aktif harus ditutup otomatis, kapasitas kelas dibebaskan, dan riwayat penempatan lama tetap disimpan.
+- Baseline GitHub Actions CI #269 pada commit `79c27dcdac1526f0fa9b35f98c0dab2cbd11063c` dikonfirmasi hijau oleh pengguna.
+- Menambahkan migrasi baru `20261124330000_student_transfer_withdrawal.sql`: kolom `ended_at` dan `ended_by` pada enrollment; pembatasan privilege agar klien authenticated tidak dapat menutup atau mengubah metadata penutupan secara langsung; trigger counter membebaskan slot saat penempatan ditutup; RPC `transition_student_status` memeriksa permission dan mengubah status serta menutup enrollment tahun ajaran aktif dalam satu transaksi.
+- Enrollment dan `student_class_history` tidak dihapus. Baris penempatan ditandai berakhir sehingga histori tetap dapat ditelusuri. Penutupan hanya menyasar penempatan pada tahun ajaran aktif; penempatan tahun ajaran sebelumnya tidak diubah.
+- Menambahkan server action dan kontrol pada detail siswa untuk status `transferred` dan `withdrawn`; perubahan status tetap tidak tersedia pada form data induk.
+- Daftar roster kelas dan penempatan tahun ajaran aktif hanya menampilkan enrollment yang belum ditutup. Server action perpindahan kelas tidak lagi mengirim metadata audit yang dilindungi.
+- Runner PostgreSQL disposable ditambah assertion privilege, transfer, withdrawal, pengurangan counter kapasitas, dan retensi riwayat penempatan/status.
+- Status verifikasi implementasi: menunggu CI. Tes lokal tidak dijalankan oleh asisten. Migrasi 3300 belum diterapkan ke Supabase production; project Supabase kedua tidak disentuh. Jangan menjalankan migrasi production tanpa persetujuan eksplisit, backup, dan pemeriksaan urutan.

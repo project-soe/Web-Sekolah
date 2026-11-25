@@ -55,6 +55,7 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
     ? await supabase.from("student_class_enrollments")
         .select("id, student_id, assigned_at")
         .eq("class_group_id", classGroup.id)
+        .is("ended_at", null)
         .order("assigned_at", { ascending: true })
     : { data: null, error: null };
 

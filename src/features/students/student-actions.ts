@@ -6,7 +6,7 @@ import { logActivity } from "@/lib/activity/log";
 import { getSession } from "@/lib/auth/session";
 import { can } from "@/lib/rbac/access";
 import { createClient } from "@/lib/supabase/server";
-import { studentInputSchema } from "./student-schema";
+import { studentInputSchema, studentLifecycleSchema } from "./student-schema";
 
 export async function saveStudent(formData: FormData): Promise<void> {
   const parsed = studentInputSchema.safeParse(Object.fromEntries(formData.entries()));
@@ -62,4 +62,35 @@ export async function saveStudent(formData: FormData): Promise<void> {
   revalidatePath("/admin/siswa");
   revalidatePath("/admin/siswa/" + result.data.id);
   redirect("/admin/siswa/" + result.data.id + "?saved=1");
+}
+
+
+export async function changeStudentLifecycle(formData: FormData): Promise<void> {
+  const parsed = studentLifecycleSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) redirect("/admin/siswa?error=validasi");
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (!can(session.access, "students:update") || !can(session.access, "students:view")
+    || !can(session.access, "classes:view") || !can(session.access, "classes:update")) {
+    redirect("/admin/siswa/" + parsed.data.student_id + "?error=akses");
+  }
+  const supabase = await createClient();
+  const { data: closedCount, error } = await supabase.rpc("transition_student_status", {
+    p_student_id: parsed.data.student_id, p_new_status: parsed.data.new_status,
+  });
+  if (error || typeof closedCount !== "number") {
+    console.error("admin_student_lifecycle_failed", error?.code ?? "invalid_result");
+    redirect("/admin/siswa/" + parsed.data.student_id + "?error=" +
+      (error?.code === "42501" ? "akses" : error?.code === "P0002" ? "tidak_ditemukan" : "lifecycle"));
+  }
+  await logActivity(supabase, {
+    action: "status_change", module: "students", entityType: "student",
+    entityId: parsed.data.student_id,
+    summary: parsed.data.new_status === "transferred" ? "Mencatat siswa pindah" : "Mencatat siswa mengundurkan diri",
+    changes: { new_status: parsed.data.new_status, closed_enrollments: closedCount },
+  });
+  revalidatePath("/admin/siswa");
+  revalidatePath("/admin/siswa/" + parsed.data.student_id);
+  revalidatePath("/admin/kelas");
+  redirect("/admin/siswa/" + parsed.data.student_id + "?saved=lifecycle");
 }

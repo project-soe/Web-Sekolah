@@ -191,7 +191,7 @@ export async function assignStudentToClass(formData: FormData): Promise<void> {
   if (previous?.class_group_id === target.id) fail("penempatan_sama");
   const result = previous
     ? await supabase.from("student_class_enrollments")
-        .update({ class_group_id: target.id, updated_by: session.userId })
+        .update({ class_group_id: target.id })
         .eq("id", previous.id).select("id").maybeSingle()
     : await supabase.from("student_class_enrollments").insert({
         student_id: student.id,

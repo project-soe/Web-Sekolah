@@ -32,7 +32,7 @@ export default async function AdminClassesPage({ searchParams }: {
   const { data: placements } = canViewStudents
     ? await supabase.from("student_class_enrollments")
         .select("id, student_id, class_group_id, academic_year_id, students(full_name, nis, status), class_groups(name)")
-        .eq("academic_year_id", activeYear?.id ?? "00000000-0000-0000-0000-000000000000")
+        .eq("academic_year_id", activeYear?.id ?? "00000000-0000-0000-0000-000000000000").is("ended_at", null)
     : { data: null };
   const errorMessage: Record<string, string> = {
     akses: "Akun tidak memiliki permission yang dibutuhkan.",
