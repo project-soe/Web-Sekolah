@@ -11,6 +11,7 @@
 \i supabase/migrations/20261124290000_class_capacity_enrollment_guard.sql
 \i supabase/migrations/20261124300000_bulk_class_promotion.sql
 \i supabase/migrations/20261124310000_bulk_student_graduation.sql
+\i supabase/migrations/20261124320000_student_lifecycle_column_guards.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -41,6 +42,18 @@ begin
   if has_table_privilege('authenticated', 'public.students', 'select') is false then
     raise exception 'authenticated is missing the table SELECT grant';
   end if;
+  if has_column_privilege('authenticated', 'public.students', 'status', 'INSERT')
+    or has_column_privilege('authenticated', 'public.students', 'status', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.students', 'graduation_date', 'INSERT')
+    or has_column_privilege('authenticated', 'public.students', 'graduation_date', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.students', 'created_by', 'INSERT')
+    or has_column_privilege('authenticated', 'public.students', 'updated_by', 'UPDATE') then
+    raise exception 'authenticated unexpectedly has direct lifecycle/audit column privileges';
+  end if;
+  if not has_column_privilege('authenticated', 'public.students', 'full_name', 'INSERT')
+    or not has_column_privilege('authenticated', 'public.students', 'full_name', 'UPDATE') then
+    raise exception 'authenticated is missing expected master-data column privileges';
+  end if;
 end;
 $$;
 
@@ -65,25 +78,31 @@ select set_config(
   false
 );
 
-\echo '5. Verify student status history and private access'
+\echo '5. Verify database-enforced student lifecycle and private access'
 do $$
 declare
   history_count integer;
   actor_id uuid := '50000000-0000-4000-8000-000000000001';
 begin
   insert into public.students (
-    id, nis, nisn, full_name, gender, department_id, enrollment_year, status, created_by
+    id, nis, nisn, full_name, gender, department_id, enrollment_year
   ) values
     ('60000000-0000-4000-8000-000000000001', 'NIS-001', '1234567890', 'Siswa Aktif Satu', 'male',
-     '30000000-0000-4000-8000-000000000001', 2026, 'active', actor_id),
+     '30000000-0000-4000-8000-000000000001', 2026),
     ('60000000-0000-4000-8000-000000000002', 'NIS-002', '1234567891', 'Siswa Tidak Aktif', 'female',
-     '30000000-0000-4000-8000-000000000001', 2026, 'withdrawn', actor_id),
+     '30000000-0000-4000-8000-000000000001', 2026),
     ('60000000-0000-4000-8000-000000000003', 'NIS-003', '1234567892', 'Siswa Aktif Dua', 'male',
-     '30000000-0000-4000-8000-000000000001', 2026, 'active', actor_id),
+     '30000000-0000-4000-8000-000000000001', 2026),
     ('60000000-0000-4000-8000-000000000004', 'NIS-004', '1234567893', 'Siswa Aktif Tiga', 'female',
-     '30000000-0000-4000-8000-000000000001', 2026, 'active', actor_id),
+     '30000000-0000-4000-8000-000000000001', 2026),
     ('60000000-0000-4000-8000-000000000005', 'NIS-005', '1234567894', 'Siswa Aktif Empat', 'male',
-     '30000000-0000-4000-8000-000000000001', 2026, 'active', actor_id);
+     '30000000-0000-4000-8000-000000000001', 2026);
+
+  if (select count(*) from public.students
+      where id between '60000000-0000-4000-8000-000000000001'::uuid and '60000000-0000-4000-8000-000000000005'::uuid
+        and status = 'active' and created_by = actor_id) <> 5 then
+    raise exception 'Student inserts must default to active and trust auth.uid() for created_by';
+  end if;
 
   select count(*) into history_count
   from public.student_status_history
@@ -94,13 +113,44 @@ begin
     raise exception 'Student insert did not create the expected status history';
   end if;
 
-  update public.students
-  set status = 'graduated'
-  where id = '60000000-0000-4000-8000-000000000001';
-  update public.students
-  set status = 'active'
+  update public.students set notes = 'Perubahan data induk diizinkan'
   where id = '60000000-0000-4000-8000-000000000001';
 
+  begin
+    update public.students set status = 'graduated'
+    where id = '60000000-0000-4000-8000-000000000001';
+    raise exception 'Authenticated direct status update unexpectedly succeeded';
+  exception when insufficient_privilege then null;
+  end;
+
+  begin
+    update public.students set graduation_date = '2026-05-15'
+    where id = '60000000-0000-4000-8000-000000000001';
+    raise exception 'Authenticated direct graduation-date update unexpectedly succeeded';
+  exception when insufficient_privilege then null;
+  end;
+
+  begin
+    insert into public.students (nis, full_name, gender, enrollment_year, status)
+    values ('NIS-DIRECT', 'Status Tidak Sah', 'male', 2026, 'graduated');
+    raise exception 'Authenticated direct lifecycle insert unexpectedly succeeded';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
+reset role;
+update public.students set status = 'withdrawn'
+where id = '60000000-0000-4000-8000-000000000002';
+update public.students set status = 'graduated'
+where id = '60000000-0000-4000-8000-000000000001';
+update public.students set status = 'active'
+where id = '60000000-0000-4000-8000-000000000001';
+set role authenticated;
+
+do $$
+declare history_count integer;
+begin
   select count(*) into history_count
   from public.student_status_history
   where student_id = '60000000-0000-4000-8000-000000000001';
@@ -334,11 +384,11 @@ $$;
 insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity)
 values ('20000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000002', 'XII TKJ 1', 12,
         '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 36);
-insert into public.students (id, nis, nisn, full_name, gender, department_id, enrollment_year, status, created_by)
+insert into public.students (id, nis, nisn, full_name, gender, department_id, enrollment_year)
 values
-  ('60000000-0000-4000-8000-000000000006', 'NIS-006', '1234567895', 'Calon Lulusan Satu', 'male', '30000000-0000-4000-8000-000000000001', 2025, 'active', '50000000-0000-4000-8000-000000000001'),
-  ('60000000-0000-4000-8000-000000000007', 'NIS-007', '1234567896', 'Calon Lulusan Dua', 'female', '30000000-0000-4000-8000-000000000001', 2025, 'active', '50000000-0000-4000-8000-000000000001'),
-  ('60000000-0000-4000-8000-000000000008', 'NIS-008', '1234567897', 'Calon Lulusan Tiga', 'male', '30000000-0000-4000-8000-000000000001', 2025, 'active', '50000000-0000-4000-8000-000000000001');
+  ('60000000-0000-4000-8000-000000000006', 'NIS-006', '1234567895', 'Calon Lulusan Satu', 'male', '30000000-0000-4000-8000-000000000001', 2025),
+  ('60000000-0000-4000-8000-000000000007', 'NIS-007', '1234567896', 'Calon Lulusan Dua', 'female', '30000000-0000-4000-8000-000000000001', 2025),
+  ('60000000-0000-4000-8000-000000000008', 'NIS-008', '1234567897', 'Calon Lulusan Tiga', 'male', '30000000-0000-4000-8000-000000000001', 2025);
 insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
 values
   ('60000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006'),

@@ -40,13 +40,13 @@ export async function saveStudent(formData: FormData): Promise<void> {
   const result = editing
     ? await supabase
         .from("students")
-        .update({ ...payload, updated_by: session.userId })
+        .update(payload)
         .eq("id", input.id!)
         .select("id")
         .maybeSingle()
     : await supabase
         .from("students")
-        .insert({ ...payload, status: "active", graduation_date: null, created_by: session.userId })
+        .insert(payload)
         .select("id")
         .single();
   if (result.error || !result.data) {

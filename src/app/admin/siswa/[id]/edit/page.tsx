@@ -20,7 +20,7 @@ export default async function EditStudentPage({ params }: { params: Promise<{ id
   ]);
   if (error || !student) notFound();
   return <div className="flex flex-col gap-6">
-    <div><Link href={"/admin/siswa/" + id} className="text-sm text-muted-foreground hover:text-primary">← Kembali ke detail siswa</Link><h1 className="mt-3 text-2xl font-bold">Edit Data Siswa</h1><p className="mt-1 text-sm text-muted-foreground">Perubahan status dicatat otomatis dalam riwayat siswa.</p></div>
+    <div><Link href={"/admin/siswa/" + id} className="text-sm text-muted-foreground hover:text-primary">← Kembali ke detail siswa</Link><h1 className="mt-3 text-2xl font-bold">Edit Data Siswa</h1><p className="mt-1 text-sm text-muted-foreground">Status dan tanggal kelulusan hanya dapat diubah melalui proses akademik khusus.</p></div>
     <StudentEditor initial={student} departments={departments ?? []} />
   </div>;
 }

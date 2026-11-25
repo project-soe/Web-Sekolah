@@ -941,3 +941,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memperbarui unit test agar memverifikasi bahwa payload legacy yang memuat status/tanggal kelulusan tidak menyebabkan schema umum gagal dan kedua properti tersebut tidak masuk ke hasil parse.
 - Tidak mengembalikan field lifecycle ke form umum, tidak mengubah migrasi/database, dan tidak menyentuh Supabase production maupun project kedua.
 - Status verifikasi: perubahan test dan dokumentasi didorong ke branch `main`; menunggu CI baru. Jangan menyatakan CI hijau sebelum run baru selesai.
+
+## 2026-11-25 — Pengamanan lifecycle siswa pada batas privilege database
+
+- Audit setelah CI #267 hijau menemukan bahwa migrasi fondasi masih memberikan privilege tabel-level `INSERT` dan `UPDATE` kepada role `authenticated`. Menghapus field status dari form/server action belum cukup: klien Supabase langsung masih dapat mencoba mengirim `status` atau `graduation_date`.
+- Menambahkan migrasi baru `20261124320000_student_lifecycle_column_guards.sql`: mencabut privilege tabel-level INSERT/UPDATE, lalu memberi privilege kolom hanya untuk data induk; kolom `status`, `graduation_date`, `created_by`, dan `updated_by` tidak dapat ditulis langsung oleh role authenticated.
+- Trigger audit baru menetapkan `created_by` / `updated_by` dari `auth.uid()`. Form/server action tidak lagi mengirim field audit maupun lifecycle; status awal menggunakan default database `active`.
+- RPC kelulusan kelas XII diubah menjadi SECURITY DEFINER dengan `search_path = ''`, tetap memeriksa empat permission dan aturan kelas XII/tahun ajaran aktif sebelum mengubah status/tanggal. Ini diperlukan karena SECURITY INVOKER tidak dapat melewati pembatasan kolom baru. Eksekusi hanya diberikan kepada authenticated.
+- Runner PostgreSQL disposable menambahkan migrasi 3200 dan assertion bahwa insert/update lifecycle langsung ditolak, insert siswa tetap default aktif, metadata actor dipercaya dari JWT, dan trigger riwayat tetap berjalan; skenario kelulusan tetap menguji RPC khusus.
+- Memperbarui keterangan halaman edit agar sesuai dengan alur lifecycle khusus.
+- Tidak ada migrasi yang diterapkan ke Supabase production dan project Supabase kedua tidak disentuh. Urutan deployment kini 2900 → 3000 → 3100 → 3200 setelah fondasi 2500–2800.
+- Status verifikasi: menunggu CI. SECURITY DEFINER RPC dan perubahan privilege harus lulus seluruh database-tests sebelum dianggap siap.
