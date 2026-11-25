@@ -1166,3 +1166,9 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan tautan Portal Siswa ke footer dan menghindari tombol duplikat pada header.
 - Menambahkan UI permintaan ulang email konfirmasi pada halaman pendaftaran agar pengguna tidak mencoba signup berulang.
 - Tidak ada perubahan database atau migrasi. CI terbaru perlu diverifikasi sebelum menyatakan pemeriksaan lulus.
+
+
+### Koreksi markup formulir kirim ulang
+
+- Mengganti pemisah baris literal yang sempat tersimpan pada JSX dengan newline sebenarnya agar file dapat diparse oleh ESLint/TypeScript.
+- Menunggu hasil CI commit koreksi ini; CI sebelumnya mengidentifikasi parsing error pada file formulir, sementara database tests tetap sukses.
