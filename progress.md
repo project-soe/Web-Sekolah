@@ -849,7 +849,7 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan migrasi 20261124300000_bulk_class_promotion.sql untuk RPC promote_class_students, SECURITY INVOKER, pemeriksaan empat permission, validasi tahun ajaran berurutan, kelas asal X/XI dan target satu tingkat di atas, serta proses batch atomik.
 - Kenaikan dilakukan per rombel: seluruh siswa berstatus aktif yang terdaftar di kelas asal dipindahkan ke kelas tujuan tahun ajaran berikutnya. Trigger kapasitas dan riwayat penempatan tetap berjalan; bila kapasitas tidak cukup, seluruh batch rollback.
 - UI admin kelas menyediakan form kenaikan per kelas X/XI dan pilihan kelas tujuan pada tahun ajaran berikutnya. Kelas XII tidak dinaikkan otomatis karena harus melalui alur kelulusan terpisah.
-- Assertion PostgreSQL ditambah untuk rollback saat kapasitas kurang, keberhasilan seluruh batch, riwayat, dan penolakan duplikasi.
+- Assertion PostgreSQL ditambah untuk rollback saat kapasitas kurang, keberhasilan seluruh batch, riwayat, dan penolakan duplikasi. Runner memuat migrasi 3000 dan menyiapkan permission penuh pada sesi uji promosi.
 - Urutan database: migrasi 20261124290000 harus diterapkan sebelum 20261124300000. Keduanya belum diterapkan ke Supabase production; jangan jalankan SQL production otomatis.
 - Tidak ada perubahan atau koneksi pada project Supabase kedua.
 - Status verifikasi fitur kenaikan massal: menunggu CI baru dan pengujian UI pengguna.

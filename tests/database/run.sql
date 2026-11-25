@@ -9,6 +9,7 @@
 \i supabase/migrations/20261124270000_student_class_enrollment_audit_guard.sql
 \i supabase/migrations/20261124280000_atomic_academic_year_activation.sql
 \i supabase/migrations/20261124290000_class_capacity_enrollment_guard.sql
+\i supabase/migrations/20261124300000_bulk_class_promotion.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -285,6 +286,8 @@ begin
   end if;
 end;
 $$;
+
+select set_config('test.permissions', 'classes:view,classes:create,classes:update,students:view,students:update', false);
 
 insert into public.academic_years (id, name, start_date, end_date)
 values ('10000000-0000-4000-8000-000000000003', '2028/2029', '2028-07-01', '2029-06-30');
