@@ -952,3 +952,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memperbarui keterangan halaman edit agar sesuai dengan alur lifecycle khusus.
 - Tidak ada migrasi yang diterapkan ke Supabase production dan project Supabase kedua tidak disentuh. Urutan deployment kini 2900 → 3000 → 3100 → 3200 setelah fondasi 2500–2800.
 - Status verifikasi: menunggu CI. SECURITY DEFINER RPC dan perubahan privilege harus lulus seluruh database-tests sebelum dianggap siap.
+
+
+## 2026-11-25 — Perbaikan CI #268: privilege kolom ID siswa
+
+- GitHub Actions run #268 (`45555596174`) pada commit `05c45e20a647279c2175ba82d57f0b8b2156a89f` gagal hanya pada job `database-tests`; job `check` sukses.
+- Log PostgreSQL menunjukkan fixture uji langkah 5 gagal saat melakukan INSERT siswa dengan ID eksplisit: privilege INSERT kolom `id` belum diberikan setelah privilege tabel-level dicabut.
+- Memperbaiki migrasi `20261124320000_student_lifecycle_column_guards.sql` dengan memberikan privilege INSERT kolom `id` kepada role authenticated. Kolom lifecycle (`status`, `graduation_date`) dan audit (`created_by`, `updated_by`) tetap tidak dapat ditulis langsung; privilege UPDATE untuk `id` juga tetap tidak diberikan.
+- Perbaikan mempertahankan pembatasan lifecycle di database dan mendukung fixture serta klien yang menentukan UUID saat INSERT. Tidak mengubah RPC kelulusan atau kebijakan RLS.
+- Belum ada klaim CI ulang berhasil sampai workflow pada commit perbaikan selesai. Migrasi 3200 tetap belum diterapkan ke Supabase production; project Supabase kedua tidak disentuh.

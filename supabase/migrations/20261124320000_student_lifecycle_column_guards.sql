@@ -3,7 +3,7 @@
 revoke insert, update on public.students from authenticated;
 
 grant insert (
-  nis, nisn, full_name, gender, birth_place, birth_date, address,
+  id, nis, nisn, full_name, gender, birth_place, birth_date, address,
   guardian_name, guardian_phone, department_id, enrollment_year, notes
 ) on public.students to authenticated;
 
