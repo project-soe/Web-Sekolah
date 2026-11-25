@@ -286,5 +286,44 @@ begin
 end;
 $$;
 
+insert into public.academic_years (id, name, start_date, end_date)
+values ('10000000-0000-4000-8000-000000000003', '2028/2029', '2028-07-01', '2029-06-30');
+insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity)
+values
+  ('20000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002', 'XI TKJ 2', 11, '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 3),
+  ('20000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000003', 'XII TKJ 2', 12, '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 2);
+insert into public.student_class_enrollments(student_id, academic_year_id, class_group_id)
+values
+  ('60000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000004'),
+  ('60000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000004'),
+  ('60000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000004');
+
+do $
+declare promoted integer; target_count integer; history_count integer;
+begin
+  begin
+    perform public.promote_class_students('20000000-0000-4000-8000-000000000004','20000000-0000-4000-8000-000000000005');
+    raise exception 'Expected capacity limit to roll back the whole promotion';
+  exception when check_violation then null;
+  end;
+  select enrolled_count into target_count from public.class_groups where id='20000000-0000-4000-8000-000000000005';
+  if target_count <> 0 then raise exception 'Failed promotion did not roll back target capacity reservations'; end if;
+  update public.class_groups set capacity=3 where id='20000000-0000-4000-8000-000000000005';
+  promoted := public.promote_class_students('20000000-0000-4000-8000-000000000004','20000000-0000-4000-8000-000000000005');
+  if promoted <> 3 then raise exception 'Expected 3 promoted students, got %', promoted; end if;
+  select count(*) into target_count from public.student_class_enrollments
+  where academic_year_id='10000000-0000-4000-8000-000000000003' and class_group_id='20000000-0000-4000-8000-000000000005';
+  if target_count <> 3 then raise exception 'Expected all 3 students in target class, got %', target_count; end if;
+  select count(*) into history_count from public.student_class_history
+  where academic_year_id='10000000-0000-4000-8000-000000000003' and new_class_group_id='20000000-0000-4000-8000-000000000005';
+  if history_count <> 3 then raise exception 'Expected promotion history for all 3 students, got %', history_count; end if;
+  begin
+    perform public.promote_class_students('20000000-0000-4000-8000-000000000004','20000000-0000-4000-8000-000000000005');
+    raise exception 'Expected duplicate target-year placements to be rejected';
+  exception when unique_violation then null;
+  end;
+end;
+$;
+
 reset role;
 \echo 'Database migration assertions passed.'

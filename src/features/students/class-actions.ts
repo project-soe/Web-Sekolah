@@ -119,6 +119,30 @@ export async function updateClassGroup(formData: FormData): Promise<void> {
   redirect("/admin/kelas/" + id + "?saved=kelas");
 }
 
+export async function promoteClassStudents(formData: FormData): Promise<void> {
+  const sourceClassId = String(formData.get("source_class_id") ?? "");
+  const targetClassId = String(formData.get("target_class_id") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(sourceClassId) || !/^[0-9a-f-]{36}$/i.test(targetClassId)) fail("validasi");
+  const session = await requireClassPermission("classes:update");
+  if (!can(session.access, "students:update")) fail("akses");
+  const supabase = await createClient();
+  const { data: count, error } = await supabase.rpc("promote_class_students", {
+    source_class_id: sourceClassId, target_class_id: targetClassId,
+  });
+  if (error || typeof count !== "number" || count < 1) {
+    console.error("admin_class_promotion_failed", error?.code ?? "invalid_result");
+    fail(error?.code === "42501" ? "akses" : error?.code === "23505" ? "kenaikan_duplikat" : error?.code === "23514" ? "kenaikan_validasi" : "kenaikan");
+  }
+  await logActivity(supabase, {
+    action: "update", module: "classes", entityType: "class_group", entityId: sourceClassId,
+    summary: "Menjalankan kenaikan kelas massal",
+    changes: { source_class_id: sourceClassId, target_class_id: targetClassId, promoted_count: count },
+  });
+  revalidatePath("/admin/kelas");
+  revalidatePath("/admin/siswa");
+  redirect("/admin/kelas?saved=kenaikan&jumlah=" + count);
+}
+
 export async function assignStudentToClass(formData: FormData): Promise<void> {
   const parsed = classAssignmentSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) fail("validasi");

@@ -840,3 +840,16 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Fixture PostgreSQL disposable CI diperluas untuk menguji counter transfer, penolakan penempatan melebihi kapasitas, penolakan pengurangan kapasitas, serta dua penempatan bersamaan yang berebut satu slot.
 - Tidak ada SQL yang dijalankan terhadap Supabase production dan tidak ada perubahan pada project Supabase kedua. Migrasi baru belum diterapkan ke database mana pun.
 - Status verifikasi: menunggu CI untuk lint, typecheck, unit test, build, migrasi/assertion PostgreSQL, dan uji konkurensi kapasitas. Setelah CI hijau, pengguna pull commit dan uji UI tambah/edit kelas serta penempatan saat kelas penuh.
+
+
+## 2026-11-25 — CI kapasitas hijau dan kenaikan kelas massal
+
+- Pengguna mengonfirmasi seluruh pemeriksaan lokal untuk perubahan kapasitas rombel lolos.
+- Verifikasi GitHub Actions: run #45529710606 pada commit 4b989dcc8f3dd421d481a799605754db8b2c424f dan run #45529628690 pada commit f01c88f45dd569d2e2c96b196daf0528e7a3e63c selesai success. Job check (lint, typecheck, unit test, build) dan database-tests (migrasi, assertion, tes konkurensi aktivasi tahun ajaran dan kapasitas) lulus.
+- Menambahkan migrasi 20261124300000_bulk_class_promotion.sql untuk RPC promote_class_students, SECURITY INVOKER, pemeriksaan empat permission, validasi tahun ajaran berurutan, kelas asal X/XI dan target satu tingkat di atas, serta proses batch atomik.
+- Kenaikan dilakukan per rombel: seluruh siswa berstatus aktif yang terdaftar di kelas asal dipindahkan ke kelas tujuan tahun ajaran berikutnya. Trigger kapasitas dan riwayat penempatan tetap berjalan; bila kapasitas tidak cukup, seluruh batch rollback.
+- UI admin kelas menyediakan form kenaikan per kelas X/XI dan pilihan kelas tujuan pada tahun ajaran berikutnya. Kelas XII tidak dinaikkan otomatis karena harus melalui alur kelulusan terpisah.
+- Assertion PostgreSQL ditambah untuk rollback saat kapasitas kurang, keberhasilan seluruh batch, riwayat, dan penolakan duplikasi.
+- Urutan database: migrasi 20261124290000 harus diterapkan sebelum 20261124300000. Keduanya belum diterapkan ke Supabase production; jangan jalankan SQL production otomatis.
+- Tidak ada perubahan atau koneksi pada project Supabase kedua.
+- Status verifikasi fitur kenaikan massal: menunggu CI baru dan pengujian UI pengguna.

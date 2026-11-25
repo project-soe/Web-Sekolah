@@ -5,13 +5,13 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/rbac/access";
-import { activateAcademicYear, assignStudentToClass, createAcademicYear, createClassGroup } from "@/features/students/class-actions";
+import { activateAcademicYear, assignStudentToClass, createAcademicYear, createClassGroup, promoteClassStudents } from "@/features/students/class-actions";
 
 export const metadata: Metadata = { title: "Tahun Ajaran dan Kelas" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminClassesPage({ searchParams }: {
-  searchParams: Promise<{ error?: string; saved?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; jumlah?: string }>;
 }) {
   const session = await requirePermission("classes:view");
   const params = await searchParams;
@@ -38,6 +38,9 @@ export default async function AdminClassesPage({ searchParams }: {
     siswa: "Siswa tidak ditemukan atau statusnya bukan aktif.",
     penempatan: "Penempatan siswa gagal disimpan.",
     kapasitas: "Kapasitas kelas sudah penuh atau tidak boleh lebih kecil dari jumlah siswa saat ini.",
+    kenaikan: "Kenaikan kelas gagal. Pastikan kelas tujuan tersedia dan kapasitasnya cukup.",
+    kenaikan_duplikat: "Sebagian siswa sudah memiliki penempatan pada tahun ajaran tujuan.",
+    kenaikan_validasi: "Kelas asal/tujuan tidak sesuai atau kelas XII harus diproses melalui kelulusan.",
   };
   return <div className="flex flex-col gap-6">
     <header>
@@ -45,7 +48,7 @@ export default async function AdminClassesPage({ searchParams }: {
       <p className="mt-1 text-sm text-muted-foreground">Kelola tahun ajaran, rombongan belajar, wali kelas, dan penempatan siswa. Contoh nama kelas: X TKJ 1.</p>
     </header>
     {params.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{errorMessage[params.error] ?? "Terjadi kesalahan."}</p>}
-    {params.saved && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Perubahan berhasil disimpan.</p>}
+    {params.saved && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">{params.saved === "kenaikan" ? "Kenaikan kelas berhasil. " + (params.jumlah ?? "0") + " siswa dipindahkan." : "Perubahan berhasil disimpan."}</p>}
 
     <section className="grid gap-5 lg:grid-cols-2">
       <Card><CardContent className="flex flex-col gap-4">
@@ -77,6 +80,31 @@ export default async function AdminClassesPage({ searchParams }: {
       <div><h2 className="text-lg font-semibold">Daftar kelas</h2><p className="text-sm text-muted-foreground">Daftar semua kelas berdasarkan tahun ajaran.</p></div>
       {classesError ? <p role="alert" className="text-sm text-danger">Gagal memuat kelas.</p> : !classes?.length ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada rombongan belajar.</p> : <Card><CardContent className="overflow-x-auto p-0"><table className="w-full min-w-[680px] text-left text-sm"><thead className="border-b border-border bg-muted/50"><tr><th className="px-4 py-3">Kelas</th><th className="px-4 py-3">Tingkat</th><th className="px-4 py-3">Jurusan</th><th className="px-4 py-3">Wali kelas</th><th className="px-4 py-3">Siswa</th><th className="px-4 py-3">Tahun ajaran</th></tr></thead><tbody className="divide-y divide-border">{classes.map((item) => {const department = Array.isArray(item.departments) ? item.departments[0] : item.departments; const teacher = Array.isArray(item.teachers) ? item.teachers[0] : item.teachers; const year = years?.find((entry) => entry.id === item.academic_year_id); return <tr key={item.id}><td className="px-4 py-3 font-semibold"><Link href={"/admin/kelas/" + item.id} className="text-primary hover:underline">{item.name}</Link></td><td className="px-4 py-3">{["","", "X","XI","XII"][item.grade_level]}</td><td className="px-4 py-3">{department?.name ?? "—"}</td><td className="px-4 py-3">{teacher?.full_name ?? "—"}</td><td className="px-4 py-3 tabular-nums">{can(session.access, "students:view") ? item.enrolled_count + " / " + item.capacity : "Maks. " + item.capacity}</td><td className="px-4 py-3">{year?.name ?? "—"}</td></tr>;})}</tbody></table></CardContent></Card>}
     </section>
+
+    {activeYear && can(session.access, "classes:update") && can(session.access, "students:update") && <section className="flex flex-col gap-3">
+      <div><h2 className="text-lg font-semibold">Kenaikan kelas massal</h2><p className="text-sm text-muted-foreground">Pindahkan seluruh siswa aktif dari kelas X ke XI atau XI ke XII pada tahun ajaran berikutnya. Setiap rombel diproses dalam satu transaksi; jika kapasitas tidak cukup, seluruh proses batal.</p></div>
+      {(() => {
+        const startYear = Number(activeYear.name.split("/")[0]);
+        const nextYear = years?.find((year) => Number(year.name.split("/")[0]) === startYear + 1);
+        const sourceClasses = (classes ?? []).filter((item) => item.academic_year_id === activeYear.id && item.grade_level < 12 && item.enrolled_count > 0);
+        return !nextYear
+          ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Buat tahun ajaran {startYear + 1}/{startYear + 2} dan kelas tujuan terlebih dahulu.</p>
+          : !sourceClasses.length
+            ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada siswa pada kelas X atau XI di tahun ajaran aktif.</p>
+            : <div className="grid gap-3">{sourceClasses.map((source) => {
+                const targets = (classes ?? []).filter((item) => item.academic_year_id === nextYear.id && item.grade_level === source.grade_level + 1);
+                return <Card key={source.id}><CardContent className="flex flex-col gap-3">
+                  <div><p className="font-semibold">{source.name} → {source.grade_level === 10 ? "XI" : "XII"}</p><p className="text-sm text-muted-foreground">{source.enrolled_count} penempatan terdaftar · tujuan: {nextYear.name}</p></div>
+                  {targets.length ? <form action={promoteClassStudents} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                    <input type="hidden" name="source_class_id" value={source.id}/>
+                    <Field id={"promotion-target-" + source.id} label="Kelas tujuan"><Select id={"promotion-target-select-" + source.id} name="target_class_id" required defaultValue=""><option value="" disabled>Pilih kelas tujuan</option>{targets.map((target) => <option key={target.id} value={target.id}>{target.name} · {target.enrolled_count}/{target.capacity} siswa</option>)}</Select></Field>
+                    <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Naikkan seluruh kelas</button>
+                  </form> : <p className="text-sm text-muted-foreground">Belum ada kelas tingkat {source.grade_level + 1} pada tahun ajaran {nextYear.name}.</p>}
+                </CardContent></Card>;
+              })}</div>;
+      })()}
+      <p className="text-xs text-muted-foreground">Kelas XII tidak ikut proses ini karena harus ditangani melalui proses kelulusan.</p>
+    </section>}
 
     {activeYear && <section className="flex flex-col gap-3">
       <div><h2 className="text-lg font-semibold">Penempatan siswa — {activeYear.name}</h2><p className="text-sm text-muted-foreground">Setiap siswa hanya memiliki satu kelas per tahun ajaran. Perpindahan kelas dicatat otomatis.</p></div>
