@@ -301,7 +301,7 @@ values
   ('60000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000004'),
   ('60000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000004');
 
-do $
+do $$
 declare promoted integer; target_count integer; history_count integer;
 begin
   begin
@@ -326,7 +326,7 @@ begin
   exception when unique_violation then null;
   end;
 end;
-$;
+$$;
 
 reset role;
 \echo 'Database migration assertions passed.'
