@@ -1131,3 +1131,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memperbaiki regex menjadi digit matcher TypeScript yang benar (`\d`) dan mempertahankan pemeriksaan tanggal kalender agar tanggal seperti 30 Februari tetap ditolak.
 - Database tests pada CI #290 sukses; lint dan typecheck juga sukses. Unit test dan build harus dijalankan ulang pada commit perbaikan ini.
 - Tidak ada perubahan migrasi atau database production.
+
+
+## 2026-11-25 — Perbaikan konfirmasi email dan antrean verifikasi Portal Siswa
+
+- Audit laporan redirect menemukan aksi `signUp()` belum mengirim `emailRedirectTo`, sehingga Supabase memakai Site URL proyek (yang saat ini mengarah ke `localhost:3000`). Pendaftaran kini mengarahkan email konfirmasi ke origin website yang sedang diakses dan endpoint aplikasi `/auth/callback`.
+- Menambahkan callback server `src/app/auth/callback/route.ts` untuk menukar authorization code menjadi sesi, memproses metadata pendaftaran setelah email terkonfirmasi, menyimpan permohonan melalui RPC `submit_student_portal_registration`, lalu mengeluarkan akun dan mengarahkan pendaftar ke halaman menunggu verifikasi. Jalur undangan juga diklaim setelah konfirmasi.
+- Mempertahankan fallback pada proses login untuk akun lama yang metadata pendaftarannya belum sempat diproses.
+- Temuan navigasi admin: halaman `/admin/akses-siswa` dan action persetujuan sebenarnya sudah ada, tetapi route tersebut tidak dimasukkan ke daftar route aktif dan tidak memiliki item navigasi. Menambahkan menu **Verifikasi Portal Siswa** dengan permission `students:view`, sehingga antrean pendaftaran dapat ditemukan admin.
+- Antrean ini memang terpisah dari `/admin/siswa`: data induk siswa tidak dibuat ulang. Admin memverifikasi dan menautkan akun pendaftar ke siswa aktif yang sudah ada.
+- Tidak mengubah migrasi, skema, atau database production. Konfigurasi Supabase Auth URL Configuration tetap harus mengizinkan domain production dengan path callback `/auth/callback`; Site URL sebaiknya disetel ke domain production agar tautan fallback tidak memakai localhost.
+- CI #291 untuk perbaikan regex sebelumnya selesai dengan status sukses. Status CI perubahan callback dan navigasi ini menunggu workflow commit terbaru.

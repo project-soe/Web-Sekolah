@@ -66,6 +66,7 @@ export const adminNav: AdminNavGroup[] = [
     items: [
       { label: "Guru", href: "/admin/guru", icon: Users },
       { label: "Siswa", href: "/admin/siswa", icon: GraduationCap },
+      { label: "Verifikasi Portal Siswa", href: "/admin/akses-siswa", icon: ClipboardList },
       { label: "Alumni", href: "/admin/alumni", icon: Award },
       { label: "Jurusan", href: "/admin/jurusan", icon: BookOpen },
       { label: "Kelas", href: "/admin/kelas", icon: DoorOpen },

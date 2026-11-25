@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { logActivity } from "@/lib/activity/log";
 import { fetchAccess } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -122,11 +123,19 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
       };
 
   try {
+    const requestHeaders = await headers();
+    const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+    if (!host) {
+      return { error: "Alamat website tidak dapat ditentukan. Silakan coba kembali atau hubungi admin sekolah.", email: input.email };
+    }
+    const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
+    const protocol = forwardedProtocol ?? (host.startsWith("localhost") ? "http" : "https");
+    const emailRedirectTo = `${protocol}://${host}/auth/callback?next=/portal/menunggu`;
     const supabase = await createClient();
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
-      options: { data: metadata },
+      options: { data: metadata, emailRedirectTo },
     });
     if (error) {
       console.error("[auth:portal] Signup failed:", { code: error.code ?? "unknown", status: error.status ?? null });
