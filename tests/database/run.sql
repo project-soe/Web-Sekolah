@@ -345,7 +345,7 @@ values
   ('60000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006'),
   ('60000000-0000-4000-8000-000000000008', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006');
 
-do $
+do $$
 declare graduated integer; history_count integer; still_active integer;
 begin
   select count(*) into still_active from public.students
@@ -407,7 +407,7 @@ begin
   exception when no_data_found then null;
   end;
 end;
-$;
+$$;
 
 
 reset role;

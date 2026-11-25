@@ -886,3 +886,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Akar masalah: blok PL/pgSQL pengujian kelulusan massal memakai delimiter `do $` dan penutup `$;`, bukan pasangan dollar-quote `do $$` dan `$$;`. Memperbaiki kedua delimiter tanpa mengubah assertion atau migrasi.
 - Job `check` pada run tersebut tetap sukses; database-tests harus dijalankan ulang pada commit perbaikan sebelum fitur dinyatakan lolos CI.
 - Perubahan hanya pada runner pengujian dan dokumentasi. Tidak ada migrasi yang diterapkan ke Supabase production; project Supabase kedua tidak disentuh.
+
+## 2026-11-25 — Koreksi delimiter tes kelulusan setelah CI #261
+
+- CI #261 (run `45544507071`) masih gagal pada `tests/database/run.sql:349` dengan `syntax error at or near "$"`. Inspeksi file branch menunjukkan blok PL/pgSQL kelulusan masih menggunakan pembuka `do $` dan penutup `$;`.
+- Mengganti delimiter khusus blok kelulusan menjadi pasangan `do $$` dan `$$;`, lalu memverifikasi pembuka dan penutup baru pada konten sebelum commit.
+- Job `check` CI #261 sukses; database-tests masih gagal sampai workflow baru menyelesaikan seluruh assertion.
+- Tidak ada migrasi yang diterapkan ke Supabase production dan project Supabase kedua tidak disentuh.
