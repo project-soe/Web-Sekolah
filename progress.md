@@ -796,3 +796,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Tidak ada migrasi database baru dan tidak ada koneksi/perubahan ke Supabase production maupun project Supabase kedua.
 - Status verifikasi fitur detail: menunggu CI baru setelah commit. Pengujian browser/preview Worker belum dilakukan.
 - Langkah berikutnya: tunggu CI perubahan detail kelas; setelah hijau, pengguna pull `main` dan verifikasi halaman `/admin/kelas` serta detail kelas di preview. Pengelolaan edit/hapus kelas, kapasitas, dan kenaikan kelas massal tetap belum termasuk.
+
+
+## 2026-11-25 — CI #246 dan review tampilan detail kelas
+
+- GitHub Actions run #246 (`45517565078`) pada commit `14c55c1357a39c6e09e707e8734c947863b8ffa8` selesai dengan conclusion `success`.
+- Job `check` berhasil pada dependency install, lint, typecheck, unit test, dan build.
+- Job `database-tests` berhasil pada bootstrap PostgreSQL disposable, penerapan migrasi `20261124250000`–`20261124280000`, seluruh assertion, serta tes konkurensi aktivasi tahun ajaran.
+- Review statis halaman `/admin/kelas` dan `/admin/kelas/[id]`: tautan nama kelas menuju detail; detail menampilkan tingkat, jurusan, wali kelas, tahun ajaran/periode, dan roster; halaman dilindungi `classes:view`, sedangkan roster hanya dimuat dengan `students:view`.
+- Review ini hanya inspeksi kode dan hasil CI. Tidak ada browser/preview Worker yang dijalankan, sehingga rendering aktual dan keberadaan record kelas `X TKJ 1` belum terverifikasi.
+- Tidak ada perubahan kode, migrasi, atau data Supabase. Production dan project Supabase kedua tidak disentuh.
+- Langkah verifikasi berikutnya: pengguna pull commit `14c55c1`, jalankan aplikasi/preview, buka `/admin/kelas`, cari kelas `X TKJ 1`, lalu buka detailnya. Uji akun dengan `classes:view + students:view` dan akun dengan `classes:view` tanpa `students:view`; kirim screenshot atau hasilnya untuk review tampilan responsif dan state kosong/permission.
