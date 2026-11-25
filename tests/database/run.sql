@@ -8,6 +8,7 @@
 \i supabase/migrations/20261124260000_academic_years_and_class_groups.sql
 \i supabase/migrations/20261124270000_student_class_enrollment_audit_guard.sql
 \i supabase/migrations/20261124280000_atomic_academic_year_activation.sql
+\i supabase/migrations/20261124290000_class_capacity_enrollment_guard.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -23,11 +24,11 @@ values
   ('10000000-0000-4000-8000-000000000001', '2026/2027', '2026-07-01', '2027-06-30'),
   ('10000000-0000-4000-8000-000000000002', '2027/2028', '2027-07-01', '2028-06-30');
 
-insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id)
+insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity)
 values
-  ('20000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'X TKJ 1', 10, '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001'),
-  ('20000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'X TKJ 2', 10, '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001'),
-  ('20000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'XI TKJ 1', 11, '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001');
+  ('20000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'X TKJ 1', 10, '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 36),
+  ('20000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'X TKJ 2', 10, '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 2),
+  ('20000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'XI TKJ 1', 11, '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 1);
 
 \echo '4. Verify grants and RLS deny anonymous/unpermitted reads'
 do $$
@@ -76,6 +77,10 @@ begin
     ('60000000-0000-4000-8000-000000000002', 'NIS-002', '1234567891', 'Siswa Tidak Aktif', 'female',
      '30000000-0000-4000-8000-000000000001', 2026, 'withdrawn', actor_id),
     ('60000000-0000-4000-8000-000000000003', 'NIS-003', '1234567892', 'Siswa Aktif Dua', 'male',
+     '30000000-0000-4000-8000-000000000001', 2026, 'active', actor_id),
+    ('60000000-0000-4000-8000-000000000004', 'NIS-004', '1234567893', 'Siswa Aktif Tiga', 'female',
+     '30000000-0000-4000-8000-000000000001', 2026, 'active', actor_id),
+    ('60000000-0000-4000-8000-000000000005', 'NIS-005', '1234567894', 'Siswa Aktif Empat', 'male',
      '30000000-0000-4000-8000-000000000001', 2026, 'active', actor_id);
 
   select count(*) into history_count
@@ -136,6 +141,32 @@ begin
   where student_class_history.enrollment_id = v_enrollment_id;
   if history_count <> 2 then
     raise exception 'Expected insert and transfer history rows, got %', history_count;
+  end if;
+
+  if (select enrolled_count from public.class_groups where id = '20000000-0000-4000-8000-000000000001') <> 0
+    or (select enrolled_count from public.class_groups where id = '20000000-0000-4000-8000-000000000002') <> 1 then
+    raise exception 'Enrollment counter did not follow the class transfer';
+  end if;
+
+  insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
+  values ('60000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002');
+
+  begin
+    insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
+    values ('60000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002');
+    raise exception 'Expected class capacity guard to reject an over-capacity enrollment';
+  exception when check_violation then null;
+  end;
+
+  begin
+    update public.class_groups set capacity = 1
+    where id = '20000000-0000-4000-8000-000000000002';
+    raise exception 'Expected capacity reduction below current enrollment to be rejected';
+  exception when check_violation then null;
+  end;
+
+  if (select enrolled_count from public.class_groups where id = '20000000-0000-4000-8000-000000000002') <> 2 then
+    raise exception 'Rejected over-capacity operations changed the counter';
   end if;
 
   begin
@@ -227,6 +258,8 @@ begin
 end;
 $$;
 
+select set_config('test.permissions', 'classes:view,students:view,classes:update', false);
+update public.class_groups set capacity = 1 where id = '20000000-0000-4000-8000-000000000003';
 select set_config('test.permissions', 'classes:view,students:view', false);
 do $$
 declare

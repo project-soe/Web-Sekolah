@@ -827,3 +827,15 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan form edit pada halaman detail `/admin/kelas/[id]`; hanya akun dengan permission `classes:update` yang melihat form.
 - Tidak ada migrasi database baru dan tidak ada perubahan data langsung di Supabase. Project production dan project Supabase kedua tidak disentuh oleh pekerjaan kode ini.
 - Status verifikasi: perubahan belum dijalankan lokal; CI baru menunggu. Setelah CI hijau, uji edit nama/tingkat/jurusan/wali kelas, konflik nama, akun tanpa permission, dan tampilan mobile.
+
+
+## 2026-11-25 — Kapasitas rombongan belajar dan pengaman penempatan siswa
+
+- Menambahkan migrasi baru `20261124290000_class_capacity_enrollment_guard.sql`; migrasi lama tidak diubah.
+- Setiap rombel memiliki kapasitas yang dapat diatur (default 36, rentang 1–60) dan counter penempatan yang dipelihara oleh trigger database.
+- Penempatan baru dan perpindahan kelas memesan slot secara atomik melalui conditional UPDATE pada baris rombel. Permintaan bersamaan ke kelas yang sama diserialkan PostgreSQL sehingga kapasitas tidak dapat terlampaui.
+- Trigger mengunci dua rombel secara berurutan saat transfer, mengurangi counter kelas asal setelah transfer/penghapusan, dan menolak penurunan kapasitas di bawah jumlah siswa yang sudah ditempatkan.
+- Form tambah/edit rombel menerima kapasitas; daftar kelas dan detail kelas menampilkan jumlah siswa dibanding kapasitas. Server action menerjemahkan penolakan kapasitas menjadi pesan yang dapat dipahami.
+- Fixture PostgreSQL disposable CI diperluas untuk menguji counter transfer, penolakan penempatan melebihi kapasitas, penolakan pengurangan kapasitas, serta dua penempatan bersamaan yang berebut satu slot.
+- Tidak ada SQL yang dijalankan terhadap Supabase production dan tidak ada perubahan pada project Supabase kedua. Migrasi baru belum diterapkan ke database mana pun.
+- Status verifikasi: menunggu CI untuk lint, typecheck, unit test, build, migrasi/assertion PostgreSQL, dan uji konkurensi kapasitas. Setelah CI hijau, pengguna pull commit dan uji UI tambah/edit kelas serta penempatan saat kelas penuh.

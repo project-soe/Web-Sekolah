@@ -69,6 +69,7 @@ export async function createClassGroup(formData: FormData): Promise<void> {
     academic_year_id: parsed.data.academic_year_id,
     name: parsed.data.name,
     grade_level: parsed.data.grade_level,
+    capacity: parsed.data.capacity,
     department_id: parsed.data.department_id || null,
     homeroom_teacher_id: parsed.data.homeroom_teacher_id || null,
   }).select("id").single();
@@ -105,12 +106,12 @@ export async function updateClassGroup(formData: FormData): Promise<void> {
   }).eq("id", id);
   if (error) {
     console.error("admin_class_group_update_failed", error.code);
-    redirect("/admin/kelas/" + id + "?error=" + (error.code === "23505" ? "duplikat" : "simpan"));
+    redirect("/admin/kelas/" + id + "?error=" + (error.code === "23505" ? "duplikat" : error.code === "23514" ? "kapasitas" : "simpan"));
   }
   await logActivity(supabase, {
     action: "update", module: "classes", entityType: "class_group",
     entityId: id, summary: "Memperbarui data rombongan belajar",
-    changes: { grade_level: parsed.data.grade_level },
+    changes: { grade_level: parsed.data.grade_level, capacity: parsed.data.capacity },
   });
   revalidatePath("/admin/kelas");
   revalidatePath("/admin/kelas/" + id);
@@ -146,7 +147,7 @@ export async function assignStudentToClass(formData: FormData): Promise<void> {
       }).select("id").single();
   if (result.error || !result.data) {
     console.error("admin_student_class_assign_failed", result.error?.code ?? "no_rows");
-    fail("penempatan");
+    fail(result.error?.code === "23514" ? "kapasitas" : "penempatan");
   }
   await logActivity(supabase, {
     action: previous ? "status_change" : "create",

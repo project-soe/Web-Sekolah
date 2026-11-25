@@ -19,6 +19,7 @@ export const classGroupSchema = z.object({
   academic_year_id: uuid,
   name: z.string().trim().min(3).max(80),
   grade_level: z.coerce.number().int().min(10).max(12),
+  capacity: z.coerce.number().int().min(1).max(60),
   department_id: z.union([uuid, z.literal("")]).optional(),
   homeroom_teacher_id: z.union([uuid, z.literal("")]).optional(),
 });

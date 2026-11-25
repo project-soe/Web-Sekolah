@@ -47,3 +47,5 @@ jobs:
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/database/run.sql
       - name: Test concurrent academic-year activation
         run: bash tests/database/concurrency.sh
+      - name: Test concurrent class-capacity enforcement
+        run: bash tests/database/capacity-concurrency.sh

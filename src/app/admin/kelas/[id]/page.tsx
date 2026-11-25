@@ -31,7 +31,7 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
   const supabase = await createClient();
   const { data: classGroup, error } = await supabase
     .from("class_groups")
-    .select("id, name, grade_level, academic_year_id, department_id, homeroom_teacher_id")
+    .select("id, name, grade_level, academic_year_id, department_id, homeroom_teacher_id, capacity, enrolled_count")
     .eq("id", id)
     .maybeSingle();
 
@@ -78,7 +78,7 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
     </header>
 
 
-    {query.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{query.error === "duplikat" ? "Nama kelas sudah digunakan pada tahun ajaran ini." : query.error === "validasi" ? "Data tidak valid. Periksa kembali isian." : "Perubahan kelas gagal disimpan."}</p>}
+    {query.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{query.error === "duplikat" ? "Nama kelas sudah digunakan pada tahun ajaran ini." : query.error === "validasi" ? "Data tidak valid. Periksa kembali isian." : query.error === "kapasitas" ? "Kapasitas tidak boleh lebih kecil dari jumlah siswa yang sudah ditempatkan." : "Perubahan kelas gagal disimpan."}</p>}
     {query.saved === "kelas" && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Data kelas berhasil diperbarui.</p>}
     {can(session.access, "classes:update") && <Card><CardContent className="flex flex-col gap-4">
       <h2 className="font-semibold">Edit data kelas</h2>
@@ -87,6 +87,7 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
         <input type="hidden" name="academic_year_id" value={classGroup.academic_year_id}/>
         <Field id="edit_class_name" label="Nama kelas"><Input id="edit_class_name" name="name" defaultValue={classGroup.name} minLength={3} maxLength={80} required/></Field>
         <Field id="edit_grade_level" label="Tingkat"><Select id="edit_grade_level" name="grade_level" defaultValue={String(classGroup.grade_level)} required><option value="10">X</option><option value="11">XI</option><option value="12">XII</option></Select></Field>
+        <Field id="edit_capacity" label="Kapasitas maksimal siswa"><Input id="edit_capacity" name="capacity" type="number" min={1} max={60} defaultValue={classGroup.capacity} required/></Field>
         <Field id="edit_department" label="Jurusan"><Select id="edit_department" name="department_id" defaultValue={classGroup.department_id ?? ""}><option value="">Tidak ditentukan</option>{(departments ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></Field>
         <Field id="edit_teacher" label="Wali kelas"><Select id="edit_teacher" name="homeroom_teacher_id" defaultValue={classGroup.homeroom_teacher_id ?? ""}><option value="">Belum ditentukan</option>{(teachers ?? []).map((item) => <option key={item.id} value={item.id}>{item.full_name}</option>)}</Select></Field>
         <button className="w-fit rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground sm:col-span-2">Simpan perubahan</button>
@@ -98,7 +99,7 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
       <div><p className="text-xs text-muted-foreground">Wali kelas</p><p className="mt-1 font-semibold">{teacher?.full_name ?? "Belum ditentukan"}</p></div>
       <div><p className="text-xs text-muted-foreground">Tahun ajaran</p><p className="mt-1 font-semibold">{year?.name ?? "Tidak tersedia"}</p></div>
       <div><p className="text-xs text-muted-foreground">Periode</p><p className="mt-1 font-semibold">{year ? year.start_date + " – " + year.end_date : "—"}</p></div>
-      {canViewStudents && <div><p className="text-xs text-muted-foreground">Jumlah siswa</p><p className="mt-1 font-semibold">{placementsError || studentsError ? "Tidak tersedia" : students?.length ?? 0}</p></div>}
+      <div><p className="text-xs text-muted-foreground">Kapasitas kelas</p><p className="mt-1 font-semibold">{canViewStudents ? (placementsError || studentsError ? classGroup.enrolled_count : students?.length ?? classGroup.enrolled_count) : classGroup.capacity} / {classGroup.capacity} siswa</p></div>
     </CardContent></Card>
 
     <section className="flex flex-col gap-3">

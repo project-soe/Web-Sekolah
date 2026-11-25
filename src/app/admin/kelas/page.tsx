@@ -24,7 +24,7 @@ export default async function AdminClassesPage({ searchParams }: {
   ]);
   const activeYear = years?.find((year) => year.is_active) ?? null;
   const { data: classes, error: classesError } = await supabase.from("class_groups")
-    .select("id, name, grade_level, academic_year_id, departments(name), teachers(full_name)")
+    .select("id, name, grade_level, capacity, enrolled_count, academic_year_id, departments(name), teachers(full_name)")
     .order("grade_level").order("name");
   const { data: placements } = await supabase.from("student_class_enrollments")
     .select("id, student_id, class_group_id, academic_year_id, students(full_name, nis), class_groups(name)")
@@ -37,6 +37,7 @@ export default async function AdminClassesPage({ searchParams }: {
     kelas: "Kelas tujuan tidak ditemukan.",
     siswa: "Siswa tidak ditemukan atau statusnya bukan aktif.",
     penempatan: "Penempatan siswa gagal disimpan.",
+    kapasitas: "Kapasitas kelas sudah penuh atau tidak boleh lebih kecil dari jumlah siswa saat ini.",
   };
   return <div className="flex flex-col gap-6">
     <header>
@@ -64,6 +65,7 @@ export default async function AdminClassesPage({ searchParams }: {
           <Field id="class_year" label="Tahun ajaran"><Select id="class_year" name="academic_year_id" required defaultValue={activeYear?.id ?? ""}><option value="" disabled>Pilih tahun ajaran</option>{years.map((year) => <option key={year.id} value={year.id}>{year.name}{year.is_active ? " (Aktif)" : ""}</option>)}</Select></Field>
           <Field id="class_name" label="Nama kelas"><Input id="class_name" name="name" placeholder="X TKJ 1" required minLength={3} maxLength={80}/></Field>
           <Field id="grade_level" label="Tingkat"><Select id="grade_level" name="grade_level" required defaultValue="10"><option value="10">X</option><option value="11">XI</option><option value="12">XII</option></Select></Field>
+          <Field id="class_capacity" label="Kapasitas maksimal siswa"><Input id="class_capacity" name="capacity" type="number" min={1} max={60} defaultValue={36} required/></Field>
           <Field id="class_department" label="Jurusan"><Select id="class_department" name="department_id"><option value="">Tidak ditentukan</option>{(departments ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></Field>
           <Field id="class_teacher" label="Wali kelas"><Select id="class_teacher" name="homeroom_teacher_id"><option value="">Belum ditentukan</option>{(teachers ?? []).map((item) => <option key={item.id} value={item.id}>{item.full_name}</option>)}</Select></Field>
           <button className="w-fit rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Simpan kelas</button>
@@ -73,7 +75,7 @@ export default async function AdminClassesPage({ searchParams }: {
 
     <section className="flex flex-col gap-3">
       <div><h2 className="text-lg font-semibold">Daftar kelas</h2><p className="text-sm text-muted-foreground">Daftar semua kelas berdasarkan tahun ajaran.</p></div>
-      {classesError ? <p role="alert" className="text-sm text-danger">Gagal memuat kelas.</p> : !classes?.length ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada rombongan belajar.</p> : <Card><CardContent className="overflow-x-auto p-0"><table className="w-full min-w-[680px] text-left text-sm"><thead className="border-b border-border bg-muted/50"><tr><th className="px-4 py-3">Kelas</th><th className="px-4 py-3">Tingkat</th><th className="px-4 py-3">Jurusan</th><th className="px-4 py-3">Wali kelas</th><th className="px-4 py-3">Tahun ajaran</th></tr></thead><tbody className="divide-y divide-border">{classes.map((item) => {const department = Array.isArray(item.departments) ? item.departments[0] : item.departments; const teacher = Array.isArray(item.teachers) ? item.teachers[0] : item.teachers; const year = years?.find((entry) => entry.id === item.academic_year_id); return <tr key={item.id}><td className="px-4 py-3 font-semibold"><Link href={"/admin/kelas/" + item.id} className="text-primary hover:underline">{item.name}</Link></td><td className="px-4 py-3">{["","", "X","XI","XII"][item.grade_level]}</td><td className="px-4 py-3">{department?.name ?? "—"}</td><td className="px-4 py-3">{teacher?.full_name ?? "—"}</td><td className="px-4 py-3">{year?.name ?? "—"}</td></tr>;})}</tbody></table></CardContent></Card>}
+      {classesError ? <p role="alert" className="text-sm text-danger">Gagal memuat kelas.</p> : !classes?.length ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada rombongan belajar.</p> : <Card><CardContent className="overflow-x-auto p-0"><table className="w-full min-w-[680px] text-left text-sm"><thead className="border-b border-border bg-muted/50"><tr><th className="px-4 py-3">Kelas</th><th className="px-4 py-3">Tingkat</th><th className="px-4 py-3">Jurusan</th><th className="px-4 py-3">Wali kelas</th><th className="px-4 py-3">Siswa</th><th className="px-4 py-3">Tahun ajaran</th></tr></thead><tbody className="divide-y divide-border">{classes.map((item) => {const department = Array.isArray(item.departments) ? item.departments[0] : item.departments; const teacher = Array.isArray(item.teachers) ? item.teachers[0] : item.teachers; const year = years?.find((entry) => entry.id === item.academic_year_id); return <tr key={item.id}><td className="px-4 py-3 font-semibold"><Link href={"/admin/kelas/" + item.id} className="text-primary hover:underline">{item.name}</Link></td><td className="px-4 py-3">{["","", "X","XI","XII"][item.grade_level]}</td><td className="px-4 py-3">{department?.name ?? "—"}</td><td className="px-4 py-3">{teacher?.full_name ?? "—"}</td><td className="px-4 py-3 tabular-nums">{item.enrolled_count} / {item.capacity}</td><td className="px-4 py-3">{year?.name ?? "—"}</td></tr>;})}</tbody></table></CardContent></Card>}
     </section>
 
     {activeYear && <section className="flex flex-col gap-3">
