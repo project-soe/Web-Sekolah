@@ -19,7 +19,7 @@ const statusLabels: Record<string, string> = {
   withdrawn: "Keluar",
 };
 
-export default async function ClassGroupDetailPage({ params }: {
+export default async function ClassGroupDetailPage({ params, searchParams }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
