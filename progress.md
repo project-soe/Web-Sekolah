@@ -1329,3 +1329,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Hasil ini memperkuat bukti kualitas kode dan migrasi pada database disposable; **bukan** bukti migrasi telah diterapkan ke Supabase production, bukan browser QA, dan bukan verifikasi Cloudflare Workers deployment.
 - PR #2 tetap draft dan belum digabung. Migrasi `20261124370000_student_attendance.sql` tetap belum diterapkan ke Supabase production. Tidak ada perubahan database production.
 - Tindak lanjut: dapatkan log Cloudflare build yang gagal pada build ID `2705fcb2-45ad-4e18-a85e-bf9874a95272`, lalu perbaiki/validasi build Worker. Setelah itu lakukan browser QA. Deployment migrasi tetap memerlukan pemeriksaan remote, backup, dan persetujuan eksplisit pengguna.
+
+
+## 2026-11-26 — Verifikasi deployment production dan CI #324
+- Pengguna mengonfirmasi halaman homepage (/), login (/login), dan Portal Siswa (/portal) dapat dibuka normal pada domain Worker production setelah perbaikan konfigurasi Build command OpenNext.
+- Log Cloudflare untuk request GET / menunjukkan HTTP 200, outcome `ok`, dan Worker version ID `305edd1d-8235-4535-83d0-28574426d62b`. Ini membuktikan runtime melayani homepage, bukan identitas commit source atau browser QA seluruh modul.
+- CI #324 sukses pada head PR #2 `5949549f12d05075d09c5d837bacdc249d1abb13`: job `check` (lint, typecheck, unit test, `pnpm build`) dan `database-tests` (migrasi/assertion PostgreSQL disposable dan tes konkurensi) seluruhnya sukses.
+- File signup Portal Siswa pada branch absensi sudah memuat Fragment JSX yang memperbaiki error parser sebelumnya.
+- Preview Cloudflare untuk head PR #2 masih tercatat gagal pada komentar deployment sebelumnya; perlu satu build Preview baru untuk memastikan konfigurasi Preview terbaru juga berhasil.
+- PR #2 tetap draft dan belum digabung. Migrasi `20261124370000_student_attendance.sql` belum diterapkan ke Supabase production. Tidak ada perubahan database production.
+- Tindak lanjut: validasi build Preview terbaru, lakukan browser QA modul absensi, lalu tinjau persiapan migrasi. Penerapan migrasi production tetap memerlukan pemeriksaan migration list, backup, dan persetujuan eksplisit pengguna.

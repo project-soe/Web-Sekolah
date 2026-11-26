@@ -154,3 +154,12 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 - Build Cloudflare sebelumnya untuk commit `0dc1610921581902e804b8aebcd848e177f99a1a` masih tercatat gagal; log build ID `2705fcb2-45ad-4e18-a85e-bf9874a95272` perlu diperiksa. Jangan menganggap CI GitHub #323 otomatis menyelesaikan kegagalan build Cloudflare.
 - PR #2 tetap draft dan belum digabung; migrasi `20261124370000_student_attendance.sql` belum diterapkan ke Supabase production; browser QA belum dilakukan.
 - Tidak ada perubahan pada database production. Jangan menjalankan `db push` tanpa persetujuan eksplisit pengguna.
+
+
+## 2026-11-26 — Pembaruan verifikasi deployment production dan CI #324
+- Pengguna mengonfirmasi homepage (/), /login, dan /portal normal pada domain Worker production.
+- Log Worker production untuk GET /: HTTP 200, outcome `ok`, version ID `305edd1d-8235-4535-83d0-28574426d62b`. Bukti ini terbatas pada runtime request homepage; tidak membuktikan source commit tertentu atau semua route/fitur.
+- CI #324 sukses pada head PR #2 `5949549f12d05075d09c5d837bacdc249d1abb13`: lint, typecheck, unit test, `pnpm build`, migrasi/assertion PostgreSQL disposable, dan tes konkurensi.
+- Kegagalan Cloudflare Preview yang tercatat pada komentar PR berasal dari build sebelumnya. Belum ada bukti build Preview baru setelah konfigurasi Build command diperbaiki; status Preview tetap perlu diverifikasi.
+- PR #2 masih draft dan belum digabung. Migrasi `20261124370000_student_attendance.sql` belum diterapkan ke Supabase production; browser QA modul absensi belum dilakukan.
+- Tidak ada perubahan database production. Jangan menjalankan `db push` tanpa persetujuan eksplisit pengguna.
