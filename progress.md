@@ -1244,3 +1244,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - `/ruang-guru` saat ini merupakan landing awal, belum memuat roster atau absensi.
 - **Belum diuji dan belum diterapkan:** migrasi, flow signup/email/callback, role redirect, dan browser QA. Jangan menjalankan `db push` tanpa persetujuan eksplisit dan pemeriksaan migration list remote.
 - Commit dasar branch: `a1043ab4c355e29415c937c8156e5f4bc9f01d76`. Semua file perubahan harus diperiksa CI sebelum merge.
+
+
+### Catatan perbaikan CI undangan guru
+- CI #305: lint lolos; typecheck gagal karena action log memakai nilai `revoke` yang tidak tersedia pada tipe activity action. Database test juga menemukan fixture belum memiliki role `guru`.
+- Perbaikan: gunakan action log `update` untuk pencabutan undangan dan pastikan role sistem `guru` tersedia secara idempotent pada migrasi fitur.
+- CI #306: lint, typecheck, dan unit test lolos; database test menemukan fixture permission belum mengikuti permission khusus `teacher_accounts:manage`. Perbaikan fixture dan pemberian permission kepada role `admin_sekolah` sudah disiapkan pada commit berikutnya.
+- Menambahkan validasi pasangan token/email sebelum signup Auth agar alamat email yang salah tidak membuat akun Auth yatim yang tidak dapat diklaim.
+- Status akhir tetap menunggu CI pada commit terbaru; jangan menandai fitur lulus sebelum job database dan build selesai.

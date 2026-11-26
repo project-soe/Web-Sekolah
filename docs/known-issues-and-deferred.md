@@ -84,3 +84,8 @@ Urutan desain yang disarankan:
 - Perlu uji: token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda, email belum terverifikasi, akun yang sudah memiliki role, duplikasi link, serta redirect guru/admin/siswa.
 - `/ruang-guru` masih landing awal; belum menyediakan data kelas atau absensi.
 - Tidak ada perubahan pada Supabase remote.
+
+
+### Riwayat CI undangan guru
+- CI #305 gagal pada typecheck (nilai action log `revoke`) dan database fixture (role guru belum tersedia); keduanya telah diperbaiki.
+- CI #306: lint, typecheck, dan unit test sukses; database test gagal karena nilai permission fixture belum sinkron dengan `teacher_accounts:manage`. Perbaikan permission, validasi email sebelum signup, dan assertion validasi pasangan token/email sudah dibuat pada commit terbaru. Menunggu hasil CI ulang.

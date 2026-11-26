@@ -30,6 +30,13 @@ export async function registerTeacherAccount(
     const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
     const emailRedirectTo = `${protocol}://${host}/auth/callback?next=/ruang-guru`;
     const supabase = await createClient();
+    const { data: invitationValid, error: validationError } = await supabase.rpc(
+      "validate_teacher_account_invitation",
+      { p_token: input.invitation_token, p_email: input.email },
+    );
+    if (validationError || invitationValid !== true) {
+      return { error: "Email tidak cocok dengan undangan, atau tautan sudah kedaluwarsa/dicabut. Periksa email undangan atau minta admin menerbitkan tautan baru." };
+    }
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,

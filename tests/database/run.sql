@@ -705,6 +705,18 @@ select public.create_teacher_account_invitation('40000000-0000-4000-8000-0000000
 select set_config('test.teacher_invite_token', :'teacher_invite_token', false);
 
 reset role;
+set role anon;
+do $teacher_validation$
+begin
+  if not public.validate_teacher_account_invitation(
+    current_setting('test.teacher_invite_token'), 'teacher-invite@example.test'
+  ) then raise exception 'Valid teacher invitation/email pair was rejected'; end if;
+  if public.validate_teacher_account_invitation(
+    current_setting('test.teacher_invite_token'), 'wrong-email@example.test'
+  ) then raise exception 'Teacher invitation accepted a mismatched email'; end if;
+end;
+$teacher_validation$;
+reset role;
 insert into public.users (id, email, full_name, is_active) values
   ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', 'Guru Undangan', false);
 insert into auth.users (id, email, email_confirmed_at) values

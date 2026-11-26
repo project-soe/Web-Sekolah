@@ -15,7 +15,7 @@ export async function createTeacherAccountInvitation(
 
   const session = await getSession();
   if (!session) return { error: "Sesi admin berakhir. Silakan masuk kembali." };
-  if (!session.access.is_super_admin && !session.access.permissions.includes("teachers:update")) {
+  if (!session.access.is_super_admin && !session.access.permissions.includes("teacher_accounts:manage")) {
     return { error: "Akun tidak memiliki izin mengundang guru." };
   }
 
@@ -46,7 +46,7 @@ export async function revokeTeacherAccountInvitation(formData: FormData): Promis
   const teacherId = String(formData.get("teacher_id") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(teacherId)) return;
   const session = await getSession();
-  if (!session || (!session.access.is_super_admin && !session.access.permissions.includes("teachers:update"))) return;
+  if (!session || (!session.access.is_super_admin && !session.access.permissions.includes("teacher_accounts:manage"))) return;
   const supabase = await createClient();
   const { error } = await supabase.rpc("revoke_teacher_account_invitation", { p_teacher_id: teacherId });
   if (error) {
