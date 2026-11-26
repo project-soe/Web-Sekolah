@@ -73,3 +73,25 @@ Urutan desain yang disarankan:
 5. Tentukan informasi yang boleh dilihat siswa pada Portal Siswa.
 6. Baru susun migrasi, database tests, server actions/RPC, UI, dan dokumentasi.
 
+
+
+## 7. Undangan akun guru — perlu verifikasi sebelum digunakan
+- Implementasi awal berada pada branch `feat/teacher-account-invitations`; belum digabung ke `main` dan belum diuji CI/browser.
+- Migrasi `20261124360000_teacher_account_invitations.sql` belum diterapkan ke Supabase production.
+- Admin hanya dapat membuat undangan untuk email yang sama dengan `teachers.email`. Token disimpan dalam bentuk hash, berlaku 24 jam, dan dapat dicabut/diganti.
+- Guru harus mendaftar dengan email undangan, menetapkan password, lalu memverifikasi email. Callback akan mengklaim undangan dan memberi role guru.
+- Tautan saat ini disalin admin dan dikirim melalui kanal resmi sekolah; belum ada integrasi pengiriman email otomatis.
+- Perlu uji: token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda, email belum terverifikasi, akun yang sudah memiliki role, duplikasi link, serta redirect guru/admin/siswa.
+- `/ruang-guru` masih landing awal; belum menyediakan data kelas atau absensi.
+- Tidak ada perubahan pada Supabase remote.
+
+
+### Riwayat CI undangan guru
+- CI #305 gagal pada typecheck (nilai action log `revoke`) dan database fixture (role guru belum tersedia); keduanya telah diperbaiki.
+- CI #306: lint, typecheck, dan unit test sukses; database test gagal karena nilai permission fixture belum sinkron dengan `teacher_accounts:manage`. Perbaikan permission, validasi email sebelum signup, dan assertion validasi pasangan token/email sudah dibuat pada commit terbaru. Menunggu hasil CI ulang.
+- CI #307: typecheck dan unit test sukses; database test gagal karena delimiter SQL pada RPC validasi undangan. Perbaikan delimiter dan grant eksplisit sudah dibuat; menunggu hasil CI terbaru.
+- Audit keamanan tambahan memperluas guard trigger aktivasi akun agar link guru yang dibuat oleh RPC klaim terverifikasi menjadi prasyarat aktivasi. Assertion database kini menolak aktivasi sebelum link dan memeriksa aktivasi setelah klaim.
+- CI #309: database job gagal di bootstrap trigger fixture (delimiter dollar-quote). Sudah diganti delimiter bernama; menunggu pemeriksaan ulang.
+- Fixture database kini memberi grant UPDATE pada profil akun dan memverifikasi trigger menolak aktivasi mandiri sebelum `teacher_user_links` tersedia; hasil CI ulang masih ditunggu.
+- CI #311: uji pra-klaim berhasil mencapai guard, tetapi pemeriksaan status sesudahnya gagal karena fixture tidak memberi SELECT users. Pemeriksaan status dipindahkan ke role reset; menunggu CI ulang.
+- **CI #312 sukses** pada commit `0da2e49b687fe89a0091a01cad3bb2e2ccc1ffae`: lint, typecheck, unit test, build, seluruh assertion migrasi database, dan dua concurrency tests lulus. Browser QA dan verifikasi Supabase production masih belum dilakukan.

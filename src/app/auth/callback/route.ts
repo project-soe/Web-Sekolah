@@ -18,6 +18,20 @@ export async function GET(request: Request) {
   }
 
   const metadata = data.user.user_metadata ?? {};
+  const teacherInvitationToken = metadata.teacher_invitation_token;
+  if (typeof teacherInvitationToken === "string" && /^[0-9a-f]{64}$/.test(teacherInvitationToken)) {
+    const { error: teacherClaimError } = await supabase.rpc("claim_teacher_account_invitation", {
+      p_token: teacherInvitationToken,
+    });
+    if (teacherClaimError) {
+      console.error("[auth:teacher] Invitation claim after confirmation failed:", teacherClaimError.code);
+      await supabase.auth.signOut();
+      return redirectTo(requestUrl, "/login?error=undangan-guru");
+    }
+    await supabase.auth.updateUser({ data: { teacher_invitation_token: null } });
+    return redirectTo(requestUrl, "/ruang-guru");
+  }
+
   const invitationToken = metadata.portal_invitation_token;
   if (typeof invitationToken === "string" && invitationToken.length > 0) {
     const { error: claimError } = await supabase.rpc("claim_student_portal_invitation", { p_token: invitationToken });

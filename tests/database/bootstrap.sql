@@ -12,7 +12,8 @@ create extension pgcrypto with schema extensions;
 
 create table auth.users (
   id uuid primary key,
-  email text
+  email text,
+  email_confirmed_at timestamptz
 );
 
 create or replace function auth.uid()
@@ -33,6 +34,18 @@ create table public.users (
   is_active boolean not null default false,
   deleted_at timestamptz
 );
+grant update on public.users to authenticated;
+
+-- Simulate the users status trigger installed by the RBAC foundation migration.
+-- Later feature migrations replace this function while keeping the trigger attached.
+create or replace function public.guard_user_update()
+returns trigger language plpgsql as $stub$
+begin
+  return new;
+end;
+$stub$;
+create trigger users_guard before update on public.users
+  for each row execute function public.guard_user_update();
 
 create table public.roles (
   id uuid primary key default gen_random_uuid(),
@@ -69,7 +82,8 @@ create table public.departments (
 );
 
 create table public.teachers (
-  id uuid primary key
+  id uuid primary key,
+  email text
 );
 
 create or replace function public.set_updated_at()

@@ -1234,3 +1234,27 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Uji browser pendaftaran Portal Siswa sengaja ditunda oleh pengguna karena pembatasan pengiriman email bawaan Supabase. Countdown 60 detik hanya jeda UX; bukan penambahan kuota email.
 - Tidak ada perubahan kode aplikasi, migrasi, konfigurasi runtime, atau database production.
 - Rekomendasi fase berikutnya: rancang Modul Absensi Siswa, dimulai dengan aturan pencatatan per hari/rombel, status kehadiran, pencegahan duplikasi, koreksi dengan audit trail, matriks permission, dan kebutuhan rekap. Jangan membuat migrasi sebelum aturan domain disepakati.
+
+
+## 2026-11-26 — Fondasi undangan akun guru (branch kerja)
+- Menambahkan migrasi baru `20261124360000_teacher_account_invitations.sql`: pemetaan privat satu-ke-satu `teacher_user_links`, undangan guru dengan hash token, masa berlaku 24 jam, pencabutan, validasi email terverifikasi dan pencocokan email profil, serta klaim atomik yang mengaktifkan akun dan memberi role `guru`.
+- Menambahkan form undangan pada halaman edit profil guru. Admin membuat tautan undangan untuk email yang sudah tercatat pada profil; tautan disalin dan dikirim melalui kanal resmi sekolah (belum mengirim email otomatis).
+- Menambahkan halaman aktivasi `/guru/aktivasi`; guru menetapkan password sendiri. Callback Auth mengklaim undangan setelah verifikasi email.
+- Login role guru diarahkan ke `/ruang-guru`; guard area admin menolak akun guru murni. Akun dengan role admin yang sah tetap menggunakan area admin.
+- `/ruang-guru` saat ini merupakan landing awal, belum memuat roster atau absensi.
+- **Belum diuji dan belum diterapkan:** migrasi, flow signup/email/callback, role redirect, dan browser QA. Jangan menjalankan `db push` tanpa persetujuan eksplisit dan pemeriksaan migration list remote.
+- Commit dasar branch: `a1043ab4c355e29415c937c8156e5f4bc9f01d76`. Semua file perubahan harus diperiksa CI sebelum merge.
+
+
+### Catatan perbaikan CI undangan guru
+- CI #305: lint lolos; typecheck gagal karena action log memakai nilai `revoke` yang tidak tersedia pada tipe activity action. Database test juga menemukan fixture belum memiliki role `guru`.
+- Perbaikan: gunakan action log `update` untuk pencabutan undangan dan pastikan role sistem `guru` tersedia secara idempotent pada migrasi fitur.
+- CI #306: lint, typecheck, dan unit test lolos; database test menemukan fixture permission belum mengikuti permission khusus `teacher_accounts:manage`. Perbaikan fixture dan pemberian permission kepada role `admin_sekolah` sudah disiapkan pada commit berikutnya.
+- Menambahkan validasi pasangan token/email sebelum signup Auth agar alamat email yang salah tidak membuat akun Auth yatim yang tidak dapat diklaim.
+- Status akhir tetap menunggu CI pada commit terbaru; jangan menandai fitur lulus sebelum job database dan build selesai.
+- CI #307: typecheck dan unit test lolos; database test menemukan delimiter fungsi validasi token/email terpotong pada migrasi. Fungsi diperbaiki dengan dollar-quote bernama, validasi token heksadesimal tanpa pola ambigu, serta grant execute eksplisit untuk anon/authenticated. Menunggu CI ulang pada commit sesudah perbaikan ini.
+- Audit lanjutan menemukan trigger `users_guard` dari onboarding siswa hanya mengizinkan aktivasi mandiri jika ada `student_portal_accounts`. Migrasi guru kini memperluas guard agar akun baru dapat aktif mandiri hanya setelah `teacher_user_links` dibuat melalui klaim undangan terverifikasi. Fixture database kini memasang trigger yang sama dan menguji aktivasi sebelum/sesudah link.
+- CI #309: database job berhenti pada bootstrap karena delimiter fungsi trigger fixture memakai `$` tunggal. Fixture diperbaiki memakai delimiter bernama `$stub$`; menunggu CI ulang.
+- Penguatan fixture: berikan grant UPDATE pada `public.users` agar skenario pra-klaim benar-benar melewati trigger status (bukan berhenti di privilege tabel), lalu assertion memastikan akun tetap nonaktif saat link belum ada.
+- CI #311: guard trigger sudah berjalan, tetapi assertion pasca-penolakan mencoba membaca `public.users` saat masih ber-role authenticated tanpa grant SELECT fixture. Assertion dipindahkan setelah `RESET ROLE`; pengujian tetap menjalankan UPDATE di bawah role authenticated agar trigger yang diuji.
+- **CI #312 sukses** pada commit `0da2e49b687fe89a0091a01cad3bb2e2ccc1ffae`: job `check` (lint, typecheck, unit test, build) dan `database-tests` seluruhnya sukses. Cakupan database termasuk penolakan aktivasi sebelum link guru tersedia dan aktivasi setelah klaim undangan.
