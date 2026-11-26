@@ -734,12 +734,16 @@ begin
     raise exception 'Unlinked teacher account unexpectedly activated itself';
   exception when insufficient_privilege then null;
   end;
+end;
+$teacher_preclaim$;
+reset role;
+do $teacher_preclaim_state$
+begin
   if (select is_active from public.users where id = '50000000-0000-4000-8000-000000000007') then
     raise exception 'Rejected pre-claim activation changed the user active state';
   end if;
 end;
-$teacher_preclaim$;
-reset role;
+$teacher_preclaim_state$;
 
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000007', false);
 select set_config('test.permissions', '', false);
