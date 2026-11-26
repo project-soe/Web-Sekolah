@@ -145,3 +145,12 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 - Navigasi publik saat ini memuat tautan `/siswa` dan `/ppdb`, tetapi route page keduanya belum ada di `src/app/(public)/`; akses tautan akan menghasilkan route not found.
 - Perlu dibuat halaman informasi siswa yang hanya menampilkan konten publik, serta halaman PPDB/SPMB dengan informasi persyaratan, jadwal, alur, dan formulir saat modul PPDB siap.
 - Belum diimplementasikan pada PR absensi ini.
+
+
+## 2026-11-26 — Pembaruan Modul Absensi setelah CI #323
+- **CI #323 sukses** pada head PR #2 `feat/student-attendance` commit `9fe9ccebd27becd28535b486b524e628cd7bca60`.
+- Job `check` (lint, typecheck, unit test, build) dan `database-tests` (migrasi/assertion PostgreSQL disposable serta tes konkurensi) seluruhnya sukses.
+- CI #323 tidak menerapkan migrasi ke Supabase production dan tidak menggantikan browser QA atau pemeriksaan build/deployment Cloudflare Workers.
+- Build Cloudflare sebelumnya untuk commit `0dc1610921581902e804b8aebcd848e177f99a1a` masih tercatat gagal; log build ID `2705fcb2-45ad-4e18-a85e-bf9874a95272` perlu diperiksa. Jangan menganggap CI GitHub #323 otomatis menyelesaikan kegagalan build Cloudflare.
+- PR #2 tetap draft dan belum digabung; migrasi `20261124370000_student_attendance.sql` belum diterapkan ke Supabase production; browser QA belum dilakukan.
+- Tidak ada perubahan pada database production. Jangan menjalankan `db push` tanpa persetujuan eksplisit pengguna.

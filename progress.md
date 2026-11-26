@@ -1320,3 +1320,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Commit `0dc1610921581902e804b8aebcd848e177f99a1a`: job `check` (lint, typecheck, unit test, build) sukses dan job `database-tests` sukses.
 - Assertion memastikan koreksi admin tidak menimpa `recorded_by` dan `recorded_at` pencatatan awal wali kelas; identitas/waktu koreksi dicatat terpisah pada audit log.
 - Build Cloudflare Workers untuk commit yang sama gagal. Ringkasan GitHub tidak memuat detail penyebab; log perlu diperiksa pada Cloudflare build ID `2705fcb2-45ad-4e18-a85e-bf9874a95272`. PR #2 tetap draft, belum digabung, dan migrasi belum diterapkan ke Supabase production.
+
+
+## 2026-11-26 — Verifikasi CI #323 Modul Absensi
+- Pengguna mengonfirmasi CI #323 hijau; pemeriksaan langsung GitHub Actions memastikan kedua job berstatus sukses pada commit head PR `9fe9ccebd27becd28535b486b524e628cd7bca60`.
+- Job `check`: install dependency, lint, typecheck, unit test, dan `pnpm build` semuanya sukses.
+- Job `database-tests`: bootstrap PostgreSQL disposable, penerapan migrasi dan assertion database, serta tes konkurensi aktivasi tahun ajaran dan kapasitas kelas semuanya sukses.
+- Hasil ini memperkuat bukti kualitas kode dan migrasi pada database disposable; **bukan** bukti migrasi telah diterapkan ke Supabase production, bukan browser QA, dan bukan verifikasi Cloudflare Workers deployment.
+- PR #2 tetap draft dan belum digabung. Migrasi `20261124370000_student_attendance.sql` tetap belum diterapkan ke Supabase production. Tidak ada perubahan database production.
+- Tindak lanjut: dapatkan log Cloudflare build yang gagal pada build ID `2705fcb2-45ad-4e18-a85e-bf9874a95272`, lalu perbaiki/validasi build Worker. Setelah itu lakukan browser QA. Deployment migrasi tetap memerlukan pemeriksaan remote, backup, dan persetujuan eksplisit pengguna.
