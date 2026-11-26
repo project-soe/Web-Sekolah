@@ -94,3 +94,4 @@ Urutan desain yang disarankan:
 - CI #309: database job gagal di bootstrap trigger fixture (delimiter dollar-quote). Sudah diganti delimiter bernama; menunggu pemeriksaan ulang.
 - Fixture database kini memberi grant UPDATE pada profil akun dan memverifikasi trigger menolak aktivasi mandiri sebelum `teacher_user_links` tersedia; hasil CI ulang masih ditunggu.
 - CI #311: uji pra-klaim berhasil mencapai guard, tetapi pemeriksaan status sesudahnya gagal karena fixture tidak memberi SELECT users. Pemeriksaan status dipindahkan ke role reset; menunggu CI ulang.
+- **CI #312 sukses** pada commit `0da2e49b687fe89a0091a01cad3bb2e2ccc1ffae`: lint, typecheck, unit test, build, seluruh assertion migrasi database, dan dua concurrency tests lulus. Browser QA dan verifikasi Supabase production masih belum dilakukan.
