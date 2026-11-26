@@ -698,11 +698,6 @@ $portal_hardening$;
 
 \echo '13. Verify teacher invitation, verified email, one-time claim, and private account link'
 reset role;
-insert into public.users (id, email, full_name, is_active) values
-  ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', 'Guru Undangan', false);
-insert into auth.users (id, email, email_confirmed_at) values
-  ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', now());
-
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
 select set_config('test.permissions', 'teachers:update', false);
 set role authenticated;
@@ -710,6 +705,11 @@ select public.create_teacher_account_invitation('40000000-0000-4000-8000-0000000
 select set_config('test.teacher_invite_token', :'teacher_invite_token', false);
 
 reset role;
+insert into public.users (id, email, full_name, is_active) values
+  ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', 'Guru Undangan', false);
+insert into auth.users (id, email, email_confirmed_at) values
+  ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', now());
+
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000007', false);
 select set_config('test.permissions', '', false);
 set role authenticated;

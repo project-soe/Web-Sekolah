@@ -2,7 +2,11 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
-import { createTeacherAccountInvitation, type TeacherInvitationState } from "./teacher-account-actions";
+import {
+  createTeacherAccountInvitation,
+  revokeTeacherAccountInvitation,
+  type TeacherInvitationState,
+} from "./teacher-account-actions";
 
 export function TeacherAccountInvitationForm({ teacherId, email }: { teacherId: string; email: string | null }) {
   const [state, action, pending] = useActionState<TeacherInvitationState, FormData>(
@@ -29,7 +33,13 @@ export function TeacherAccountInvitationForm({ teacherId, email }: { teacherId: 
         <div className="mt-3 space-y-2">
           <p role="status" className="text-sm text-success">Undangan berhasil dibuat. Salin tautan ini dan kirim kepada guru melalui kanal resmi sekolah.</p>
           <div className="break-all rounded-md bg-muted p-3 text-xs">{invitationUrl}</div>
-          <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(invitationUrl)}>Salin tautan undangan</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(invitationUrl)}>Salin tautan undangan</Button>
+            <form action={revokeTeacherAccountInvitation}>
+              <input type="hidden" name="teacher_id" value={teacherId} />
+              <Button type="submit" variant="outline">Cabut undangan</Button>
+            </form>
+          </div>
         </div>
       )}
       {state.error && <p role="alert" className="mt-2 text-sm text-danger">{state.error}</p>}
