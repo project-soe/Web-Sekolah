@@ -139,7 +139,7 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 ### CI #321 — hasil verifikasi audit koreksi
 - GitHub Actions `check` dan `database-tests` sukses pada commit `0dc1610921581902e804b8aebcd848e177f99a1a`.
 - Pengujian database memverifikasi koreksi tidak mengganti pencatat/waktu input awal; aktor/waktu koreksi disimpan di audit log.
-- Build Cloudflare Workers masih berjalan saat pembaruan ini dibuat. PR #2 belum digabung; migrasi production belum dijalankan.
+- Build Cloudflare Workers untuk commit tersebut gagal; ringkasan GitHub tidak memuat detail penyebab. Periksa [log build Cloudflare](https://dash.cloudflare.com/e51c1457f8ff3ab619a1adaf962a4f8a/workers/services/view/web-sekolah/production/builds/2705fcb2-45ad-4e18-a85e-bf9874a95272). PR #2 belum digabung; migrasi production belum dijalankan.
 
 ## 9. Halaman publik yang belum tersedia
 - Navigasi publik saat ini memuat tautan `/siswa` dan `/ppdb`, tetapi route page keduanya belum ada di `src/app/(public)/`; akses tautan akan menghasilkan route not found.

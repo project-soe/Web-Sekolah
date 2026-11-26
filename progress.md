@@ -1319,4 +1319,4 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 ### CI #321 — verifikasi audit koreksi
 - Commit `0dc1610921581902e804b8aebcd848e177f99a1a`: job `check` (lint, typecheck, unit test, build) sukses dan job `database-tests` sukses.
 - Assertion memastikan koreksi admin tidak menimpa `recorded_by` dan `recorded_at` pencatatan awal wali kelas; identitas/waktu koreksi dicatat terpisah pada audit log.
-- Build Cloudflare Workers masih berstatus berjalan ketika catatan ini diperbarui. PR #2 tetap draft, belum digabung, dan migrasi belum diterapkan ke Supabase production.
+- Build Cloudflare Workers untuk commit yang sama gagal. Ringkasan GitHub tidak memuat detail penyebab; log perlu diperiksa pada Cloudflare build ID `2705fcb2-45ad-4e18-a85e-bf9874a95272`. PR #2 tetap draft, belum digabung, dan migrasi belum diterapkan ke Supabase production.
