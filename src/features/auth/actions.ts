@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { z } from "zod";
 import { logActivity } from "@/lib/activity/log";
 import { fetchAccess } from "@/lib/auth/session";
@@ -9,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { loginSchema, studentPortalSignupSchema } from "./schema";
 
 export type LoginState = { error?: string; email?: string };
-export type SignupState = { error?: string; message?: string; email?: string };
+export type SignupState = { error?: string; message?: string; email?: string; awaitingOtp?: boolean };
 
 function getSignupErrorMessage(code: string | undefined, message: string | undefined): string {
   switch (code) {
@@ -128,19 +127,11 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
       };
 
   try {
-    const requestHeaders = await headers();
-    const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
-    if (!host) {
-      return { error: "Alamat website tidak dapat ditentukan. Silakan coba kembali atau hubungi admin sekolah.", email: input.email };
-    }
-    const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
-    const protocol = forwardedProtocol ?? (host.startsWith("localhost") ? "http" : "https");
-    const emailRedirectTo = `${protocol}://${host}/auth/callback?next=/portal/menunggu`;
     const supabase = await createClient();
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
-      options: { data: metadata, emailRedirectTo },
+      options: { data: metadata },
     });
     if (error) {
       console.error("[auth:portal] Signup failed:", { code: error.code ?? "unknown", status: error.status ?? null });
@@ -148,8 +139,9 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
     }
     if (!data.session) {
       return {
-        message: "Pendaftaran akun dimulai. Periksa email untuk menyelesaikan verifikasi, lalu masuk kembali. Pengajuan akan diteruskan setelah akun terverifikasi.",
+        message: "Kode verifikasi 6 digit telah dikirim ke email. Masukkan kode tersebut untuk menyelesaikan pendaftaran.",
         email: input.email,
+        awaitingOtp: true,
       };
     }
 
@@ -180,6 +172,62 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
     console.error("[auth:portal] Unexpected signup error:", error instanceof Error ? error.message : "Unknown");
     return { error: "Layanan pendaftaran sedang bermasalah. Silakan coba beberapa saat lagi.", email: input.email };
   }
+}
+
+export async function verifyStudentPortalOtp(
+  _prev: SignupState,
+  formData: FormData,
+): Promise<SignupState> {
+  const parsed = z.object({
+    email: z.email(),
+    token: z.string().trim().regex(/^\d{6}$/, "Masukkan kode OTP 6 digit."),
+  }).safeParse({
+    email: String(formData.get("email") ?? "").trim().toLowerCase(),
+    token: String(formData.get("token") ?? "").trim(),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Kode OTP tidak valid." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: parsed.data.email,
+    token: parsed.data.token,
+    type: "signup",
+  });
+  if (error || !data.user) {
+    return { error: "Kode OTP salah atau kedaluwarsa. Periksa email atau minta kode baru.", email: parsed.data.email, awaitingOtp: true };
+  }
+
+  const metadata = data.user.user_metadata ?? {};
+  if (typeof metadata.portal_invitation_token === "string") {
+    const { error: claimError } = await supabase.rpc("claim_student_portal_invitation", {
+      p_token: metadata.portal_invitation_token,
+    });
+    if (claimError) {
+      await supabase.auth.signOut();
+      return { error: "Undangan tidak valid atau sudah kedaluwarsa. Hubungi admin untuk meminta undangan baru.", email: parsed.data.email };
+    }
+    await clearPortalMetadata(supabase);
+    redirect("/portal");
+  }
+
+  if (metadata.portal_registration === "student") {
+    const { error: requestError } = await supabase.rpc("submit_student_portal_registration", {
+      p_full_name: metadata.portal_registration_full_name,
+      p_nis: metadata.portal_registration_nis,
+      p_birth_date: metadata.portal_registration_birth_date,
+    });
+    if (requestError && requestError.code !== "23505") {
+      console.error("[auth:portal] OTP self-registration failed:", requestError.code);
+      await supabase.auth.signOut();
+      return { error: "Pengajuan akun gagal disimpan. Silakan hubungi admin sekolah.", email: parsed.data.email };
+    }
+    await clearPortalMetadata(supabase);
+    await supabase.auth.signOut();
+    redirect("/portal/menunggu");
+  }
+
+  await supabase.auth.signOut();
+  return { error: "Data pendaftaran tidak ditemukan pada akun. Hubungi admin sekolah.", email: parsed.data.email };
 }
 
 export async function retryStudentPortalRegistration(
@@ -244,30 +292,23 @@ export async function resendStudentPortalConfirmation(
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Email tidak valid." };
 
   try {
-    const requestHeaders = await headers();
-    const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
-    if (!host) return { error: "Alamat website tidak dapat ditentukan. Silakan coba kembali." };
-    const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
-    const protocol = forwardedProtocol ?? (host.startsWith("localhost") ? "http" : "https");
-    const emailRedirectTo = `${protocol}://${host}/auth/callback?next=/portal/menunggu`;
     const supabase = await createClient();
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: parsed.data,
-      options: { emailRedirectTo },
     });
     if (error) {
       console.error("[auth:portal] Confirmation resend failed:", { code: error.code ?? "unknown", status: error.status ?? null });
       if (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit") {
-        return { error: "Permintaan email terlalu sering. Tunggu beberapa menit sebelum meminta tautan baru.", email: parsed.data };
+        return { error: "Permintaan email terlalu sering. Tunggu beberapa menit sebelum meminta kode baru.", email: parsed.data };
       }
       if (error.code === "email_not_confirmed") {
         return { error: "Akun ini sudah terkonfirmasi. Silakan langsung masuk ke Portal Siswa.", email: parsed.data };
       }
-      return { error: "Tautan belum dapat dikirim. Pastikan email benar dan akun masih menunggu konfirmasi, atau hubungi admin sekolah.", email: parsed.data };
+      return { error: "Kode belum dapat dikirim. Pastikan email benar dan akun masih menunggu konfirmasi, atau hubungi admin sekolah.", email: parsed.data };
     }
     return {
-      message: "Permintaan tautan konfirmasi berhasil dikirim jika akun masih menunggu verifikasi. Periksa kotak masuk dan folder spam.",
+      message: "Permintaan kode OTP berhasil dikirim jika akun masih menunggu verifikasi. Periksa kotak masuk dan folder spam.",
       email: parsed.data,
     };
   } catch (error) {

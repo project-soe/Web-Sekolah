@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
-import { registerStudentPortal, resendStudentPortalConfirmation, retryStudentPortalRegistration } from "@/features/auth/actions";
+import { registerStudentPortal, resendStudentPortalConfirmation, retryStudentPortalRegistration, verifyStudentPortalOtp } from "@/features/auth/actions";
 
 function ResendCooldownButton({ pending, startCooldown }: { pending: boolean; startCooldown: boolean }) {
   const [remaining, setRemaining] = useState(startCooldown ? 60 : 0);
@@ -27,7 +27,7 @@ function ResendCooldownButton({ pending, startCooldown }: { pending: boolean; st
     >
       {remaining > 0
         ? `Kirim ulang tersedia dalam 00:${String(remaining).padStart(2, "0")}`
-        : "Kirim ulang tautan"}
+        : "Kirim ulang kode OTP"}
     </Button>
   );
 }
@@ -35,6 +35,7 @@ function ResendCooldownButton({ pending, startCooldown }: { pending: boolean; st
 export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode?: boolean }) {
   const [state, action, pending] = useActionState(registerStudentPortal, {});
   const [resendState, resendAction, resendPending] = useActionState(resendStudentPortalConfirmation, {});
+  const [otpState, otpAction, otpPending] = useActionState(verifyStudentPortalOtp, {});
   const [retryState, retryAction, retryPending] = useActionState(retryStudentPortalRegistration, {});
   const [selfRegistrationEnabled, setSelfRegistrationEnabled] = useState(false);
 
@@ -55,7 +56,7 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
     </section>
     ) : (
     <>
-    <form action={action} className="flex flex-col gap-4">
+    <form action={action} hidden={Boolean(state.awaitingOtp)} className="flex flex-col gap-4">
       <Field id="full_name" label="Nama lengkap sesuai data sekolah" required><Input id="full_name" name="full_name" autoComplete="name" required maxLength={150} /></Field>
       <Field id="email" label="Email aktif" required><Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required /></Field>
       <Field id="password" label="Buat password (minimal 8 karakter)" required><Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} maxLength={72} required /></Field>
@@ -71,9 +72,21 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
       <Button type="submit" size="lg" loading={pending}>Buat akun Portal Siswa</Button>
       <p className="text-center text-sm text-muted-foreground">Sudah punya akun? <Link href="/login" className="font-medium text-primary hover:underline">Masuk</Link></p>
     </form>
+    {state.awaitingOtp && <section className="rounded-xl border border-primary/30 bg-muted/40 p-4">
+      <h2 className="font-semibold">Verifikasi email dengan kode OTP</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Kode verifikasi telah dikirim ke {state.email}. Masukkan 6 digit kode tersebut.</p>
+      <form action={otpAction} className="mt-3 flex flex-col gap-3">
+        <input type="hidden" name="email" value={state.email ?? ""} />
+        <Field id="student_otp" label="Kode verifikasi 6 digit" required>
+          <Input id="student_otp" name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required />
+        </Field>
+        {otpState.error && <p role="alert" className="text-sm text-danger">{otpState.error}</p>}
+        <Button type="submit" size="lg" loading={otpPending}>Verifikasi kode</Button>
+      </form>
+    </section>}
     <section className="rounded-xl border border-border bg-muted/40 p-4">
-      <h2 className="font-semibold">Email konfirmasi belum masuk?</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Jika sebelumnya sudah mendaftar tetapi belum menerima email, minta tautan konfirmasi baru di sini. Tidak perlu membuat akun ulang. Setelah permintaan, tunggu minimal 60 detik sebelum mencoba lagi.</p>
+      <h2 className="font-semibold">Kode OTP belum masuk?</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Jika sebelumnya sudah mendaftar tetapi belum menerima email, minta kode OTP baru di sini. Tidak perlu membuat akun ulang. Setelah permintaan, tunggu minimal 60 detik sebelum mencoba lagi.</p>
       <p className="mt-2 text-xs text-muted-foreground">Catatan: layanan email bawaan Supabase dibatasi hingga 2 email per jam untuk seluruh project sekolah. Countdown hanya menunjukkan jeda minimum; jika kuota project habis, email tetap belum dapat dikirim sampai kuota tersedia kembali.</p>
       <form action={resendAction} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end"><div className="min-w-0 flex-1"><Field id="resend_email" label="Email yang digunakan saat mendaftar" required><Input id="resend_email" name="email" type="email" autoComplete="email" defaultValue={state.email} required /></Field></div><ResendCooldownButton key={state.message || resendState.message || "ready"} pending={resendPending} startCooldown={Boolean(state.message || resendState.message)} /></form>
       {resendState.error && <p role="alert" className="mt-3 text-sm text-danger">{resendState.error}</p>}
