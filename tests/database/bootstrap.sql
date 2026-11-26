@@ -12,7 +12,8 @@ create extension pgcrypto with schema extensions;
 
 create table auth.users (
   id uuid primary key,
-  email text
+  email text,
+  email_confirmed_at timestamptz
 );
 
 create or replace function auth.uid()
@@ -69,7 +70,8 @@ create table public.departments (
 );
 
 create table public.teachers (
-  id uuid primary key
+  id uuid primary key,
+  email text
 );
 
 create or replace function public.set_updated_at()

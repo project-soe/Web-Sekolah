@@ -99,6 +99,10 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
       return { error: "Akun belum aktif atau belum memiliki akses. Jika sudah mendaftar sebagai siswa, tunggu verifikasi admin.", email: parsed.data.email };
     }
     if (access.roles.includes("siswa") && !access.is_super_admin) destination = "/portal";
+    else if (access.roles.includes("guru") && !access.is_super_admin
+      && !access.roles.some((role) => ["admin_sekolah", "editor", "operator_ppdb"].includes(role))) {
+      destination = "/ruang-guru";
+    }
     await logActivity(supabase, { action: "login", module: "auth", summary: "Login berhasil" });
   } catch (error) {
     console.error("[auth:login] Unexpected error:", error instanceof Error ? error.message : "Unknown");

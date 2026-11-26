@@ -73,3 +73,14 @@ Urutan desain yang disarankan:
 5. Tentukan informasi yang boleh dilihat siswa pada Portal Siswa.
 6. Baru susun migrasi, database tests, server actions/RPC, UI, dan dokumentasi.
 
+
+
+## 7. Undangan akun guru — perlu verifikasi sebelum digunakan
+- Implementasi awal berada pada branch `feat/teacher-account-invitations`; belum digabung ke `main` dan belum diuji CI/browser.
+- Migrasi `20261124360000_teacher_account_invitations.sql` belum diterapkan ke Supabase production.
+- Admin hanya dapat membuat undangan untuk email yang sama dengan `teachers.email`. Token disimpan dalam bentuk hash, berlaku 24 jam, dan dapat dicabut/diganti.
+- Guru harus mendaftar dengan email undangan, menetapkan password, lalu memverifikasi email. Callback akan mengklaim undangan dan memberi role guru.
+- Tautan saat ini disalin admin dan dikirim melalui kanal resmi sekolah; belum ada integrasi pengiriman email otomatis.
+- Perlu uji: token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda, email belum terverifikasi, akun yang sudah memiliki role, duplikasi link, serta redirect guru/admin/siswa.
+- `/ruang-guru` masih landing awal; belum menyediakan data kelas atau absensi.
+- Tidak ada perubahan pada Supabase remote.

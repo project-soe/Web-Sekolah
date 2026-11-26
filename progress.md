@@ -1234,3 +1234,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Uji browser pendaftaran Portal Siswa sengaja ditunda oleh pengguna karena pembatasan pengiriman email bawaan Supabase. Countdown 60 detik hanya jeda UX; bukan penambahan kuota email.
 - Tidak ada perubahan kode aplikasi, migrasi, konfigurasi runtime, atau database production.
 - Rekomendasi fase berikutnya: rancang Modul Absensi Siswa, dimulai dengan aturan pencatatan per hari/rombel, status kehadiran, pencegahan duplikasi, koreksi dengan audit trail, matriks permission, dan kebutuhan rekap. Jangan membuat migrasi sebelum aturan domain disepakati.
+
+
+## 2026-11-26 — Fondasi undangan akun guru (branch kerja)
+- Menambahkan migrasi baru `20261124360000_teacher_account_invitations.sql`: pemetaan privat satu-ke-satu `teacher_user_links`, undangan guru dengan hash token, masa berlaku 24 jam, pencabutan, validasi email terverifikasi dan pencocokan email profil, serta klaim atomik yang mengaktifkan akun dan memberi role `guru`.
+- Menambahkan form undangan pada halaman edit profil guru. Admin membuat tautan undangan untuk email yang sudah tercatat pada profil; tautan disalin dan dikirim melalui kanal resmi sekolah (belum mengirim email otomatis).
+- Menambahkan halaman aktivasi `/guru/aktivasi`; guru menetapkan password sendiri. Callback Auth mengklaim undangan setelah verifikasi email.
+- Login role guru diarahkan ke `/ruang-guru`; guard area admin menolak akun guru murni. Akun dengan role admin yang sah tetap menggunakan area admin.
+- `/ruang-guru` saat ini merupakan landing awal, belum memuat roster atau absensi.
+- **Belum diuji dan belum diterapkan:** migrasi, flow signup/email/callback, role redirect, dan browser QA. Jangan menjalankan `db push` tanpa persetujuan eksplisit dan pemeriksaan migration list remote.
+- Commit dasar branch: `a1043ab4c355e29415c937c8156e5f4bc9f01d76`. Semua file perubahan harus diperiksa CI sebelum merge.

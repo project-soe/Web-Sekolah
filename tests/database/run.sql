@@ -15,6 +15,7 @@
 \i supabase/migrations/20261124330000_student_transfer_withdrawal.sql
 \i supabase/migrations/20261124340000_student_portal_account_onboarding.sql
 \i supabase/migrations/20261124350000_student_portal_onboarding_account_state_guard.sql
+\i supabase/migrations/20261124360000_teacher_account_invitations.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -22,8 +23,8 @@ insert into public.users (id) values
   ('50000000-0000-4000-8000-000000000002');
 insert into public.departments (id)
 values ('30000000-0000-4000-8000-000000000001');
-insert into public.teachers (id)
-values ('40000000-0000-4000-8000-000000000001');
+insert into public.teachers (id, email)
+values ('40000000-0000-4000-8000-000000000001', 'teacher-invite@example.test');
 
 insert into public.academic_years (id, name, start_date, end_date)
 values
@@ -693,6 +694,54 @@ begin
   end if;
 end;
 $portal_hardening$;
+
+
+\echo '13. Verify teacher invitation, verified email, one-time claim, and private account link'
+reset role;
+insert into public.users (id, email, full_name, is_active) values
+  ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', 'Guru Undangan', false);
+insert into auth.users (id, email, email_confirmed_at) values
+  ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', now());
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'teachers:update', false);
+set role authenticated;
+select public.create_teacher_account_invitation('40000000-0000-4000-8000-000000000001') as teacher_invite_token \gset
+select set_config('test.teacher_invite_token', :'teacher_invite_token', false);
+
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000007', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+select public.claim_teacher_account_invitation(current_setting('test.teacher_invite_token'));
+
+reset role;
+do $teacher_invite$
+begin
+  if not (select is_active from public.users where id = '50000000-0000-4000-8000-000000000007') then
+    raise exception 'Claimed teacher invitation did not activate the account';
+  end if;
+  if not exists (
+    select 1 from public.teacher_user_links
+    where teacher_id = '40000000-0000-4000-8000-000000000001'
+      and user_id = '50000000-0000-4000-8000-000000000007'
+  ) then raise exception 'Teacher invitation did not create the private teacher-user link'; end if;
+  if not exists (
+    select 1 from public.user_roles ur join public.roles r on r.id = ur.role_id
+    where ur.user_id = '50000000-0000-4000-8000-000000000007' and r.slug = 'guru'
+  ) then raise exception 'Teacher invitation did not assign the guru role'; end if;
+  if has_table_privilege('authenticated', 'public.teacher_user_links', 'insert')
+    or has_table_privilege('authenticated', 'public.teacher_account_invitations', 'insert') then
+    raise exception 'Authenticated users unexpectedly have direct teacher-link/invitation write privileges';
+  end if;
+  if (select claimed_at from public.teacher_account_invitations
+      where token_hash = extensions.digest(convert_to(current_setting('test.teacher_invite_token'), 'UTF8'), 'sha256')) is null then
+    raise exception 'Teacher invitation token was not consumed';
+  end if;
+end;
+$teacher_invite$;
+
+reset role;
 
 \echo 'Database migration assertions passed.'
 

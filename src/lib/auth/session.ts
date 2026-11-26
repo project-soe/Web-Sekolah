@@ -26,6 +26,17 @@ export async function requireAdmin() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.access.roles.includes("siswa") && !session.access.is_super_admin) redirect("/portal");
+  if (session.access.roles.includes("guru") && !session.access.is_super_admin
+    && !session.access.roles.some((role) => ["admin_sekolah", "editor", "operator_ppdb"].includes(role))) {
+    redirect("/ruang-guru");
+  }
+  return session;
+}
+
+export async function requireTeacher() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (!session.access.roles.includes("guru") || session.access.is_super_admin) redirect("/admin");
   return session;
 }
 
