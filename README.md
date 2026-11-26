@@ -76,3 +76,8 @@ Setiap perubahan kode, database, konfigurasi, atau keputusan arsitektur wajib me
 ## Admin CMS
 
 Modul admin harus memeriksa permission pada server action dan dilindungi RLS di Supabase. Menyembunyikan tombol atau menu bukan kontrol keamanan. Alur konten mendukung draft, terbit, arsip, dan penjadwalan bila tabel menyediakan `published_at`. Catatan implementasi serta status migrasi dan pengujian berada di `progress.md`.
+
+
+## Status pengujian dan pekerjaan tertunda
+
+Daftar pengujian yang belum lolos, ditunda, atau masih membutuhkan verifikasi production/browser dicatat terpusat di [docs/known-issues-and-deferred.md](docs/known-issues-and-deferred.md). Baca dokumen tersebut bersama `progress.md` sebelum melanjutkan fitur.

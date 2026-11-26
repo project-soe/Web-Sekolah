@@ -4,15 +4,16 @@
 
 ## Status saat ini
 
-- **Tahap terbaru (2026-11-24):** build Cloudflare/OpenNext (`pnpm cf:build`) telah dikonfirmasi berhasil oleh pengguna dan artefak `.open-next/` tersedia. Audit RLS/Storage production, smoke test anon, serta pengujian editor dan permission Storage lintas-folder telah dilakukan/dilaporkan selesai. Langkah berikutnya: jalankan preview Worker (`pnpm exec wrangler dev`), lalu browser QA responsif dan aksesibilitas sebelum deployment.
-
-- **Branch:** `main`
-- **Tahap:** Fase 5 — Admin CRUD dan publikasi konten untuk modul Berita, Pengumuman, Galeri, Prestasi, Agenda, Guru, Jurusan, dan Fasilitas; audit RLS/Storage sedang menuju verifikasi akhir.
-- **Commit dokumentasi terbaru:** `345f5b9f4ae782c5eae5638e4fb84c3dbb3d36bc` — konfirmasi build Cloudflare/OpenNext berhasil dan langkah preview Worker.
-- **Commit perubahan kode terbaru yang tercatat dalam audit ini:** migration hardening RLS/Storage `80552300ae9e55b075f8fd0908a66a7a519ac959`; periksa riwayat `main` untuk commit kode yang lebih baru sebelum mengubah implementasi.
-- **Status pemeriksaan:** pengguna telah mengonfirmasi `pnpm typecheck`, `pnpm lint`, dan `pnpm test` lolos pada beberapa tahap CMS hingga Fasilitas. Pengguna kini juga mengonfirmasi `pnpm cf:build` selesai tanpa error; hasil preview Worker dan browser QA belum tersedia.
-- **Status Supabase:** migration konten hingga Fasilitas telah dikonfirmasi diterapkan sebelumnya; migration hardening `20261124240000_security_rls_storage_hardening.sql` juga dikonfirmasi tercatat Local/Remote sama pada production. Lihat bagian audit keamanan di bawah untuk batas bukti dan detail verifikasi.
-- **Aturan kerja:** jangan menyatakan build/typecheck/test/migrasi berhasil tanpa hasil yang benar-benar terkonfirmasi.
+- **Tanggal audit:** 2026-11-26.
+- **Branch:** `main`.
+- **Commit terbaru yang diaudit:** `d5e8401541b2bafcc835e27b23ed06441fc3cbdd` — `feat(portal): add confirmation resend cooldown timer`.
+- **CI terbaru:** GitHub Actions #303 pada commit tersebut berstatus `success`. Job `check` (lint, typecheck, unit test, build) dan `database-tests` seluruhnya sukses. Ini bukan bukti pengiriman email nyata atau uji browser.
+- **Tahap fungsional:** website publik dan CMS delapan domain; fondasi administrasi siswa/kelas/tahun ajaran dan lifecycle siswa; onboarding serta dashboard awal Portal Siswa.
+- **Fokus berikutnya yang direkomendasikan:** perancangan Modul Absensi Siswa. Mulai dari aturan domain dan matriks hak akses, kemudian skema/migrasi, RPC/query, UI guru/admin, rekap, dan integrasi tampilan Portal Siswa.
+- **Pengujian yang ditunda:** browser QA pendaftaran Portal Siswa yang membutuhkan email konfirmasi Supabase. Lihat [docs/known-issues-and-deferred.md](docs/known-issues-and-deferred.md).
+- **Catatan deployment database:** jangan menyimpulkan migrasi sudah diterapkan hanya dari CI. Riwayat progress mencatat beberapa migrasi lifecycle/onboarding belum diterapkan atau belum dikonfirmasi pada Supabase production. Periksa `supabase migration list --remote` pada project Website Sekolah yang benar sebelum tindakan deployment.
+- **Deployment aplikasi:** konfigurasi menggunakan Cloudflare Workers/OpenNext (`wrangler.jsonc`). Domain production, Site URL Supabase, dan daftar redirect URL harus dipastikan cocok sebelum uji email end-to-end.
+- **Aturan kerja:** jangan mengklaim build/typecheck/test/migrasi/browser QA berhasil tanpa bukti. Jangan melakukan `db push` atau mengubah production database tanpa persetujuan eksplisit. Jangan menyentuh project Supabase kedua.
 
 ## Ringkasan arsitektur
 
@@ -1221,3 +1222,15 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan catatan bahwa layanan email bawaan Supabase memiliki batas 2 email per jam untuk seluruh project (bukan per pengguna). Karena itu countdown 60 detik adalah jeda minimum dan tidak menjamin kuota project sudah tersedia.
 - Referensi resmi Supabase: Auth Rate Limits (cooldown signup 60 detik; built-in email provider 2 email/jam), Testing Auth Flows, dan Send Custom SMTP. Tidak ada perubahan SMTP, Auth config, database, atau migrasi.
 - Menunggu CI untuk commit countdown ini dan uji browser setelah deployment.
+
+
+## 2026-11-26 — Audit arsitektur dan pencatatan pekerjaan tertunda
+
+- Audit ulang branch `main`, README, progress, tree repository, riwayat commit, dan workflow terbaru.
+- Commit terbaru saat audit: `d5e8401541b2bafcc835e27b23ed06441fc3cbdd`.
+- CI #303 sukses pada kedua job: `check` (lint, typecheck, unit test, build) dan `database-tests`.
+- Menyelaraskan bagian Status saat ini dengan keadaan repository setelah pengembangan lifecycle siswa dan Portal Siswa.
+- Menambahkan `docs/known-issues-and-deferred.md` sebagai daftar terpusat pengujian tertunda, batasan layanan email, verifikasi deployment, dan pekerjaan QA yang belum dikonfirmasi.
+- Uji browser pendaftaran Portal Siswa sengaja ditunda oleh pengguna karena pembatasan pengiriman email bawaan Supabase. Countdown 60 detik hanya jeda UX; bukan penambahan kuota email.
+- Tidak ada perubahan kode aplikasi, migrasi, konfigurasi runtime, atau database production.
+- Rekomendasi fase berikutnya: rancang Modul Absensi Siswa, dimulai dengan aturan pencatatan per hari/rombel, status kehadiran, pencegahan duplikasi, koreksi dengan audit trail, matriks permission, dan kebutuhan rekap. Jangan membuat migrasi sebelum aturan domain disepakati.
