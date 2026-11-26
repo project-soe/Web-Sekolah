@@ -151,18 +151,6 @@ create policy attendance_records_select on public.attendance_records
       where s.id = attendance_records.session_id
         and public.can_access_attendance_class(s.class_group_id)
     )
-    or (
-      public.has_permission('student_portal:view')
-      and exists (
-        select 1
-        from public.student_portal_accounts spa
-        join public.attendance_sessions own_session
-          on own_session.id = attendance_records.session_id
-         and own_session.status = 'finalized'
-        where spa.user_id = (select auth.uid())
-          and spa.student_id = attendance_records.student_id
-      )
-    )
   );
 create policy attendance_change_logs_select on public.attendance_change_logs
   for select to authenticated using (

@@ -121,3 +121,6 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 
 
 - Navigasi admin untuk Kalender Pendidikan/Laporan Absensi dan pintasan Ruang Guru ditambahkan pada commit perbaikan berikutnya; CI ulang akan memverifikasi.
+
+
+- Audit lanjutan menutup akses SELECT langsung siswa ke tabel `attendance_records`; riwayat siswa hanya melalui RPC pemilik yang memfilter sesi final. Assertion database diperbarui untuk memastikan batas ini.

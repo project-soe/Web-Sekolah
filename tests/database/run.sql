@@ -941,9 +941,16 @@ do $student_attendance_privacy$
 declare visible_count integer; own_status text;
 begin
   select count(*) into visible_count from public.attendance_records;
-  if visible_count <> 1 then raise exception 'Student RLS should expose exactly one own attendance record, got %', visible_count; end if;
+  if visible_count <> 0 then
+    raise exception 'Student direct table query must not expose attendance rows; got %', visible_count;
+  end if;
   select status into own_status from public.my_attendance_records() limit 1;
-  if own_status <> 'permitted' then raise exception 'Student attendance RPC did not return corrected own status'; end if;
+  if own_status <> 'permitted' then
+    raise exception 'Student attendance RPC did not return corrected own finalized status';
+  end if;
+  if (select count(*) from public.my_attendance_records()) <> 1 then
+    raise exception 'Student RPC should expose exactly one finalized attendance row for the linked student';
+  end if;
 end;
 $student_attendance_privacy$;
 

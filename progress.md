@@ -1297,3 +1297,8 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan tautan admin untuk Kalender Pendidikan dan Laporan Absensi, masing-masing dibatasi permission `attendance:calendar_manage` dan `attendance:reports`.
 - Menambahkan pintasan Absensi Siswa dari landing page Ruang Guru.
 - Memastikan menu admin hanya menampilkan route absensi setelah route tersebut benar-benar tersedia.
+
+
+### Penguatan privasi absensi siswa
+- Akses langsung ke tabel `attendance_records` kini dibatasi hanya untuk wali kelas dan petugas laporan/koreksi. Siswa membaca riwayat melalui RPC `my_attendance_records()` yang hanya mengembalikan data miliknya dan sesi yang sudah final.
+- Assertion database disesuaikan untuk memastikan query tabel langsung tidak membocorkan catatan, sementara RPC siswa mengembalikan tepat satu baris miliknya.
