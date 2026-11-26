@@ -52,6 +52,34 @@ join public.permissions p on p.code = 'teacher_accounts:manage'
 where r.slug = 'admin_sekolah'
 on conflict do nothing;
 
+create or replace function public.guard_user_update()
+returns trigger language plpgsql security definer set search_path = '' as $guard$
+begin
+  if (new.is_active is distinct from old.is_active
+      or new.deleted_at is distinct from old.deleted_at)
+     and (select auth.uid()) is not null
+     and not public.has_permission('users:update') then
+    if new.deleted_at is distinct from old.deleted_at then
+      raise exception 'Tidak diizinkan mengubah status akun' using errcode = '42501';
+    end if;
+    if not (
+      new.is_active is true and old.is_active is false
+      and (
+        (exists (select 1 from public.student_portal_accounts spa where spa.user_id = old.id)
+          and ((select auth.uid()) = old.id or public.has_permission('students:update'))
+        )
+        or (exists (select 1 from public.teacher_user_links tul where tul.user_id = old.id)
+          and (select auth.uid()) = old.id
+        )
+      )
+    ) then
+      raise exception 'Tidak diizinkan mengubah status akun' using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end
+$guard$;
+
 create or replace function public.create_teacher_account_invitation(p_teacher_id uuid)
 returns text
 language plpgsql security definer set search_path = ''

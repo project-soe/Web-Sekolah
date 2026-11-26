@@ -35,6 +35,17 @@ create table public.users (
   deleted_at timestamptz
 );
 
+-- Simulate the users status trigger installed by the RBAC foundation migration.
+-- Later feature migrations replace this function while keeping the trigger attached.
+create or replace function public.guard_user_update()
+returns trigger language plpgsql as $
+begin
+  return new;
+end;
+$;
+create trigger users_guard before update on public.users
+  for each row execute function public.guard_user_update();
+
 create table public.roles (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,

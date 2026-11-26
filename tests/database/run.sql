@@ -658,6 +658,7 @@ select public.submit_student_portal_registration(
   'Siswa Approval Aktif', 'PORTAL-ACTIVE-APPROVAL', '2009-07-08'
 );
 
+select set_config('request.jwt.claim.sub', '', false);
 reset role;
 update public.users set is_active = true
 where id = '50000000-0000-4000-8000-000000000006';
@@ -721,6 +722,21 @@ insert into public.users (id, email, full_name, is_active) values
   ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', 'Guru Undangan', false);
 insert into auth.users (id, email, email_confirmed_at) values
   ('50000000-0000-4000-8000-000000000007', 'teacher-invite@example.test', now());
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000007', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+do $teacher_preclaim$
+begin
+  begin
+    update public.users set is_active = true
+    where id = '50000000-0000-4000-8000-000000000007';
+    raise exception 'Unlinked teacher account unexpectedly activated itself';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$teacher_preclaim$;
+reset role;
 
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000007', false);
 select set_config('test.permissions', '', false);
