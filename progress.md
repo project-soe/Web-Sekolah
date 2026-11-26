@@ -1252,3 +1252,4 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - CI #306: lint, typecheck, dan unit test lolos; database test menemukan fixture permission belum mengikuti permission khusus `teacher_accounts:manage`. Perbaikan fixture dan pemberian permission kepada role `admin_sekolah` sudah disiapkan pada commit berikutnya.
 - Menambahkan validasi pasangan token/email sebelum signup Auth agar alamat email yang salah tidak membuat akun Auth yatim yang tidak dapat diklaim.
 - Status akhir tetap menunggu CI pada commit terbaru; jangan menandai fitur lulus sebelum job database dan build selesai.
+- CI #307: typecheck dan unit test lolos; database test menemukan delimiter fungsi validasi token/email terpotong pada migrasi. Fungsi diperbaiki dengan dollar-quote bernama, validasi token heksadesimal tanpa pola ambigu, serta grant execute eksplisit untuk anon/authenticated. Menunggu CI ulang pada commit sesudah perbaikan ini.
