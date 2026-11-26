@@ -103,3 +103,12 @@ Urutan desain yang disarankan:
 - Belum dilakukan browser QA email konfirmasi pada domain production.
 - Belum ada email undangan otomatis; admin menyalin tautan dan mengirim melalui kanal sekolah.
 - `/ruang-guru` masih landing awal, tanpa roster dan absensi.
+
+
+## 8. Verifikasi email OTP — konfigurasi dan QA wajib
+- Branch kerja: `feat/email-otp-verification`; belum digabung ke `main`.
+- Kode mengalihkan signup Portal Siswa (undangan dan mandiri) serta aktivasi undangan Guru ke OTP 6 digit Supabase Auth.
+- **Tindakan dashboard yang masih diperlukan:** ubah template email Signup/Confirmation Supabase agar menyertakan `{{ .Token }}`. Jika template masih hanya memakai `{{ .ConfirmationURL }}`, kode OTP tidak akan tersedia untuk pengguna.
+- Sebelum merge/deploy, uji signup Portal Siswa undangan, pendaftaran mandiri, aktivasi Guru, OTP salah/kedaluwarsa, resend/rate-limit, serta callback link lama.
+- **CI run `45833840670` sukses penuh** pada commit `62c78826c4c36507490798f20bc9d4e8331b6d3e`: lint, typecheck, unit test, build, database assertions, dan concurrency tests.
+- Browser QA end-to-end, pengiriman email nyata, verifikasi kuota provider, serta perubahan template Supabase masih belum dilakukan. Tidak ada migrasi/database production yang dijalankan.

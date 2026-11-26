@@ -20,7 +20,7 @@ export default async function TeacherActivationPage({
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Aktivasi Akun Guru</CardTitle>
-          <p className="text-sm text-muted-foreground">Gunakan email yang menerima undangan. Tautan berlaku 24 jam dan hanya dapat digunakan sekali.</p>
+          <p className="text-sm text-muted-foreground">Gunakan email yang menerima undangan. Kode verifikasi dikirim ke email setelah password dibuat. Undangan berlaku 24 jam dan hanya dapat digunakan sekali.</p>
         </CardHeader>
         <CardContent>
           {validToken ? <TeacherActivationForm token={validToken} /> : (

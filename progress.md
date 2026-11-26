@@ -1268,3 +1268,17 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Undangan admin saat ini menghasilkan tautan 24 jam untuk disalin dan dikirim manual melalui kanal resmi; belum ada email undangan otomatis.
 - Halaman `/ruang-guru` masih landing awal. Belum ada roster kelas atau fitur absensi.
 - Tindak lanjut: verifikasi migration list pada project Website Sekolah, pastikan backup, minta persetujuan sebelum deployment, lalu uji signup/verifikasi email pada domain production. Setelah fondasi guru terverifikasi, lanjutkan Modul Absensi Siswa sesuai aturan domain yang telah disepakati.
+
+
+## 2026-11-26 — Peralihan verifikasi email ke OTP (branch kerja)
+- Branch `feat/email-otp-verification` dibuat dari `main`.
+- Kode mengalihkan pendaftaran Portal Siswa (undangan dan mandiri) serta aktivasi undangan Guru ke OTP 6 digit melalui Supabase Auth `verifyOtp({ type: "signup" })`.
+- Pengiriman ulang kode OTP tersedia pada alur Portal Siswa dan Guru. Callback lama dipertahankan untuk kompatibilitas tautan yang sudah terkirim sebelum perubahan.
+- **Konfigurasi eksternal wajib:** template email Signup/Confirmation di Supabase harus menampilkan `{{ .Token }}`; template yang hanya menggunakan `{{ .ConfirmationURL }}` tidak mengirim kode yang dapat dimasukkan di form.
+- Konfigurasi dashboard Supabase belum diubah. Belum ada pengujian email nyata/browser production atau verifikasi kuota email provider.
+- Tidak ada migrasi, perubahan database, perubahan project Supabase, atau deployment pada sesi ini.
+
+- Pemeriksaan lanjutan setelah commit awal: memperbaiki pembungkusan JSX pada form aktivasi Guru dan mempertahankan tampilan langkah OTP saat validasi server menolak format kode.
+
+
+- CI run `45833840670` pada commit `62c78826c4c36507490798f20bc9d4e8331b6d3e` sukses penuh: lint, typecheck, unit test, build, database assertions, dan concurrency tests. Ini belum mencakup pengiriman email nyata, browser QA, perubahan template Supabase, atau deployment.
