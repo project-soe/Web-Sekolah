@@ -110,7 +110,7 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 - Snapshot roster dibuat saat sesi dibuat, menggunakan `student_class_history` dan `student_status_history`; snapshot tidak berubah setelah siswa pindah kelas.
 - Finalisasi mewajibkan semua siswa ditandai. Koreksi hanya melalui RPC admin berizin dengan alasan dan audit nilai lama/baru.
 - Siswa hanya dapat membaca catatan miliknya yang sudah difinalisasi.
-- CI dan browser QA masih menunggu. Tidak ada migrasi production yang dijalankan.
+- **CI #319 sukses** pada commit `f18b7e2992359d8360d85660001c833d01560055`: lint, typecheck, unit test, build, dan database tests lulus. Browser QA masih menunggu. Tidak ada migrasi production yang dijalankan.
 
 
 ### Hasil CI awal Modul Absensi — perlu tindak lanjut
@@ -124,3 +124,10 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 
 
 - Audit lanjutan menutup akses SELECT langsung siswa ke tabel `attendance_records`; riwayat siswa hanya melalui RPC pemilik yang memfilter sesi final. Assertion database diperbarui untuk memastikan batas ini.
+
+
+### Verifikasi ulang Modul Absensi
+- CI #319 pada commit `f18b7e2992359d8360d85660001c833d01560055` sukses pada kedua job.
+- Assertion database memastikan siswa tidak dapat membaca tabel absensi secara langsung; RPC `my_attendance_records()` hanya menampilkan catatan milik siswa tersebut dari sesi final.
+- PR #2 masih draft, belum digabung, dan migrasi belum diterapkan ke Supabase production.
+- Browser QA tetap diperlukan untuk kalender admin, alur wali kelas, finalisasi, koreksi admin, dan riwayat siswa.

@@ -1281,7 +1281,7 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan RPC aman dan RLS untuk kalender, sesi, catatan, koreksi, serta RPC khusus siswa untuk melihat hanya absensi miliknya yang sudah difinalisasi.
 - Menambahkan halaman admin kalender pendidikan dan laporan/koreksi, halaman wali kelas untuk mengisi/finalisasi absensi, serta ringkasan riwayat absensi pada Portal Siswa.
 - Menambahkan assertion database untuk pembatasan kalender, wali kelas, snapshot perpindahan, finalisasi, koreksi/audit, dan privasi siswa.
-- **Status:** branch kerja; CI belum dijalankan untuk commit fase absensi ini. Migrasi belum diterapkan ke Supabase production. Browser QA belum dilakukan.
+- **Status:** implementasi tersedia pada PR #2 `feat/student-attendance`. CI #319 sukses pada commit `f18b7e2992359d8360d85660001c833d01560055`: lint, typecheck, unit test, build, seluruh database assertions, dan tes konkurensi terkait lulus. Migrasi belum diterapkan ke Supabase production. Browser QA belum dilakukan.
 - **Tidak ada perubahan database production.** Jangan menjalankan `db push` tanpa persetujuan eksplisit dan pemeriksaan migration list remote.
 
 
@@ -1302,3 +1302,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 ### Penguatan privasi absensi siswa
 - Akses langsung ke tabel `attendance_records` kini dibatasi hanya untuk wali kelas dan petugas laporan/koreksi. Siswa membaca riwayat melalui RPC `my_attendance_records()` yang hanya mengembalikan data miliknya dan sesi yang sudah final.
 - Assertion database disesuaikan untuk memastikan query tabel langsung tidak membocorkan catatan, sementara RPC siswa mengembalikan tepat satu baris miliknya.
+
+
+### Verifikasi CI Modul Absensi — 2026-11-26
+- CI #319 pada commit `f18b7e2992359d8360d85660001c833d01560055` sukses untuk kedua job: `check` (lint, typecheck, unit test, build) dan `database-tests`.
+- Database tests meliputi kalender, pembatasan wali kelas, snapshot roster saat perpindahan, penolakan finalisasi parsial, koreksi dengan audit, serta privasi Portal Siswa.
+- Akses SELECT langsung siswa ke `attendance_records` ditolak; siswa memakai RPC `my_attendance_records()` yang hanya mengembalikan baris miliknya dari sesi final.
+- PR #2 masih draft dan belum digabung. Tidak ada perubahan Supabase production. Browser QA dan pemeriksaan migrasi remote tetap tertunda.
