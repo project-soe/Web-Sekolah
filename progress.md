@@ -1277,3 +1277,5 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - **Konfigurasi eksternal wajib:** template email Signup/Confirmation di Supabase harus menampilkan `{{ .Token }}`; template yang hanya menggunakan `{{ .ConfirmationURL }}` tidak mengirim kode yang dapat dimasukkan di form.
 - Konfigurasi dashboard Supabase belum diubah. Belum ada pengujian email nyata/browser production atau verifikasi kuota email provider.
 - Tidak ada migrasi, perubahan database, perubahan project Supabase, atau deployment pada sesi ini.
+
+- Pemeriksaan lanjutan setelah commit awal: memperbaiki pembungkusan JSX pada form aktivasi Guru dan mempertahankan tampilan langkah OTP saat validasi server menolak format kode.

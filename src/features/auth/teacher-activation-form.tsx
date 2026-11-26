@@ -10,6 +10,7 @@ export function TeacherActivationForm({ token }: { token: string }) {
   const [otpState, otpAction, otpPending] = useActionState(verifyTeacherAccountOtp, {});
   const [resendState, resendAction, resendPending] = useActionState(resendTeacherAccountOtp, {});
   return (
+    <>
     <form action={action} hidden={Boolean(state.awaitingOtp)} className="flex flex-col gap-4">
       <input type="hidden" name="invitation_token" value={token} />
       <Field id="email" label="Email undangan" required>
@@ -42,6 +43,7 @@ export function TeacherActivationForm({ token }: { token: string }) {
         {resendState.error && <p role="alert" className="text-sm text-danger">{resendState.error}</p>}
         {resendState.message && <p role="status" className="text-sm text-success">{resendState.message}</p>}
       </form>
-    </section>
+    </section>}
+    </>
   );
 }

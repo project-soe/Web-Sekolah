@@ -185,7 +185,7 @@ export async function verifyStudentPortalOtp(
     email: String(formData.get("email") ?? "").trim().toLowerCase(),
     token: String(formData.get("token") ?? "").trim(),
   });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Kode OTP tidak valid." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Kode OTP tidak valid.", email: String(formData.get("email") ?? ""), awaitingOtp: true };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.verifyOtp({
