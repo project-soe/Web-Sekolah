@@ -134,3 +134,14 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 
 
 - Penguatan audit: koreksi setelah finalisasi tidak lagi menimpa `recorded_by`/`recorded_at` milik wali kelas. Identitas dan waktu koreksi tetap dicatat di `attendance_change_logs`; assertion database memverifikasi keduanya.
+
+
+### CI #321 — hasil verifikasi audit koreksi
+- GitHub Actions `check` dan `database-tests` sukses pada commit `0dc1610921581902e804b8aebcd848e177f99a1a`.
+- Pengujian database memverifikasi koreksi tidak mengganti pencatat/waktu input awal; aktor/waktu koreksi disimpan di audit log.
+- Build Cloudflare Workers masih berjalan saat pembaruan ini dibuat. PR #2 belum digabung; migrasi production belum dijalankan.
+
+## 9. Halaman publik yang belum tersedia
+- Navigasi publik saat ini memuat tautan `/siswa` dan `/ppdb`, tetapi route page keduanya belum ada di `src/app/(public)/`; akses tautan akan menghasilkan route not found.
+- Perlu dibuat halaman informasi siswa yang hanya menampilkan konten publik, serta halaman PPDB/SPMB dengan informasi persyaratan, jadwal, alur, dan formulir saat modul PPDB siap.
+- Belum diimplementasikan pada PR absensi ini.

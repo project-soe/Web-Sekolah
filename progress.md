@@ -1314,3 +1314,9 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 ### Audit koreksi — preservasi pencatat awal
 - RPC koreksi pasca-finalisasi kini hanya mengubah nilai kehadiran. Kolom `recorded_by` dan `recorded_at` tetap menunjukkan wali kelas yang pertama kali mengisi; aktor/waktu koreksi tersimpan terpisah pada `attendance_change_logs`.
 - Assertion database memastikan koreksi admin tidak menimpa identitas dan waktu pencatatan awal.
+
+
+### CI #321 — verifikasi audit koreksi
+- Commit `0dc1610921581902e804b8aebcd848e177f99a1a`: job `check` (lint, typecheck, unit test, build) sukses dan job `database-tests` sukses.
+- Assertion memastikan koreksi admin tidak menimpa `recorded_by` dan `recorded_at` pencatatan awal wali kelas; identitas/waktu koreksi dicatat terpisah pada audit log.
+- Build Cloudflare Workers masih berstatus berjalan ketika catatan ini diperbarui. PR #2 tetap draft, belum digabung, dan migrasi belum diterapkan ke Supabase production.
