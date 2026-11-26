@@ -734,6 +734,9 @@ begin
     raise exception 'Unlinked teacher account unexpectedly activated itself';
   exception when insufficient_privilege then null;
   end;
+  if (select is_active from public.users where id = '50000000-0000-4000-8000-000000000007') then
+    raise exception 'Rejected pre-claim activation changed the user active state';
+  end if;
 end;
 $teacher_preclaim$;
 reset role;

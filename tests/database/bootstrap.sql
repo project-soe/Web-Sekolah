@@ -34,6 +34,7 @@ create table public.users (
   is_active boolean not null default false,
   deleted_at timestamptz
 );
+grant update on public.users to authenticated;
 
 -- Simulate the users status trigger installed by the RBAC foundation migration.
 -- Later feature migrations replace this function while keeping the trigger attached.
