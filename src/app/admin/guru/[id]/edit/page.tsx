@@ -26,7 +26,7 @@ export default async function EditTeacherPage({ params }: { params: Promise<{ id
     <div><Link href="/admin/guru" className="text-sm text-muted-foreground hover:text-primary">← Kembali ke guru</Link>
       <h1 className="mt-3 text-2xl font-bold">Edit Data Guru</h1><p className="mt-1 text-sm text-muted-foreground">Perbarui profil guru dan pengaturan visibilitas.</p></div>
     <TeacherEditor initial={item} departments={departments ?? []} canPublish={can(session.access, "teachers:publish")} />
-    {can(session.access, "teachers:update") && (
+    {can(session.access, "teacher_accounts:manage") && (
       <TeacherAccountInvitationForm teacherId={item.id} email={item.email} />
     )}
   </div>;

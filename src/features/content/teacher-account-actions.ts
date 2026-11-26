@@ -54,7 +54,7 @@ export async function revokeTeacherAccountInvitation(formData: FormData): Promis
     return;
   }
   await logActivity(supabase, {
-    action: "revoke", module: "teacher_accounts", entityType: "teacher",
+    action: "update", module: "teacher_accounts", entityType: "teacher",
     entityId: teacherId, summary: "Mencabut undangan aktivasi akun guru",
   });
 }

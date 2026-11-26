@@ -29,6 +29,10 @@ alter table public.teacher_account_invitations enable row level security;
 revoke all on public.teacher_user_links, public.teacher_account_invitations from anon, authenticated;
 revoke truncate, references, trigger on public.teacher_user_links, public.teacher_account_invitations from authenticated;
 
+insert into public.roles(slug, name, description, is_system)
+values ('guru', 'Guru', 'Akses terbatas', true)
+on conflict (slug) do nothing;
+
 insert into public.permissions(code, module, action)
 values ('teacher_accounts:manage', 'teacher_accounts', 'manage'),
        ('teacher_portal:view', 'teacher_portal', 'view')

@@ -699,7 +699,7 @@ $portal_hardening$;
 \echo '13. Verify teacher invitation, verified email, one-time claim, and private account link'
 reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
-select set_config('test.permissions', 'teachers:update', false);
+select set_config('test.permissions', 'teacher_accounts:manage', false);
 set role authenticated;
 select public.create_teacher_account_invitation('40000000-0000-4000-8000-000000000001') as teacher_invite_token \gset
 select set_config('test.teacher_invite_token', :'teacher_invite_token', false);
