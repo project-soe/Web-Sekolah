@@ -909,6 +909,15 @@ begin
       and reason = 'Koreksi sesuai surat izin'
       and changed_by = '50000000-0000-4000-8000-000000000001'
   ) then raise exception 'Attendance correction audit log is incomplete'; end if;
+  if (select recorded_by from public.attendance_records
+      where id = current_setting('test.attendance_record_one')::uuid)
+      <> '50000000-0000-4000-8000-000000000007' then
+    raise exception 'Correction should preserve the original attendance recorder';
+  end if;
+  if (select recorded_at from public.attendance_records
+      where id = current_setting('test.attendance_record_one')::uuid) is null then
+    raise exception 'Correction should preserve the original attendance recorded timestamp';
+  end if;
   if has_table_privilege('authenticated', 'public.attendance_records', 'insert')
     or has_table_privilege('authenticated', 'public.attendance_records', 'update')
     or has_table_privilege('authenticated', 'public.attendance_sessions', 'insert')

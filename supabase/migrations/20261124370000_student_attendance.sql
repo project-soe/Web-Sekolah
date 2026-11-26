@@ -501,9 +501,7 @@ begin
   update public.attendance_records
   set status = p_new_status,
       arrival_time = case when p_new_status = 'late' then p_new_arrival_time else null end,
-      notes = nullif(btrim(p_new_notes), ''),
-      recorded_at = now(),
-      recorded_by = (select auth.uid())
+      notes = nullif(btrim(p_new_notes), '')
   where id = p_record_id;
 
   insert into public.attendance_change_logs(attendance_record_id, old_values, new_values, reason, changed_by)

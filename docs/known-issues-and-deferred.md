@@ -131,3 +131,6 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 - Assertion database memastikan siswa tidak dapat membaca tabel absensi secara langsung; RPC `my_attendance_records()` hanya menampilkan catatan milik siswa tersebut dari sesi final.
 - PR #2 masih draft, belum digabung, dan migrasi belum diterapkan ke Supabase production.
 - Browser QA tetap diperlukan untuk kalender admin, alur wali kelas, finalisasi, koreksi admin, dan riwayat siswa.
+
+
+- Penguatan audit: koreksi setelah finalisasi tidak lagi menimpa `recorded_by`/`recorded_at` milik wali kelas. Identitas dan waktu koreksi tetap dicatat di `attendance_change_logs`; assertion database memverifikasi keduanya.

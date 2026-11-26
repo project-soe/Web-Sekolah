@@ -1309,3 +1309,8 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Database tests meliputi kalender, pembatasan wali kelas, snapshot roster saat perpindahan, penolakan finalisasi parsial, koreksi dengan audit, serta privasi Portal Siswa.
 - Akses SELECT langsung siswa ke `attendance_records` ditolak; siswa memakai RPC `my_attendance_records()` yang hanya mengembalikan baris miliknya dari sesi final.
 - PR #2 masih draft dan belum digabung. Tidak ada perubahan Supabase production. Browser QA dan pemeriksaan migrasi remote tetap tertunda.
+
+
+### Audit koreksi — preservasi pencatat awal
+- RPC koreksi pasca-finalisasi kini hanya mengubah nilai kehadiran. Kolom `recorded_by` dan `recorded_at` tetap menunjukkan wali kelas yang pertama kali mengisi; aktor/waktu koreksi tersimpan terpisah pada `attendance_change_logs`.
+- Assertion database memastikan koreksi admin tidak menimpa identitas dan waktu pencatatan awal.
