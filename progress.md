@@ -6,10 +6,12 @@
 
 - **Tanggal audit:** 2026-11-26.
 - **Branch:** `main`.
-- **Commit terbaru yang diaudit:** `d5e8401541b2bafcc835e27b23ed06441fc3cbdd` — `feat(portal): add confirmation resend cooldown timer`.
+- **Commit dasar fase ini:** `4d1bb17df189f07fdf8ca0d499b52d6d39238881` — dokumentasi milestone akun guru.
+- **Status akun guru:** undangan akun guru sudah digabung ke `main` melalui PR #1; CI #312/#313 sukses.
+- **Fokus aktif:** implementasi Modul Absensi Siswa pada branch `feat/student-attendance`; belum digabung dan belum diterapkan ke Supabase production.
 - **CI terbaru:** GitHub Actions #303 pada commit tersebut berstatus `success`. Job `check` (lint, typecheck, unit test, build) dan `database-tests` seluruhnya sukses. Ini bukan bukti pengiriman email nyata atau uji browser.
 - **Tahap fungsional:** website publik dan CMS delapan domain; fondasi administrasi siswa/kelas/tahun ajaran dan lifecycle siswa; onboarding serta dashboard awal Portal Siswa.
-- **Fokus berikutnya yang direkomendasikan:** perancangan Modul Absensi Siswa. Mulai dari aturan domain dan matriks hak akses, kemudian skema/migrasi, RPC/query, UI guru/admin, rekap, dan integrasi tampilan Portal Siswa.
+- **Aturan absensi yang sudah disepakati:** wali kelas mengisi dan memfinalisasi per rombel; terlambat adalah status tersendiri; hari absensi mengikuti kalender pendidikan yang dikelola admin; koreksi setelah finalisasi wajib beralasan dan diaudit; status kosong tidak otomatis menjadi Alpa.
 - **Pengujian yang ditunda:** browser QA pendaftaran Portal Siswa yang membutuhkan email konfirmasi Supabase. Lihat [docs/known-issues-and-deferred.md](docs/known-issues-and-deferred.md).
 - **Catatan deployment database:** jangan menyimpulkan migrasi sudah diterapkan hanya dari CI. Riwayat progress mencatat beberapa migrasi lifecycle/onboarding belum diterapkan atau belum dikonfirmasi pada Supabase production. Periksa `supabase migration list --remote` pada project Website Sekolah yang benar sebelum tindakan deployment.
 - **Deployment aplikasi:** konfigurasi menggunakan Cloudflare Workers/OpenNext (`wrangler.jsonc`). Domain production, Site URL Supabase, dan daftar redirect URL harus dipastikan cocok sebelum uji email end-to-end.
@@ -1268,3 +1270,72 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Undangan admin saat ini menghasilkan tautan 24 jam untuk disalin dan dikirim manual melalui kanal resmi; belum ada email undangan otomatis.
 - Halaman `/ruang-guru` masih landing awal. Belum ada roster kelas atau fitur absensi.
 - Tindak lanjut: verifikasi migration list pada project Website Sekolah, pastikan backup, minta persetujuan sebelum deployment, lalu uji signup/verifikasi email pada domain production. Setelah fondasi guru terverifikasi, lanjutkan Modul Absensi Siswa sesuai aturan domain yang telah disepakati.
+
+
+## 2026-11-26 — Implementasi Modul Absensi Siswa (branch kerja)
+- Mengikuti keputusan domain yang telah dikunci: wali kelas mengisi/finalisasi rombel; status `present`, `late`, `sick`, `permitted`, `absent`; status NULL berarti belum diisi; kalender pendidikan admin menjadi sumber hari sekolah.
+- Menambahkan migrasi `20261124370000_student_attendance.sql` untuk kalender pendidikan, sesi harian per rombel, snapshot roster, catatan kehadiran, dan audit koreksi.
+- Sesi hanya dapat dibuat pada kalender `school_day` atau `special_school_day`, untuk tahun ajaran aktif, dan hanya wali kelas yang terhubung ke profil guru dapat membuat/mengisi/finalisasi.
+- Snapshot roster memakai riwayat penempatan kelas dan status siswa pada tanggal sesi. Perpindahan siswa setelah sesi dibuat tidak mengubah roster historis.
+- Finalisasi ditolak jika masih ada siswa tanpa status. Setelah finalisasi, perubahan hanya melalui RPC koreksi admin dengan alasan, nilai lama/baru, aktor, dan waktu.
+- Menambahkan RPC aman dan RLS untuk kalender, sesi, catatan, koreksi, serta RPC khusus siswa untuk melihat hanya absensi miliknya yang sudah difinalisasi.
+- Menambahkan halaman admin kalender pendidikan dan laporan/koreksi, halaman wali kelas untuk mengisi/finalisasi absensi, serta ringkasan riwayat absensi pada Portal Siswa.
+- Menambahkan assertion database untuk pembatasan kalender, wali kelas, snapshot perpindahan, finalisasi, koreksi/audit, dan privasi siswa.
+- **Status:** implementasi tersedia pada PR #2 `feat/student-attendance`. CI #319 sukses pada commit `f18b7e2992359d8360d85660001c833d01560055`: lint, typecheck, unit test, build, seluruh database assertions, dan tes konkurensi terkait lulus. Migrasi belum diterapkan ke Supabase production. Browser QA belum dilakukan.
+- **Tidak ada perubahan database production.** Jangan menjalankan `db push` tanpa persetujuan eksplisit dan pemeriksaan migration list remote.
+
+
+### Perbaikan awal CI Modul Absensi
+- CI pertama pada branch `feat/student-attendance` menemukan typecheck gagal karena hasil RPC `my_homeroom_classes` belum diberi tipe eksplisit dan TypeScript belum menyempitkan hasil validasi kalender sebelum akses `parsed.data`.
+- Database test berhenti saat mengaktifkan tahun ajaran karena fixture tidak menyertakan permission `classes:view` yang diwajibkan RPC aktivasi.
+- Perbaikan yang disiapkan: tipe hasil RPC wali kelas, narrowing input kalender eksplisit, dan sinkronisasi permission fixture.
+- Audit RLS tambahan: siswa hanya boleh membaca baris attendance record miliknya setelah sesi difinalisasi; baris draft tidak lagi terlihat melalui query langsung.
+- Menunggu hasil CI ulang setelah commit perbaikan. Tidak ada perubahan Supabase production.
+
+
+### Penyempurnaan navigasi Modul Absensi
+- Menambahkan tautan admin untuk Kalender Pendidikan dan Laporan Absensi, masing-masing dibatasi permission `attendance:calendar_manage` dan `attendance:reports`.
+- Menambahkan pintasan Absensi Siswa dari landing page Ruang Guru.
+- Memastikan menu admin hanya menampilkan route absensi setelah route tersebut benar-benar tersedia.
+
+
+### Penguatan privasi absensi siswa
+- Akses langsung ke tabel `attendance_records` kini dibatasi hanya untuk wali kelas dan petugas laporan/koreksi. Siswa membaca riwayat melalui RPC `my_attendance_records()` yang hanya mengembalikan data miliknya dan sesi yang sudah final.
+- Assertion database disesuaikan untuk memastikan query tabel langsung tidak membocorkan catatan, sementara RPC siswa mengembalikan tepat satu baris miliknya.
+
+
+### Verifikasi CI Modul Absensi — 2026-11-26
+- CI #319 pada commit `f18b7e2992359d8360d85660001c833d01560055` sukses untuk kedua job: `check` (lint, typecheck, unit test, build) dan `database-tests`.
+- Database tests meliputi kalender, pembatasan wali kelas, snapshot roster saat perpindahan, penolakan finalisasi parsial, koreksi dengan audit, serta privasi Portal Siswa.
+- Akses SELECT langsung siswa ke `attendance_records` ditolak; siswa memakai RPC `my_attendance_records()` yang hanya mengembalikan baris miliknya dari sesi final.
+- PR #2 masih draft dan belum digabung. Tidak ada perubahan Supabase production. Browser QA dan pemeriksaan migrasi remote tetap tertunda.
+
+
+### Audit koreksi — preservasi pencatat awal
+- RPC koreksi pasca-finalisasi kini hanya mengubah nilai kehadiran. Kolom `recorded_by` dan `recorded_at` tetap menunjukkan wali kelas yang pertama kali mengisi; aktor/waktu koreksi tersimpan terpisah pada `attendance_change_logs`.
+- Assertion database memastikan koreksi admin tidak menimpa identitas dan waktu pencatatan awal.
+
+
+### CI #321 — verifikasi audit koreksi
+- Commit `0dc1610921581902e804b8aebcd848e177f99a1a`: job `check` (lint, typecheck, unit test, build) sukses dan job `database-tests` sukses.
+- Assertion memastikan koreksi admin tidak menimpa `recorded_by` dan `recorded_at` pencatatan awal wali kelas; identitas/waktu koreksi dicatat terpisah pada audit log.
+- Build Cloudflare Workers untuk commit yang sama gagal. Ringkasan GitHub tidak memuat detail penyebab; log perlu diperiksa pada Cloudflare build ID `2705fcb2-45ad-4e18-a85e-bf9874a95272`. PR #2 tetap draft, belum digabung, dan migrasi belum diterapkan ke Supabase production.
+
+
+## 2026-11-26 — Verifikasi CI #323 Modul Absensi
+- Pengguna mengonfirmasi CI #323 hijau; pemeriksaan langsung GitHub Actions memastikan kedua job berstatus sukses pada commit head PR `9fe9ccebd27becd28535b486b524e628cd7bca60`.
+- Job `check`: install dependency, lint, typecheck, unit test, dan `pnpm build` semuanya sukses.
+- Job `database-tests`: bootstrap PostgreSQL disposable, penerapan migrasi dan assertion database, serta tes konkurensi aktivasi tahun ajaran dan kapasitas kelas semuanya sukses.
+- Hasil ini memperkuat bukti kualitas kode dan migrasi pada database disposable; **bukan** bukti migrasi telah diterapkan ke Supabase production, bukan browser QA, dan bukan verifikasi Cloudflare Workers deployment.
+- PR #2 tetap draft dan belum digabung. Migrasi `20261124370000_student_attendance.sql` tetap belum diterapkan ke Supabase production. Tidak ada perubahan database production.
+- Tindak lanjut: dapatkan log Cloudflare build yang gagal pada build ID `2705fcb2-45ad-4e18-a85e-bf9874a95272`, lalu perbaiki/validasi build Worker. Setelah itu lakukan browser QA. Deployment migrasi tetap memerlukan pemeriksaan remote, backup, dan persetujuan eksplisit pengguna.
+
+
+## 2026-11-26 — Verifikasi deployment production dan CI #324
+- Pengguna mengonfirmasi halaman homepage (/), login (/login), dan Portal Siswa (/portal) dapat dibuka normal pada domain Worker production setelah perbaikan konfigurasi Build command OpenNext.
+- Log Cloudflare untuk request GET / menunjukkan HTTP 200, outcome `ok`, dan Worker version ID `305edd1d-8235-4535-83d0-28574426d62b`. Ini membuktikan runtime melayani homepage, bukan identitas commit source atau browser QA seluruh modul.
+- CI #324 sukses pada head PR #2 `5949549f12d05075d09c5d837bacdc249d1abb13`: job `check` (lint, typecheck, unit test, `pnpm build`) dan `database-tests` (migrasi/assertion PostgreSQL disposable dan tes konkurensi) seluruhnya sukses.
+- File signup Portal Siswa pada branch absensi sudah memuat Fragment JSX yang memperbaiki error parser sebelumnya.
+- Preview Cloudflare untuk head PR #2 masih tercatat gagal pada komentar deployment sebelumnya; perlu satu build Preview baru untuk memastikan konfigurasi Preview terbaru juga berhasil.
+- PR #2 tetap draft dan belum digabung. Migrasi `20261124370000_student_attendance.sql` belum diterapkan ke Supabase production. Tidak ada perubahan database production.
+- Tindak lanjut: validasi build Preview terbaru, lakukan browser QA modul absensi, lalu tinjau persiapan migrasi. Penerapan migrasi production tetap memerlukan pemeriksaan migration list, backup, dan persetujuan eksplisit pengguna.

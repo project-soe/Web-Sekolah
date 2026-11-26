@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { logout } from "@/features/auth/actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireTeacher } from "@/lib/auth/session";
@@ -18,7 +19,8 @@ export default async function TeacherPortalPage() {
         <CardHeader><CardTitle>Akun guru aktif</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>Akun telah terhubung dengan profil guru sekolah.</p>
-          <p>Fitur kelas dan absensi akan ditampilkan setelah modul absensi serta penugasan wali kelas diaktifkan.</p>
+          <p>Kelola kehadiran siswa pada rombel yang ditugaskan kepadamu sebagai wali kelas.</p>
+          <Link href="/ruang-guru/absensi" className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">Buka Absensi Siswa</Link>
         </CardContent>
       </Card>
     </main>
