@@ -63,15 +63,13 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 
 ## 6. Kandidat fase pengembangan berikutnya
 
-**Modul Absensi Siswa** — masih tahap rekomendasi/perancangan, belum diimplementasikan.
+**Modul Absensi Siswa** — implementasi awal berada pada branch `feat/student-attendance`; belum digabung dan belum diterapkan ke production.
 
-Urutan desain yang disarankan:
-1. Sepakati siapa yang boleh mencatat, mengoreksi, melihat, dan mengunci absensi.
-2. Definisikan status kehadiran dan aturan izin/sakit/alpa/terlambat.
-3. Tentukan keunikan pencatatan (siswa + tanggal + sesi/rombel) dan penanganan perpindahan siswa.
-4. Rancang audit trail koreksi, pembatasan tanggal, serta rekap harian/bulanan.
-5. Tentukan informasi yang boleh dilihat siswa pada Portal Siswa.
-6. Baru susun migrasi, database tests, server actions/RPC, UI, dan dokumentasi.
+- Aturan domain sudah disepakati dan dikunci: wali kelas mengisi/finalisasi per rombel; kalender admin menentukan hari sekolah; terlambat terpisah; koreksi pasca-finalisasi wajib beralasan; status kosong tidak otomatis menjadi Alpa.
+- Migrasi `20261124370000_student_attendance.sql` dan UI admin/guru/siswa sudah disiapkan pada branch.
+- Database tests ditambahkan untuk kalender, pembatasan wali kelas, snapshot roster, finalisasi, koreksi/audit, dan privasi siswa. Menunggu CI.
+- Browser QA belum dilakukan. Migrasi belum diterapkan ke Supabase production.
+- Jangan menjalankan `db push` tanpa persetujuan eksplisit pengguna.
 
 
 
@@ -103,3 +101,13 @@ Urutan desain yang disarankan:
 - Belum dilakukan browser QA email konfirmasi pada domain production.
 - Belum ada email undangan otomatis; admin menyalin tautan dan mengirim melalui kanal sekolah.
 - `/ruang-guru` masih landing awal, tanpa roster dan absensi.
+
+
+## 8. Modul Absensi Siswa — status implementasi
+- Branch kerja: `feat/student-attendance`.
+- File utama: migrasi `20261124370000_student_attendance.sql`, actions/schema `src/features/attendance/`, halaman admin kalender/laporan, halaman `/ruang-guru/absensi`, dan tampilan Portal Siswa.
+- Kalender mendukung `school_day`, `holiday`, `special_school_day`, dan `special_holiday`. Sesi hanya dibuat pada dua jenis hari sekolah.
+- Snapshot roster dibuat saat sesi dibuat, menggunakan `student_class_history` dan `student_status_history`; snapshot tidak berubah setelah siswa pindah kelas.
+- Finalisasi mewajibkan semua siswa ditandai. Koreksi hanya melalui RPC admin berizin dengan alasan dan audit nilai lama/baru.
+- Siswa hanya dapat membaca catatan miliknya yang sudah difinalisasi.
+- CI dan browser QA masih menunggu. Tidak ada migrasi production yang dijalankan.

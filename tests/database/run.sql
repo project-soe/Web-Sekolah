@@ -16,6 +16,7 @@
 \i supabase/migrations/20261124340000_student_portal_account_onboarding.sql
 \i supabase/migrations/20261124350000_student_portal_onboarding_account_state_guard.sql
 \i supabase/migrations/20261124360000_teacher_account_invitations.sql
+\i supabase/migrations/20261124370000_student_attendance.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -775,6 +776,176 @@ begin
   end if;
 end;
 $teacher_invite$;
+
+reset role;
+
+
+\echo '14. Verify calendar-gated daily attendance, homeroom-only access, roster snapshots, finalization, corrections, and student privacy'
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'classes:update', false);
+reset role;
+insert into public.teachers (id, email)
+values ('40000000-0000-4000-8000-000000000002', 'teacher-two@example.test');
+update public.class_groups
+set homeroom_teacher_id = '40000000-0000-4000-8000-000000000002'
+where id = '20000000-0000-4000-8000-000000000001';
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'classes:update,attendance:calendar_manage', false);
+set role authenticated;
+select public.activate_academic_year('10000000-0000-4000-8000-000000000001');
+select public.save_academic_calendar_day(
+  '10000000-0000-4000-8000-000000000001', current_date, 'school_day', 'Hari uji absensi', null
+) as attendance_day_id \gset
+select public.save_academic_calendar_day(
+  '10000000-0000-4000-8000-000000000001', current_date + 1, 'holiday', 'Libur uji', null
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000007', false);
+select set_config('test.permissions', 'attendance:view,attendance:create,attendance:update,attendance:finalize', false);
+set role authenticated;
+do $attendance_access$
+declare classes_count integer;
+begin
+  select count(*) into classes_count from public.my_homeroom_classes();
+  if classes_count <> 1 then raise exception 'Teacher should see only their assigned active homeroom class'; end if;
+  begin
+    perform public.create_attendance_session('20000000-0000-4000-8000-000000000001', current_date);
+    raise exception 'Non-homeroom teacher unexpectedly created attendance session';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.create_attendance_session('20000000-0000-4000-8000-000000000002', current_date + 1);
+    raise exception 'Attendance session unexpectedly opened on a holiday';
+  exception when check_violation then null;
+  end;
+end;
+$attendance_access$;
+
+select public.create_attendance_session('20000000-0000-4000-8000-000000000002', current_date) as attendance_session_id \gset
+select set_config('test.attendance_session_id', :'attendance_session_id', false);
+
+reset role;
+do $attendance_snapshot$
+declare roster_count integer;
+begin
+  select count(*) into roster_count from public.attendance_records
+  where session_id = current_setting('test.attendance_session_id')::uuid;
+  if roster_count <> 2 then raise exception 'Expected snapshot roster of 2 students, got %', roster_count; end if;
+end;
+$attendance_snapshot$;
+
+-- Move one student after the session was created; the original session snapshot must remain unchanged.
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'classes:view,classes:update,students:update', false);
+update public.student_class_enrollments
+set class_group_id = '20000000-0000-4000-8000-000000000001'
+where student_id = '60000000-0000-4000-8000-000000000001'
+  and academic_year_id = '10000000-0000-4000-8000-000000000001';
+
+do $attendance_snapshot$
+begin
+  if (select count(*) from public.attendance_records
+      where session_id = current_setting('test.attendance_session_id')::uuid
+        and class_group_id = '20000000-0000-4000-8000-000000000002') <> 2 then
+    raise exception 'Attendance roster snapshot changed after student transfer';
+  end if;
+end;
+$attendance_snapshot$;
+
+select id as attendance_record_one from public.attendance_records
+where session_id = current_setting('test.attendance_session_id')::uuid
+  and student_id = '60000000-0000-4000-8000-000000000001' \gset
+select id as attendance_record_two from public.attendance_records
+where session_id = current_setting('test.attendance_session_id')::uuid
+  and student_id = '60000000-0000-4000-8000-000000000003' \gset
+select set_config('test.attendance_record_one', :'attendance_record_one', false);
+select set_config('test.attendance_record_two', :'attendance_record_two', false);
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000007', false);
+select set_config('test.permissions', 'attendance:view,attendance:create,attendance:update,attendance:finalize', false);
+set role authenticated;
+do $attendance_workflow$
+begin
+  begin
+    perform public.finalize_attendance_session(current_setting('test.attendance_session_id')::uuid);
+    raise exception 'Incomplete attendance session unexpectedly finalized';
+  exception when check_violation then null;
+  end;
+  perform public.set_attendance_record(current_setting('test.attendance_record_one')::uuid, 'present', null, null);
+  begin
+    perform public.finalize_attendance_session(current_setting('test.attendance_session_id')::uuid);
+    raise exception 'Partially completed attendance session unexpectedly finalized';
+  exception when check_violation then null;
+  end;
+  perform public.set_attendance_record(current_setting('test.attendance_record_two')::uuid, 'late', '08:15', 'Tiba setelah bel masuk');
+  perform public.finalize_attendance_session(current_setting('test.attendance_session_id')::uuid);
+  begin
+    perform public.set_attendance_record(current_setting('test.attendance_record_one')::uuid, 'absent', null, null);
+    raise exception 'Finalized attendance record unexpectedly changed without correction permission';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$attendance_workflow$;
+
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'attendance:correct,attendance:reports,attendance:calendar_manage', false);
+set role authenticated;
+select public.correct_attendance_record(
+  :'attendance_record_one', 'permitted', null, 'Izin keluarga',
+  'Koreksi sesuai surat izin'
+);
+
+reset role;
+do $attendance_audit$
+begin
+  if not exists (
+    select 1 from public.attendance_change_logs
+    where attendance_record_id = current_setting('test.attendance_record_one')::uuid
+      and old_values ->> 'status' = 'present'
+      and new_values ->> 'status' = 'permitted'
+      and reason = 'Koreksi sesuai surat izin'
+      and changed_by = '50000000-0000-4000-8000-000000000001'
+  ) then raise exception 'Attendance correction audit log is incomplete'; end if;
+  if has_table_privilege('authenticated', 'public.attendance_records', 'insert')
+    or has_table_privilege('authenticated', 'public.attendance_records', 'update')
+    or has_table_privilege('authenticated', 'public.attendance_sessions', 'insert')
+    or has_table_privilege('authenticated', 'public.attendance_sessions', 'update') then
+    raise exception 'Authenticated clients unexpectedly have direct attendance write privileges';
+  end if;
+  begin
+    perform public.save_academic_calendar_day(
+      '10000000-0000-4000-8000-000000000001', current_date, 'holiday', 'Ubah jadi libur', null
+    );
+    raise exception 'Calendar day with attendance session unexpectedly changed to holiday';
+  exception when check_violation then null;
+  end;
+end;
+$attendance_audit$;
+
+-- Link a student portal identity and verify the RPC returns only that student's finalized records.
+select set_config('request.jwt.claim.sub', '', false);
+reset role;
+update public.users set is_active = true
+where id = '50000000-0000-4000-8000-000000000002';
+insert into public.student_portal_accounts(user_id, student_id, linked_by)
+values ('50000000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000001',
+        '50000000-0000-4000-8000-000000000001');
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000002', false);
+select set_config('test.permissions', 'student_portal:view', false);
+set role authenticated;
+do $student_attendance_privacy$
+declare visible_count integer; own_status text;
+begin
+  select count(*) into visible_count from public.attendance_records;
+  if visible_count <> 1 then raise exception 'Student RLS should expose exactly one own attendance record, got %', visible_count; end if;
+  select status into own_status from public.my_attendance_records() limit 1;
+  if own_status <> 'permitted' then raise exception 'Student attendance RPC did not return corrected own status'; end if;
+end;
+$student_attendance_privacy$;
 
 reset role;
 

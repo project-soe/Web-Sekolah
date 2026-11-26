@@ -6,10 +6,12 @@
 
 - **Tanggal audit:** 2026-11-26.
 - **Branch:** `main`.
-- **Commit terbaru yang diaudit:** `d5e8401541b2bafcc835e27b23ed06441fc3cbdd` — `feat(portal): add confirmation resend cooldown timer`.
+- **Commit dasar fase ini:** `4d1bb17df189f07fdf8ca0d499b52d6d39238881` — dokumentasi milestone akun guru.
+- **Status akun guru:** undangan akun guru sudah digabung ke `main` melalui PR #1; CI #312/#313 sukses.
+- **Fokus aktif:** implementasi Modul Absensi Siswa pada branch `feat/student-attendance`; belum digabung dan belum diterapkan ke Supabase production.
 - **CI terbaru:** GitHub Actions #303 pada commit tersebut berstatus `success`. Job `check` (lint, typecheck, unit test, build) dan `database-tests` seluruhnya sukses. Ini bukan bukti pengiriman email nyata atau uji browser.
 - **Tahap fungsional:** website publik dan CMS delapan domain; fondasi administrasi siswa/kelas/tahun ajaran dan lifecycle siswa; onboarding serta dashboard awal Portal Siswa.
-- **Fokus berikutnya yang direkomendasikan:** perancangan Modul Absensi Siswa. Mulai dari aturan domain dan matriks hak akses, kemudian skema/migrasi, RPC/query, UI guru/admin, rekap, dan integrasi tampilan Portal Siswa.
+- **Aturan absensi yang sudah disepakati:** wali kelas mengisi dan memfinalisasi per rombel; terlambat adalah status tersendiri; hari absensi mengikuti kalender pendidikan yang dikelola admin; koreksi setelah finalisasi wajib beralasan dan diaudit; status kosong tidak otomatis menjadi Alpa.
 - **Pengujian yang ditunda:** browser QA pendaftaran Portal Siswa yang membutuhkan email konfirmasi Supabase. Lihat [docs/known-issues-and-deferred.md](docs/known-issues-and-deferred.md).
 - **Catatan deployment database:** jangan menyimpulkan migrasi sudah diterapkan hanya dari CI. Riwayat progress mencatat beberapa migrasi lifecycle/onboarding belum diterapkan atau belum dikonfirmasi pada Supabase production. Periksa `supabase migration list --remote` pada project Website Sekolah yang benar sebelum tindakan deployment.
 - **Deployment aplikasi:** konfigurasi menggunakan Cloudflare Workers/OpenNext (`wrangler.jsonc`). Domain production, Site URL Supabase, dan daftar redirect URL harus dipastikan cocok sebelum uji email end-to-end.
@@ -1268,3 +1270,16 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Undangan admin saat ini menghasilkan tautan 24 jam untuk disalin dan dikirim manual melalui kanal resmi; belum ada email undangan otomatis.
 - Halaman `/ruang-guru` masih landing awal. Belum ada roster kelas atau fitur absensi.
 - Tindak lanjut: verifikasi migration list pada project Website Sekolah, pastikan backup, minta persetujuan sebelum deployment, lalu uji signup/verifikasi email pada domain production. Setelah fondasi guru terverifikasi, lanjutkan Modul Absensi Siswa sesuai aturan domain yang telah disepakati.
+
+
+## 2026-11-26 — Implementasi Modul Absensi Siswa (branch kerja)
+- Mengikuti keputusan domain yang telah dikunci: wali kelas mengisi/finalisasi rombel; status `present`, `late`, `sick`, `permitted`, `absent`; status NULL berarti belum diisi; kalender pendidikan admin menjadi sumber hari sekolah.
+- Menambahkan migrasi `20261124370000_student_attendance.sql` untuk kalender pendidikan, sesi harian per rombel, snapshot roster, catatan kehadiran, dan audit koreksi.
+- Sesi hanya dapat dibuat pada kalender `school_day` atau `special_school_day`, untuk tahun ajaran aktif, dan hanya wali kelas yang terhubung ke profil guru dapat membuat/mengisi/finalisasi.
+- Snapshot roster memakai riwayat penempatan kelas dan status siswa pada tanggal sesi. Perpindahan siswa setelah sesi dibuat tidak mengubah roster historis.
+- Finalisasi ditolak jika masih ada siswa tanpa status. Setelah finalisasi, perubahan hanya melalui RPC koreksi admin dengan alasan, nilai lama/baru, aktor, dan waktu.
+- Menambahkan RPC aman dan RLS untuk kalender, sesi, catatan, koreksi, serta RPC khusus siswa untuk melihat hanya absensi miliknya yang sudah difinalisasi.
+- Menambahkan halaman admin kalender pendidikan dan laporan/koreksi, halaman wali kelas untuk mengisi/finalisasi absensi, serta ringkasan riwayat absensi pada Portal Siswa.
+- Menambahkan assertion database untuk pembatasan kalender, wali kelas, snapshot perpindahan, finalisasi, koreksi/audit, dan privasi siswa.
+- **Status:** branch kerja; CI belum dijalankan untuk commit fase absensi ini. Migrasi belum diterapkan ke Supabase production. Browser QA belum dilakukan.
+- **Tidak ada perubahan database production.** Jangan menjalankan `db push` tanpa persetujuan eksplisit dan pemeriksaan migration list remote.
