@@ -118,3 +118,6 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 - Job `database-tests` berhenti pada assertion kalender karena fixture tidak menyertakan `classes:view` saat memanggil RPC aktivasi tahun ajaran.
 - Perbaikan typecheck, permission fixture, dan pembatasan RLS agar siswa hanya melihat absensi final sedang disiapkan.
 - Jangan anggap fitur lulus sebelum seluruh job CI ulang berhasil.
+
+
+- Navigasi admin untuk Kalender Pendidikan/Laporan Absensi dan pintasan Ruang Guru ditambahkan pada commit perbaikan berikutnya; CI ulang akan memverifikasi.

@@ -1291,3 +1291,9 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Perbaikan yang disiapkan: tipe hasil RPC wali kelas, narrowing input kalender eksplisit, dan sinkronisasi permission fixture.
 - Audit RLS tambahan: siswa hanya boleh membaca baris attendance record miliknya setelah sesi difinalisasi; baris draft tidak lagi terlihat melalui query langsung.
 - Menunggu hasil CI ulang setelah commit perbaikan. Tidak ada perubahan Supabase production.
+
+
+### Penyempurnaan navigasi Modul Absensi
+- Menambahkan tautan admin untuk Kalender Pendidikan dan Laporan Absensi, masing-masing dibatasi permission `attendance:calendar_manage` dan `attendance:reports`.
+- Menambahkan pintasan Absensi Siswa dari landing page Ruang Guru.
+- Memastikan menu admin hanya menampilkan route absensi setelah route tersebut benar-benar tersedia.
