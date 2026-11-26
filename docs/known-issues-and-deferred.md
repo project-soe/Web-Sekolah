@@ -76,12 +76,12 @@ Urutan desain yang disarankan:
 
 
 ## 7. Undangan akun guru — perlu verifikasi sebelum digunakan
-- Implementasi awal berada pada branch `feat/teacher-account-invitations`; belum digabung ke `main` dan belum diuji CI/browser.
+- Implementasi undangan akun guru sudah digabung ke `main` melalui PR #1 (commit `7ec5cf7589c351f49e4fedddc106c074faf66a02`).
 - Migrasi `20261124360000_teacher_account_invitations.sql` belum diterapkan ke Supabase production.
 - Admin hanya dapat membuat undangan untuk email yang sama dengan `teachers.email`. Token disimpan dalam bentuk hash, berlaku 24 jam, dan dapat dicabut/diganti.
 - Guru harus mendaftar dengan email undangan, menetapkan password, lalu memverifikasi email. Callback akan mengklaim undangan dan memberi role guru.
 - Tautan saat ini disalin admin dan dikirim melalui kanal resmi sekolah; belum ada integrasi pengiriman email otomatis.
-- Perlu uji: token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda, email belum terverifikasi, akun yang sudah memiliki role, duplikasi link, serta redirect guru/admin/siswa.
+- CI #312 dan #313 sukses: lint, typecheck, unit test, build, database assertions, dan concurrency tests. Browser QA tetap diperlukan untuk token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun yang sudah memiliki role, duplikasi link, dan redirect guru/admin/siswa.
 - `/ruang-guru` masih landing awal; belum menyediakan data kelas atau absensi.
 - Tidak ada perubahan pada Supabase remote.
 
@@ -95,3 +95,11 @@ Urutan desain yang disarankan:
 - Fixture database kini memberi grant UPDATE pada profil akun dan memverifikasi trigger menolak aktivasi mandiri sebelum `teacher_user_links` tersedia; hasil CI ulang masih ditunggu.
 - CI #311: uji pra-klaim berhasil mencapai guard, tetapi pemeriksaan status sesudahnya gagal karena fixture tidak memberi SELECT users. Pemeriksaan status dipindahkan ke role reset; menunggu CI ulang.
 - **CI #312 sukses** pada commit `0da2e49b687fe89a0091a01cad3bb2e2ccc1ffae`: lint, typecheck, unit test, build, seluruh assertion migrasi database, dan dua concurrency tests lulus. Browser QA dan verifikasi Supabase production masih belum dilakukan.
+
+
+### Status setelah merge undangan guru
+- Kode dan migrasi sudah ada di `main`; migrasi `20261124360000_teacher_account_invitations.sql` belum diterapkan ke Supabase production.
+- CI #312 (commit kode) dan #313 (head PR final) seluruhnya sukses.
+- Belum dilakukan browser QA email konfirmasi pada domain production.
+- Belum ada email undangan otomatis; admin menyalin tautan dan mengirim melalui kanal sekolah.
+- `/ruang-guru` masih landing awal, tanpa roster dan absensi.

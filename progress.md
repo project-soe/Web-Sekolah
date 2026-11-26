@@ -1258,3 +1258,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Penguatan fixture: berikan grant UPDATE pada `public.users` agar skenario pra-klaim benar-benar melewati trigger status (bukan berhenti di privilege tabel), lalu assertion memastikan akun tetap nonaktif saat link belum ada.
 - CI #311: guard trigger sudah berjalan, tetapi assertion pasca-penolakan mencoba membaca `public.users` saat masih ber-role authenticated tanpa grant SELECT fixture. Assertion dipindahkan setelah `RESET ROLE`; pengujian tetap menjalankan UPDATE di bawah role authenticated agar trigger yang diuji.
 - **CI #312 sukses** pada commit `0da2e49b687fe89a0091a01cad3bb2e2ccc1ffae`: job `check` (lint, typecheck, unit test, build) dan `database-tests` seluruhnya sukses. Cakupan database termasuk penolakan aktivasi sebelum link guru tersedia dan aktivasi setelah klaim undangan.
+
+
+## 2026-11-26 — Undangan akun guru digabung ke main
+- PR #1 `feat(teachers): secure teacher account invitations` berhasil digabung ke `main` melalui squash merge.
+- Commit merge: `7ec5cf7589c351f49e4fedddc106c074faf66a02`.
+- CI #312 pada commit kode `0da2e49b687fe89a0091a01cad3bb2e2ccc1ffae` sukses; CI #313 pada head PR terakhir `e32d35b858c4a7a6cc37543ba9262fabbc7b3930` juga sukses. Lint, typecheck, unit test, build, database assertions, dan concurrency tests lulus.
+- Migrasi `20261124360000_teacher_account_invitations.sql` **belum diterapkan ke Supabase production**. Tidak ada perubahan remote database pada sesi ini.
+- Undangan admin saat ini menghasilkan tautan 24 jam untuk disalin dan dikirim manual melalui kanal resmi; belum ada email undangan otomatis.
+- Halaman `/ruang-guru` masih landing awal. Belum ada roster kelas atau fitur absensi.
+- Tindak lanjut: verifikasi migration list pada project Website Sekolah, pastikan backup, minta persetujuan sebelum deployment, lalu uji signup/verifikasi email pada domain production. Setelah fondasi guru terverifikasi, lanjutkan Modul Absensi Siswa sesuai aturan domain yang telah disepakati.
