@@ -111,3 +111,10 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil br
 - Finalisasi mewajibkan semua siswa ditandai. Koreksi hanya melalui RPC admin berizin dengan alasan dan audit nilai lama/baru.
 - Siswa hanya dapat membaca catatan miliknya yang sudah difinalisasi.
 - CI dan browser QA masih menunggu. Tidak ada migrasi production yang dijalankan.
+
+
+### Hasil CI awal Modul Absensi — perlu tindak lanjut
+- CI pertama pada branch `feat/student-attendance` gagal di job `check` pada typecheck: dua callback `map` tidak memiliki tipe eksplisit dan action kalender mengakses `parsed.data` sebelum narrowing TypeScript.
+- Job `database-tests` berhenti pada assertion kalender karena fixture tidak menyertakan `classes:view` saat memanggil RPC aktivasi tahun ajaran.
+- Perbaikan typecheck, permission fixture, dan pembatasan RLS agar siswa hanya melihat absensi final sedang disiapkan.
+- Jangan anggap fitur lulus sebelum seluruh job CI ulang berhasil.

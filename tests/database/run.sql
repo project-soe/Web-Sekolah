@@ -791,7 +791,7 @@ set homeroom_teacher_id = '40000000-0000-4000-8000-000000000002'
 where id = '20000000-0000-4000-8000-000000000001';
 
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
-select set_config('test.permissions', 'classes:update,attendance:calendar_manage', false);
+select set_config('test.permissions', 'classes:view,classes:update,attendance:calendar_manage', false);
 set role authenticated;
 select public.activate_academic_year('10000000-0000-4000-8000-000000000001');
 select public.save_academic_calendar_day(

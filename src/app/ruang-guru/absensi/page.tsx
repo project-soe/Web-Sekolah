@@ -11,13 +11,24 @@ function todayJakarta() {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
 }
 
+type HomeroomClass = {
+  class_group_id: string;
+  class_name: string;
+  grade_level: number;
+  academic_year_id: string;
+  academic_year_name: string;
+  enrolled_count: number;
+  capacity: number;
+};
+
 export default async function TeacherAttendancePage({ searchParams }: {
   searchParams: Promise<{ error?: string }>;
 }) {
   await requireTeacher();
   const params = await searchParams;
   const supabase = await createClient();
-  const { data: classes, error } = await supabase.rpc("my_homeroom_classes");
+  const { data: classesData, error } = await supabase.rpc("my_homeroom_classes");
+  const classes = (classesData ?? null) as HomeroomClass[] | null;
   const errors: Record<string,string> = {
     akses: "Akun tidak memiliki hak akses absensi wali kelas.",
     validasi: "Pilih kelas dan tanggal yang valid.",

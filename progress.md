@@ -1283,3 +1283,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan assertion database untuk pembatasan kalender, wali kelas, snapshot perpindahan, finalisasi, koreksi/audit, dan privasi siswa.
 - **Status:** branch kerja; CI belum dijalankan untuk commit fase absensi ini. Migrasi belum diterapkan ke Supabase production. Browser QA belum dilakukan.
 - **Tidak ada perubahan database production.** Jangan menjalankan `db push` tanpa persetujuan eksplisit dan pemeriksaan migration list remote.
+
+
+### Perbaikan awal CI Modul Absensi
+- CI pertama pada branch `feat/student-attendance` menemukan typecheck gagal karena hasil RPC `my_homeroom_classes` belum diberi tipe eksplisit dan TypeScript belum menyempitkan hasil validasi kalender sebelum akses `parsed.data`.
+- Database test berhenti saat mengaktifkan tahun ajaran karena fixture tidak menyertakan permission `classes:view` yang diwajibkan RPC aktivasi.
+- Perbaikan yang disiapkan: tipe hasil RPC wali kelas, narrowing input kalender eksplisit, dan sinkronisasi permission fixture.
+- Audit RLS tambahan: siswa hanya boleh membaca baris attendance record miliknya setelah sesi difinalisasi; baris draft tidak lagi terlihat melalui query langsung.
+- Menunggu hasil CI ulang setelah commit perbaikan. Tidak ada perubahan Supabase production.

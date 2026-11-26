@@ -28,18 +28,19 @@ async function requireTeacherAttendance(permission: "attendance:create" | "atten
 
 export async function saveAcademicCalendarDay(formData: FormData): Promise<void> {
   const parsed = calendarDaySchema.safeParse(Object.fromEntries(formData.entries()));
-  if (!parsed.success) redirectCalendar("validasi");
+  if (!parsed.success) return redirectCalendar("validasi");
+  const input = parsed.data;
   const session = await getSession();
   if (!session || (!session.access.is_super_admin && !can(session.access, "attendance:calendar_manage"))) {
     redirectCalendar("akses");
   }
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("save_academic_calendar_day", {
-    p_academic_year_id: parsed.data.academic_year_id,
-    p_calendar_date: parsed.data.calendar_date,
-    p_day_type: parsed.data.day_type,
-    p_title: parsed.data.title || null,
-    p_notes: parsed.data.notes || null,
+    p_academic_year_id: input.academic_year_id,
+    p_calendar_date: input.calendar_date,
+    p_day_type: input.day_type,
+    p_title: input.title || null,
+    p_notes: input.notes || null,
   });
   if (error || !data) {
     console.error("[attendance:calendar] Save failed:", error?.code ?? "no_result");
@@ -48,7 +49,7 @@ export async function saveAcademicCalendarDay(formData: FormData): Promise<void>
   await logActivity(supabase, {
     action: "create", module: "attendance", entityType: "academic_calendar_day",
     entityId: data, summary: "Memperbarui kalender pendidikan",
-    changes: { date: parsed.data.calendar_date, day_type: parsed.data.day_type },
+    changes: { date: input.calendar_date, day_type: input.day_type },
   });
   revalidatePath("/admin/kalender-pendidikan");
   redirectCalendar();

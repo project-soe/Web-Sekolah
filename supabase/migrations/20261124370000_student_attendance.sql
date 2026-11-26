@@ -154,7 +154,11 @@ create policy attendance_records_select on public.attendance_records
     or (
       public.has_permission('student_portal:view')
       and exists (
-        select 1 from public.student_portal_accounts spa
+        select 1
+        from public.student_portal_accounts spa
+        join public.attendance_sessions own_session
+          on own_session.id = attendance_records.session_id
+         and own_session.status = 'finalized'
         where spa.user_id = (select auth.uid())
           and spa.student_id = attendance_records.student_id
       )
@@ -272,7 +276,6 @@ as $create_session$
 declare
   v_class record;
   v_session_id uuid;
-  v_created boolean := false;
   v_roster_count integer := 0;
   v_day_type text;
   v_boundary timestamptz;
@@ -318,7 +321,6 @@ begin
     for update;
     return v_session_id;
   end if;
-  v_created := true;
   v_boundary := ((p_attendance_date + 1)::timestamp at time zone 'Asia/Jakarta');
 
   insert into public.attendance_records(

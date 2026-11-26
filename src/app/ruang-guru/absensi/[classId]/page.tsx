@@ -21,6 +21,15 @@ const statusLabels: Record<string,string> = {
   present: "Hadir", late: "Terlambat", sick: "Sakit", permitted: "Izin", absent: "Alpa",
 };
 const statuses = ["present","late","sick","permitted","absent"];
+type HomeroomClass = {
+  class_group_id: string;
+  class_name: string;
+  grade_level: number;
+  academic_year_id: string;
+  academic_year_name: string;
+  enrolled_count: number;
+  capacity: number;
+};
 
 export default async function TeacherAttendanceDetailPage({ params, searchParams }: {
   params: Promise<{ classId: string }>;
@@ -32,7 +41,8 @@ export default async function TeacherAttendanceDetailPage({ params, searchParams
   const date = query.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
   if (!/^[0-9a-f-]{36}$/i.test(classId) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) notFound();
   const supabase = await createClient();
-  const { data: classes } = await supabase.rpc("my_homeroom_classes");
+  const { data: classesData } = await supabase.rpc("my_homeroom_classes");
+  const classes = (classesData ?? null) as HomeroomClass[] | null;
   const classInfo = classes?.find((item) => item.class_group_id === classId);
   if (!classInfo) notFound();
   const { data, error } = await supabase.rpc("get_attendance_session", {

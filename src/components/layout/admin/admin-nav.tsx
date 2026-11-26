@@ -21,8 +21,6 @@ const implementedRoutes = new Set([
   "/admin/siswa",
   "/admin/akses-siswa",
   "/admin/kelas",
-  "/admin/kalender-pendidikan",
-  "/admin/absensi",
 ]);
 
 const permissionByHref: Record<string, string> = {
@@ -34,8 +32,6 @@ const permissionByHref: Record<string, string> = {
   "/admin/siswa": "students:view",
   "/admin/akses-siswa": "students:view",
   "/admin/kelas": "classes:view",
-  "/admin/kalender-pendidikan": "attendance:calendar_manage",
-  "/admin/absensi": "attendance:reports",
   "/admin/berita": "news:view",
   "/admin/kategori-berita": "news:view",
   "/admin/pengumuman": "announcements:view",
