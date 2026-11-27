@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { can } from "@/lib/rbac/access";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { changeStudentLifecycle } from "@/features/students/student-actions";
+import { archiveStudent, changeStudentLifecycle, restoreStudent } from "@/features/students/student-actions";
 import { StudentPortalInvitationForm } from "@/features/students/student-portal-invitation-form";
 
 export const metadata: Metadata = { title: "Detail Siswa" };
@@ -24,7 +24,7 @@ export default async function StudentDetailPage({ params, searchParams }: { para
   const query = await searchParams;
   const supabase = await createClient();
   const [{ data: student, error }, { data: history }, { data: portalAccount }] = await Promise.all([
-    supabase.from("students").select("id, nis, nisn, full_name, email, gender, birth_place, birth_date, address, guardian_name, guardian_phone, enrollment_year, status, graduation_date, notes, departments(name)").eq("id", id).maybeSingle(),
+    supabase.from("students").select("id, nis, nisn, full_name, email, gender, birth_place, birth_date, address, guardian_name, guardian_phone, enrollment_year, status, graduation_date, notes, archived_at, departments(name)").eq("id", id).maybeSingle(),
     supabase.from("student_status_history").select("id, old_status, new_status, changed_at").eq("student_id", id).order("changed_at", { ascending: false }).limit(50),
     can(session.access, "students:update")
       ? supabase.from("student_portal_accounts").select("user_id, linked_at").eq("student_id", id).maybeSingle()
@@ -33,9 +33,10 @@ export default async function StudentDetailPage({ params, searchParams }: { para
   if (error || !student) notFound();
   const department = Array.isArray(student.departments) ? student.departments[0] : student.departments;
   return <div className="flex flex-col gap-6">
-    <header className="flex flex-wrap items-start justify-between gap-3"><div><Link href="/admin/siswa" className="text-sm text-muted-foreground hover:text-primary">← Kembali ke data siswa</Link><h1 className="mt-3 text-2xl font-bold">{student.full_name}</h1><p className="mt-1 text-sm text-muted-foreground">NIS {student.nis} · {labels[student.status] ?? student.status}</p></div>{can(session.access, "students:update") && <Link href={"/admin/siswa/" + id + "/edit"} className={buttonVariants({ size: "md", variant: "outline" })}>Edit data</Link>}</header>
-    {query.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{query.error === "akses" ? "Akun tidak memiliki permission untuk mengubah status siswa." : "Perubahan status siswa gagal diproses."}</p>}
+    <header className="flex flex-wrap items-start justify-between gap-3"><div><Link href="/admin/siswa" className="text-sm text-muted-foreground hover:text-primary">← Kembali ke data siswa</Link><h1 className="mt-3 text-2xl font-bold">{student.full_name}</h1><p className="mt-1 text-sm text-muted-foreground">NIS {student.nis} · {labels[student.status] ?? student.status}{student.archived_at ? " · Diarsipkan" : ""}</p></div>{can(session.access, "students:update") && <Link href={"/admin/siswa/" + id + "/edit"} className={buttonVariants({ size: "md", variant: "outline" })}>Edit data</Link>}</header>
+    {query.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{query.error === "akses" ? "Akun tidak memiliki permission untuk tindakan ini." : query.error === "arsip_terkait" ? "Siswa belum dapat diarsipkan. Putuskan tautan akun/undangan Portal Siswa dan tutup penempatan kelas aktif terlebih dahulu." : query.error === "tidak_ditemukan" ? "Data siswa tidak ditemukan." : "Perubahan data siswa gagal diproses."}</p>}
     {query.saved === "lifecycle" ? <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Status siswa berhasil diperbarui. Penempatan kelas aktif ditutup dan riwayat tetap tersimpan.</p> : query.saved && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Data siswa berhasil disimpan.</p>}
+    {student.archived_at ? <Card><CardContent className="flex flex-col gap-3"><div><h2 className="font-semibold">Data siswa diarsipkan</h2><p className="text-sm text-muted-foreground">Data ini disembunyikan dari daftar aktif. Riwayat akademik dan audit tetap tersimpan.</p></div>{can(session.access, "students:update") && <form action={restoreStudent}><input type="hidden" name="student_id" value={student.id}/><button className="w-fit rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted">Pulihkan data siswa</button></form>}</CardContent></Card> : can(session.access, "students:delete") ? <Card><CardContent className="flex flex-col gap-3"><div><h2 className="font-semibold">Hapus / arsipkan siswa</h2><p className="text-sm text-muted-foreground">Data akan disembunyikan dari daftar aktif, tetapi riwayat akademik dan audit tetap dipertahankan. Untuk keamanan, ketik HAPUS sebelum melanjutkan.</p></div><form action={archiveStudent} className="flex flex-wrap items-end gap-3"><input type="hidden" name="student_id" value={student.id}/><label className="flex flex-col gap-1 text-sm font-medium">Konfirmasi<Input name="confirmation" required pattern="HAPUS" placeholder="Ketik HAPUS" className="w-40"/></label><button className="rounded-md border border-danger/40 px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10">Arsipkan siswa</button></form></CardContent></Card> : null}
     <Card><CardContent className="grid gap-5 sm:grid-cols-2">
       <div><p className="text-xs text-muted-foreground">NISN</p><p className="mt-1 font-medium">{student.nisn ?? "—"}</p></div>
       <div><p className="text-xs text-muted-foreground">Email siswa</p><p className="mt-1 font-medium">{student.email ?? "Belum diisi"}</p></div>
