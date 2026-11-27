@@ -149,7 +149,7 @@ begin
  select * into v_e from public.attendance_entries where id=p_entry_id for update;
  if not found then raise exception 'Entri tidak ditemukan' using errcode='P0002'; end if;
  select * into v_s from public.attendance_sessions where id=v_e.session_id for update;
- if v_s.status='locked' then raise exception 'Buka kunci sesi sebelum koreksi' using errcode='55000'; end if;
+ if v_s.status<>'submitted' then raise exception 'Koreksi hanya untuk sesi terkirim yang belum terkunci' using errcode='55000'; end if;
  insert into public.attendance_entry_history(entry_id,old_status,new_status,old_note,new_note,reason,changed_by)
  values(v_e.id,v_e.status,p_status,v_e.note,p_note,p_reason,(select auth.uid()));
  update public.attendance_entries set status=p_status,note=nullif(left(coalesce(p_note,''),500),''),
