@@ -1,6 +1,6 @@
 -- Soft-delete student master records while preserving academic and audit history.
 alter table public.students
-  add column archived_at timestamptz;
+  add column if not exists archived_at timestamptz;
 
 comment on column public.students.archived_at is
   'Waktu data siswa diarsipkan. Arsip menyembunyikan data dari daftar aktif tanpa menghapus riwayat akademik/audit.';
