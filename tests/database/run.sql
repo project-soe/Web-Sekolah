@@ -19,6 +19,7 @@
 \i supabase/migrations/20261127300000_student_portal_invitation_email_binding.sql
 \i supabase/migrations/20261127310000_student_portal_registration_identity_normalization.sql
 \i supabase/migrations/20261127320000_student_archive.sql
+\i supabase/migrations/20261127330000_student_daily_attendance.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -829,6 +830,27 @@ begin
   end if;
 end;
 $student_archive$;
+
+\echo '15. Verify attendance RPC permissions and private tables'
+do $attendance_migration$
+begin
+ if has_table_privilege('anon','public.attendance_sessions','select')
+   or has_table_privilege('authenticated','public.attendance_sessions','select')
+   or has_table_privilege('authenticated','public.attendance_entries','insert') then
+  raise exception 'Attendance tables unexpectedly expose direct access';
+ end if;
+ if to_regprocedure('public.my_teacher_attendance_roster(date)') is null
+   or to_regprocedure('public.save_class_attendance(uuid,date,jsonb)') is null
+   or to_regprocedure('public.submit_class_attendance(uuid)') is null
+   or to_regprocedure('public.my_student_attendance()') is null then
+  raise exception 'Required attendance RPC is missing';
+ end if;
+ if not exists (select 1 from public.role_permissions rp join public.roles r on r.id=rp.role_id
+   join public.permissions p on p.id=rp.permission_id where r.slug='guru' and p.code='attendance:take') then
+  raise exception 'Guru role is missing attendance:take';
+ end if;
+end;
+$attendance_migration$;
 
 \echo 'Database migration assertions passed.'
 
