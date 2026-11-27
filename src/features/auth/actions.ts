@@ -10,7 +10,17 @@ import { loginSchema, studentPortalSignupSchema } from "./schema";
 export type LoginState = { error?: string; email?: string };
 export type SignupState = { error?: string; message?: string; email?: string; awaitingOtp?: boolean };
 
+const SMTP_CREDENTIALS_ERROR = "Supabase ditolak oleh server Gmail karena username atau App Password SMTP tidak valid. Admin sekolah perlu memperbarui kredensial SMTP di Supabase Authentication → SMTP Settings menggunakan Google App Password, bukan password login Gmail.";
+
+function isGmailSmtpBadCredentials(message: string | undefined): boolean {
+  const normalized = message?.toLowerCase() ?? "";
+  return normalized.includes("535")
+    && (normalized.includes("badcredentials") || normalized.includes("username and password not accepted"));
+}
+
 function getSignupErrorMessage(code: string | undefined, message: string | undefined, status: number | undefined): string {
+  if (isGmailSmtpBadCredentials(message)) return SMTP_CREDENTIALS_ERROR;
+
   switch (code) {
     case "user_already_exists":
     case "email_exists":
@@ -308,7 +318,14 @@ export async function resendStudentPortalConfirmation(
       email: parsed.data,
     });
     if (error) {
-      console.error("[auth:portal] Confirmation resend failed:", { code: error.code ?? "unknown", status: error.status ?? null });
+      console.error("[auth:portal] Confirmation resend failed:", {
+        code: error.code ?? null,
+        status: error.status ?? null,
+        message: error.message,
+      });
+      if (isGmailSmtpBadCredentials(error.message)) {
+        return { error: SMTP_CREDENTIALS_ERROR, email: parsed.data };
+      }
       if (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit") {
         return { error: "Permintaan email terlalu sering. Tunggu beberapa menit sebelum meminta kode baru.", email: parsed.data };
       }
