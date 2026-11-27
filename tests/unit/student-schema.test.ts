@@ -13,7 +13,8 @@ describe("studentInputSchema", () => {
   it("menerima email opsional yang valid dan menolak format email salah", () => {
     expect(studentInputSchema.safeParse({ ...validStudent, email: "siswa@example.com" }).success).toBe(true);
     expect(studentInputSchema.safeParse({ ...validStudent, email: "bukan-email" }).success).toBe(false);
-  });\n  it("menolak NISN yang bukan 10 digit", () => expect(studentInputSchema.safeParse({ ...validStudent, nisn: "12345" }).success).toBe(false));
+  });
+  it("menolak NISN yang bukan 10 digit", () => expect(studentInputSchema.safeParse({ ...validStudent, nisn: "12345" }).success).toBe(false));
   it("menolak nama terlalu pendek dan NIS kosong", () => {
     expect(studentInputSchema.safeParse({ ...validStudent, full_name: "A" }).success).toBe(false);
     expect(studentInputSchema.safeParse({ ...validStudent, nis: " " }).success).toBe(false);
