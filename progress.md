@@ -1294,7 +1294,7 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 ## 2026-11-27 — Diagnosis kegagalan signup setelah peralihan OTP
 
 - Audit kode pada `main` menemukan pesan generik pendaftaran berasal dari fallback `getSignupErrorMessage()` saat Supabase Auth mengembalikan error yang belum dipetakan.
-- Peralihan ke OTP membuat keberhasilan signup bergantung pada pengiriman email konfirmasi. Catatan konfigurasi sebelumnya menegaskan SMTP kustom Supabase dan template `{{ .Token }}` belum disiapkan; SMTP bawaan Supabase memiliki pembatasan penerima/kuota dan bukan solusi pengiriman produksi.
+- Peralihan ke OTP membuat keberhasilan signup bergantung pada pengiriman email konfirmasi. Pengguna mengonfirmasi konfigurasi SMTP kustom Supabase telah diselesaikan pada 2026-11-26; pastikan template Confirm signup menggunakan `{{ .Token }}` dan lakukan uji pengiriman terkontrol.
 - Memetakan kode Auth `email_address_not_authorized`, `smtp_error`, dan `unexpected_failure` ke pesan yang lebih spesifik agar kendala provider tidak lagi tampil sebagai error duplikasi email yang ambigu.
-- **Batas perbaikan:** perubahan kode tidak dapat mengaktifkan SMTP atau mengubah konfigurasi Supabase. Signup end-to-end dengan OTP tetap belum dapat dinyatakan pulih sebelum SMTP aktif, template OTP memakai `{{ .Token }}`, dan satu uji email nyata berhasil.
+- **Batas perbaikan:** perubahan kode ini hanya memperjelas pesan error; tidak mengubah konfigurasi SMTP/Supabase. Status keberhasilan signup end-to-end tetap perlu divalidasi melalui uji email nyata.
 - Tidak mengubah database, migrasi, konfigurasi Supabase, atau project lain.
