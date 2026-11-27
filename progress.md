@@ -1306,3 +1306,19 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Branch `fix/auth-signup-diagnostic-errors` mengubah fallback agar menampilkan kode Auth dan status HTTP (tanpa menampilkan pesan provider mentah kepada pengguna), serta mencatat `error.message` di log server untuk diagnosis.
 - Perubahan ini belum membuktikan atau memperbaiki akar kegagalan provider. Setelah deployment, satu percobaan terkontrol diperlukan untuk memperoleh kode diagnostik; jika pesan generik lama tetap tampil persis, periksa deployment Worker atau jalur form/action yang sedang dipakai.
 - Tidak ada perubahan database, migrasi, konfigurasi Supabase, atau project lain. CI dan deployment belum diverifikasi.
+
+## 2026-11-27 — Akar kegagalan OTP terkonfirmasi: kredensial SMTP Gmail
+- Auth Logs production menunjukkan request `POST /signup` gagal dengan `error_code=unexpected_failure`, HTTP 500, dan respons SMTP Gmail `535 5.7.8 Username and Password not accepted (BadCredentials)`.
+- Akar masalah terkonfirmasi berada pada autentikasi SMTP Gmail yang dikonfigurasi di Supabase, bukan pada validasi kode OTP atau komponen input. Supabase tidak dapat mengirim email konfirmasi sehingga signup gagal sebelum aplikasi mengaktifkan state input OTP.
+- PR #7 pada branch `fix/gmail-smtp-auth-error-guidance` memetakan pesan Gmail 535 BadCredentials pada signup dan resend menjadi instruksi spesifik untuk admin memperbarui SMTP password menggunakan Google App Password. Pesan mentah provider tetap hanya dicatat di log server.
+- Tindakan eksternal wajib: admin membuat Google App Password untuk akun Gmail pengirim (dengan 2-Step Verification aktif), lalu memperbarui password SMTP pada project Supabase Website Sekolah di Authentication → SMTP Settings. Jangan memakai password login Gmail biasa. Pastikan username dan sender email sesuai akun Gmail tersebut.
+- Setelah SMTP diperbaiki, lakukan satu uji signup dan satu uji resend terkontrol; pastikan email OTP diterima dan template Confirm signup memakai `{{ .Token }}`. Jangan mengulang percobaan berkali-kali karena batas pengiriman provider.
+- Perubahan PR #7 hanya menyentuh pesan diagnostik aplikasi dan dokumentasi. Tidak ada perubahan database, migrasi, secret, konfigurasi Supabase, project lain, atau deployment. CI dan browser QA masih menunggu.
+
+
+## 2026-11-27 — Penyesuaian panjang OTP Supabase menjadi 8 digit
+- Pengguna berhasil menerima email OTP setelah perbaikan SMTP, tetapi menemukan kode yang dikirim Supabase terdiri dari 8 digit sedangkan formulir dan validasi server hanya menerima 6 digit.
+- Menyesuaikan input Portal Siswa: petunjuk, label, HTML pattern, dan maxLength menjadi 8 digit; validasi server `verifyStudentPortalOtp` kini menerima tepat 8 angka.
+- Menyamakan alur aktivasi akun Guru dengan panjang 8 digit, termasuk input UI, pola HTML, pesan, dan validasi server, agar kedua alur email OTP konsisten dengan konfigurasi Supabase saat ini.
+- Perubahan dilakukan pada branch `fix/gmail-smtp-auth-error-guidance` yang menjadi head PR #7. Tidak mengubah konfigurasi Supabase, template email, database, migrasi, atau deployment.
+- CI dan pengujian browser/email nyata untuk panjang kode 8 digit masih perlu dijalankan setelah commit ini.

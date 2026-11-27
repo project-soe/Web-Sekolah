@@ -30,11 +30,11 @@ export function TeacherActivationForm({ token }: { token: string }) {
     </form>
     {awaitingOtp && <section className="flex flex-col gap-3">
       <p role="status" className="text-sm text-success">{state.message}</p>
-      <p className="text-sm text-muted-foreground">Masukkan kode OTP 6 digit yang dikirim ke {otpEmail}.</p>
+      <p className="text-sm text-muted-foreground">Masukkan kode OTP 8 digit yang dikirim ke {otpEmail}.</p>
       <form action={otpAction} className="flex flex-col gap-3">
         <input type="hidden" name="email" value={otpEmail ?? ""} />
-        <Field id="teacher_otp" label="Kode OTP 6 digit" required>
-          <Input id="teacher_otp" name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required />
+        <Field id="teacher_otp" label="Kode OTP 8 digit" required>
+          <Input id="teacher_otp" name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" maxLength={8} required />
         </Field>
         {otpState.error && <p role="alert" className="text-sm text-danger">{otpState.error}</p>}
         <Button type="submit" size="lg" loading={otpPending}>Verifikasi dan aktifkan akun</Button>
