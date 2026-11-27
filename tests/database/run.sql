@@ -573,15 +573,12 @@ end;
 $portal$;
 
 reset role;
+update public.students
+set full_name = '  SISWA   MANDIRI  ', nis = ' PORTAL-SELF '
+where id = '60000000-0000-4000-8000-000000000012';
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000004', false);
 select set_config('test.permissions', '', false);
 set role authenticated;
-update public.students
-set full_name = '  SISWA   MANDIRI  ', nis = ' PORTAL-SELF '
-where id = '60000000-0000-4000-8000-000000000012';
-update public.students
-set full_name = '  SISWA   MANDIRI  ', nis = ' PORTAL-SELF '
-where id = '60000000-0000-4000-8000-000000000012';
 select public.submit_student_portal_registration('Siswa Mandiri', 'PORTAL-SELF', '2009-03-04');
 
 reset role;
