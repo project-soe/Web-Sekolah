@@ -19,6 +19,8 @@
 \i supabase/migrations/20261127300000_student_portal_invitation_email_binding.sql
 \i supabase/migrations/20261127310000_student_portal_registration_identity_normalization.sql
 \i supabase/migrations/20261127320000_student_archive.sql
+\echo 'Verify archive migration is safe when archived_at already exists'
+\i supabase/migrations/20261127320000_student_archive.sql
 \i supabase/migrations/20261127330000_student_daily_attendance.sql
 
 \echo '3. Seed deterministic reference rows'
