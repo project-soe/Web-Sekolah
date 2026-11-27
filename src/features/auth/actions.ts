@@ -160,7 +160,7 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
     }
     if (!data.session) {
       return {
-        message: "Kode verifikasi 6 digit telah dikirim ke email. Masukkan kode tersebut untuk menyelesaikan pendaftaran.",
+        message: "Kode verifikasi 8 digit telah dikirim ke email. Masukkan kode tersebut untuk menyelesaikan pendaftaran.",
         email: input.email,
         awaitingOtp: true,
       };
@@ -201,7 +201,7 @@ export async function verifyStudentPortalOtp(
 ): Promise<SignupState> {
   const parsed = z.object({
     email: z.email(),
-    token: z.string().trim().regex(/^\d{6}$/, "Masukkan kode OTP 6 digit."),
+    token: z.string().trim().regex(/^\d{8}$/, "Masukkan kode OTP 8 digit."),
   }).safeParse({
     email: String(formData.get("email") ?? "").trim().toLowerCase(),
     token: String(formData.get("token") ?? "").trim(),
