@@ -38,7 +38,7 @@ function getSignupErrorMessage(code: string | undefined, message: string | undef
       if (message?.toLowerCase().includes("database error saving new user")) {
         return "Layanan gagal menyiapkan profil akun di database. Data siswa belum diproses; silakan hubungi admin sekolah.";
       }
-      return "Layanan autentikasi menolak pendaftaran. Periksa apakah email sudah digunakan, lalu coba kembali beberapa saat lagi.";
+      return `Layanan autentikasi menolak pendaftaran (kode: ${code ?? "tidak tersedia"}, HTTP: ${status ?? "tidak diketahui"}). Catat kode ini untuk admin sekolah agar penyebabnya dapat diperiksa di log Supabase Auth.`;
   }
 }
 
