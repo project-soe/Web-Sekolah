@@ -1,3 +1,9 @@
+-- The student master-data migration intentionally uses column-level grants
+-- to protect lifecycle/audit fields. The email column was added later, so it
+-- needs explicit insert/update privileges for authorized student editors.
+grant insert (email) on public.students to authenticated;
+grant update (email) on public.students to authenticated;
+
 -- Normalize user-entered identity fields before matching a self-registration
 -- request to the student master record. This tolerates casing and accidental
 -- whitespace differences without weakening the date-of-birth check.
