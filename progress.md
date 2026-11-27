@@ -4,16 +4,16 @@
 
 ## Status saat ini
 
-- **Tanggal audit:** 2026-11-26.
-- **Branch:** `main`.
-- **Commit terbaru yang diaudit:** `d5e8401541b2bafcc835e27b23ed06441fc3cbdd` — `feat(portal): add confirmation resend cooldown timer`.
-- **CI terbaru:** GitHub Actions #303 pada commit tersebut berstatus `success`. Job `check` (lint, typecheck, unit test, build) dan `database-tests` seluruhnya sukses. Ini bukan bukti pengiriman email nyata atau uji browser.
-- **Tahap fungsional:** website publik dan CMS delapan domain; fondasi administrasi siswa/kelas/tahun ajaran dan lifecycle siswa; onboarding serta dashboard awal Portal Siswa.
-- **Fokus berikutnya yang direkomendasikan:** perancangan Modul Absensi Siswa. Mulai dari aturan domain dan matriks hak akses, kemudian skema/migrasi, RPC/query, UI guru/admin, rekap, dan integrasi tampilan Portal Siswa.
-- **Pengujian yang ditunda:** browser QA pendaftaran Portal Siswa yang membutuhkan email konfirmasi Supabase. Lihat [docs/known-issues-and-deferred.md](docs/known-issues-and-deferred.md).
-- **Catatan deployment database:** jangan menyimpulkan migrasi sudah diterapkan hanya dari CI. Riwayat progress mencatat beberapa migrasi lifecycle/onboarding belum diterapkan atau belum dikonfirmasi pada Supabase production. Periksa `supabase migration list --remote` pada project Website Sekolah yang benar sebelum tindakan deployment.
-- **Deployment aplikasi:** konfigurasi menggunakan Cloudflare Workers/OpenNext (`wrangler.jsonc`). Domain production, Site URL Supabase, dan daftar redirect URL harus dipastikan cocok sebelum uji email end-to-end.
-- **Aturan kerja:** jangan mengklaim build/typecheck/test/migrasi/browser QA berhasil tanpa bukti. Jangan melakukan `db push` atau mengubah production database tanpa persetujuan eksplisit. Jangan menyentuh project Supabase kedua.
+- **Tanggal pembaruan:** 2026-11-27.
+- **Branch implementasi:** feat/student-attendance-daily; PR #12 terbuka.
+- **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan tahap pertama Modul Absensi Siswa.
+- **Portal Siswa:** pengguna mengonfirmasi simulasi pendaftaran berhasil dan akun dapat login pada 2026-11-27. Item pengujian pendaftaran Portal Siswa dihapus dari daftar deferred; cakupan konfirmasi tidak berarti seluruh edge-case sudah diuji.
+- **Modul Absensi:** migrasi 20261127330000_student_daily_attendance.sql, UI guru, rekap/koreksi admin, dan tampilan riwayat Portal Siswa disiapkan pada PR #12. CI sedang berjalan saat catatan ini dibuat; jangan menyatakan lulus sebelum hasil final.
+- **Rancangan dan keputusan domain:** docs/attendance-module-design.md.
+- **Daftar tertunda:** docs/known-issues-and-deferred.md.
+- **Database production:** migrasi absensi belum diterapkan. Periksa migration list remote, review SQL, pastikan backup, dan minta persetujuan eksplisit sebelum deployment. Jangan sentuh project Supabase kedua.
+- **Deployment aplikasi:** Cloudflare Workers/OpenNext (wrangler.jsonc).
+- **Aturan kerja:** jangan mengklaim build/typecheck/test/migrasi/browser QA berhasil tanpa bukti.
 
 ## Ringkasan arsitektur
 
@@ -1346,3 +1346,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan database assertions untuk pengarsipan dan pemulihan serta memastikan riwayat status tetap tersimpan.
 - Migrasi baru: `20261127320000_student_archive.sql`. Migrasi belum diterapkan ke Supabase production; perlu diperiksa dan diterapkan setelah PR lulus CI.
 - Menunggu CI dan uji browser setelah merge/deploy. Tidak ada perubahan pada database production.
+
+
+## 2026-11-27 — Portal Siswa selesai diuji dan Modul Absensi tahap pertama
+
+- Pengguna mengonfirmasi simulasi pendaftaran Portal Siswa berhasil dan akun dapat login ke portal. Daftar deferred tidak lagi memuat item uji pendaftaran Portal Siswa.
+- Keputusan domain absensi disetujui: satu sesi harian per rombel; guru wali kelas pencatat; status hadir/terlambat/sakit/izin/alpa; batas input hari ini hingga 7 hari ke belakang; submit memerlukan seluruh status; koreksi admin wajib alasan; lock/unlock oleh admin; siswa hanya melihat absensi sendiri setelah submit.
+- PR #12 dibuat pada branch feat/student-attendance-daily.
+- Migrasi 20261127330000_student_daily_attendance.sql menambah sesi, entri, histori koreksi, permission, dan RPC untuk roster, simpan draft, submit, koreksi, lock/unlock, serta pembacaan pribadi siswa.
+- Route /ruang-guru menampilkan roster wali kelas dan form draft/submit. Route /admin/absensi menyediakan rekap harian, koreksi, dan lock/unlock. Portal Siswa menampilkan riwayat kehadiran pribadi.
+- Database test runner diperbarui untuk menerapkan migrasi dan memeriksa akses tabel serta keberadaan RPC/permission.
+- Tidak ada migrasi production yang dijalankan. Browser QA belum dilakukan. Rekap bulanan/persentase dan ekspor masih tahap berikutnya.

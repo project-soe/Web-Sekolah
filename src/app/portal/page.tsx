@@ -20,6 +20,16 @@ export default async function StudentPortalPage() {
   const { data, error } = await supabase.rpc("my_student_portal_profile");
   if (error || !data) redirect("/login");
   const profile = data as PortalProfile;
+  const { data: attendanceData } = await supabase.rpc("my_student_attendance");
+  const attendance = (attendanceData ?? []) as Array<{
+    attendance_date: string;
+    class_name: string;
+    status: "present" | "late" | "sick" | "excused" | "absent";
+    note: string | null;
+  }>;
+  const attendanceLabels: Record<string, string> = {
+    present: "Hadir", late: "Terlambat", sick: "Sakit", excused: "Izin", absent: "Alpa",
+  };
   return <main className="min-h-dvh bg-muted/40 p-4 sm:p-8">
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -35,6 +45,26 @@ export default async function StudentPortalPage() {
           <div><p className="text-xs text-muted-foreground">Jurusan</p><p className="mt-1 font-semibold">{profile.department ?? "Belum ditentukan"}</p></div>
           <div><p className="text-xs text-muted-foreground">Kelas saat ini</p><p className="mt-1 font-semibold">{profile.class_name ?? "Belum ditempatkan"}</p></div>
           <div><p className="text-xs text-muted-foreground">Tahun ajaran</p><p className="mt-1 font-semibold">{profile.academic_year ?? "—"}</p></div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Riwayat kehadiran</CardTitle></CardHeader>
+        <CardContent>
+          {attendance.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Belum ada riwayat absensi yang dikirim oleh sekolah.</p>
+          ) : (
+            <div className="divide-y divide-border">
+              {attendance.map((item, index) => (
+                <div key={item.attendance_date + item.class_name + index} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                  <div>
+                    <p className="text-sm font-medium">{new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeZone: "Asia/Jakarta" }).format(new Date(item.attendance_date + "T00:00:00+07:00"))}</p>
+                    <p className="text-xs text-muted-foreground">{item.class_name}{item.note ? " · " + item.note : ""}</p>
+                  </div>
+                  <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">{attendanceLabels[item.status] ?? item.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
       <p className="text-xs text-muted-foreground">Informasi yang ditampilkan terbatas pada data akademik dasar. Data pribadi dan kontak wali tetap hanya tersedia bagi petugas sekolah berwenang.</p>
