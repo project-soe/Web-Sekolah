@@ -38,6 +38,8 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
   const [otpState, otpAction, otpPending] = useActionState(verifyStudentPortalOtp, {});
   const [retryState, retryAction, retryPending] = useActionState(retryStudentPortalRegistration, {});
   const [selfRegistrationEnabled, setSelfRegistrationEnabled] = useState(false);
+  const awaitingOtp = Boolean(state.awaitingOtp || resendState.awaitingOtp);
+  const otpEmail = resendState.awaitingOtp ? resendState.email : state.email;
 
   return <div className="flex flex-col gap-6">
     {recoveryMode ? (
@@ -56,7 +58,7 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
     </section>
     ) : (
     <>
-    <form action={action} hidden={Boolean(state.awaitingOtp)} className="flex flex-col gap-4">
+    <form action={action} hidden={awaitingOtp} className="flex flex-col gap-4">
       <Field id="full_name" label="Nama lengkap sesuai data sekolah" required><Input id="full_name" name="full_name" autoComplete="name" required maxLength={150} /></Field>
       <Field id="email" label="Email aktif" required><Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required /></Field>
       <Field id="password" label="Buat password (minimal 8 karakter)" required><Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} maxLength={72} required /></Field>
@@ -72,11 +74,11 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
       <Button type="submit" size="lg" loading={pending}>Buat akun Portal Siswa</Button>
       <p className="text-center text-sm text-muted-foreground">Sudah punya akun? <Link href="/login" className="font-medium text-primary hover:underline">Masuk</Link></p>
     </form>
-    {state.awaitingOtp && <section className="rounded-xl border border-primary/30 bg-muted/40 p-4">
+    {awaitingOtp && <section className="rounded-xl border border-primary/30 bg-muted/40 p-4">
       <h2 className="font-semibold">Verifikasi email dengan kode OTP</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Kode verifikasi telah dikirim ke {state.email}. Masukkan 6 digit kode tersebut.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Kode verifikasi telah dikirim ke {otpEmail}. Masukkan 6 digit kode tersebut.</p>
       <form action={otpAction} className="mt-3 flex flex-col gap-3">
-        <input type="hidden" name="email" value={state.email ?? ""} />
+        <input type="hidden" name="email" value={otpEmail ?? ""} />
         <Field id="student_otp" label="Kode verifikasi 6 digit" required>
           <Input id="student_otp" name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required />
         </Field>

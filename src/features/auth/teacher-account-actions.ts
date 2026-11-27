@@ -53,9 +53,9 @@ export async function verifyTeacherAccountOtp(
 }
 
 export async function resendTeacherAccountOtp(
-  _prev: { error?: string; message?: string; email?: string },
+  _prev: { error?: string; message?: string; email?: string; awaitingOtp?: boolean },
   formData: FormData,
-): Promise<{ error?: string; message?: string; email?: string }> {
+): Promise<{ error?: string; message?: string; email?: string; awaitingOtp?: boolean }> {
   const parsed = z.email().safeParse(String(formData.get("email") ?? "").trim().toLowerCase());
   if (!parsed.success) return { error: "Masukkan email undangan yang valid." };
   const supabase = await createClient();
@@ -66,7 +66,7 @@ export async function resendTeacherAccountOtp(
     }
     return { error: "Kode belum dapat dikirim. Pastikan akun masih menunggu verifikasi atau hubungi admin.", email: parsed.data };
   }
-  return { message: "Kode OTP dikirim jika akun masih menunggu verifikasi.", email: parsed.data };
+  return { message: "Kode OTP dikirim jika akun masih menunggu verifikasi.", email: parsed.data, awaitingOtp: true };
 }
 
 export async function registerTeacherAccount(

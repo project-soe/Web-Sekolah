@@ -285,9 +285,9 @@ export async function retryStudentPortalRegistration(
 }
 
 export async function resendStudentPortalConfirmation(
-  _prev: { error?: string; message?: string; email?: string },
+  _prev: { error?: string; message?: string; email?: string; awaitingOtp?: boolean },
   formData: FormData,
-): Promise<{ error?: string; message?: string; email?: string }> {
+): Promise<{ error?: string; message?: string; email?: string; awaitingOtp?: boolean }> {
   const parsed = z.email("Masukkan alamat email yang valid").safeParse(String(formData.get("email") ?? "").trim());
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Email tidak valid." };
 
@@ -310,6 +310,7 @@ export async function resendStudentPortalConfirmation(
     return {
       message: "Permintaan kode OTP berhasil dikirim jika akun masih menunggu verifikasi. Periksa kotak masuk dan folder spam.",
       email: parsed.data,
+      awaitingOtp: true,
     };
   } catch (error) {
     console.error("[auth:portal] Confirmation resend unexpected error:", error instanceof Error ? error.message : "Unknown");

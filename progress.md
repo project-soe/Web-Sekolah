@@ -1282,3 +1282,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 
 
 - CI run `45833840670` pada commit `62c78826c4c36507490798f20bc9d4e8331b6d3e` sukses penuh: lint, typecheck, unit test, build, database assertions, dan concurrency tests. Ini belum mencakup pengiriman email nyata, browser QA, perubahan template Supabase, atau deployment.
+
+
+## 2026-11-27 — Perbaikan tahap OTP setelah permintaan kirim ulang
+- Audit kode setelah PR #3 digabung menemukan bahwa aksi kirim ulang OTP Portal Siswa hanya mengembalikan pesan/email, tanpa `awaitingOtp`; akibatnya kolom input OTP hanya tampil setelah signup awal berhasil, bukan setelah resend berhasil.
+- Perbaikan pada branch `fix/student-otp-resend-flow`: respons resend sukses kini mengaktifkan tahap OTP dan membawa email yang diminta; UI memakai email dari respons resend untuk form verifikasi. Jika resend gagal/rate-limit, tahap OTP tidak diaktifkan oleh aksi resend.
+- Terapkan pola state yang sama pada aktivasi Guru agar state verifikasi dan email tetap konsisten.
+- Belum ada perubahan database, migrasi, konfigurasi Supabase, atau deployment. Perlu CI dan browser QA setelah PR ditinjau/digabung.
