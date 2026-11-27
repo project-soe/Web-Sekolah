@@ -26,7 +26,7 @@ export async function saveStudent(formData: FormData): Promise<void> {
     nis: input.nis,
     nisn: input.nisn || null,
     full_name: input.full_name,
-    email: input.email ? input.email.toLowerCase() : null,
+    email: input.email ? input.email.trim().toLowerCase() : null,
     gender: input.gender,
     birth_place: input.birth_place || null,
     birth_date: input.birth_date || null,
@@ -51,8 +51,17 @@ export async function saveStudent(formData: FormData): Promise<void> {
         .select("id")
         .single();
   if (result.error || !result.data) {
-    console.error("admin_students_save_failed", result.error?.code ?? "no_rows");
-    redirect("/admin/siswa?error=" + (result.error?.code === "23505" ? "duplikat" : "simpan"));
+    console.error("admin_students_save_failed", {
+      code: result.error?.code ?? null,
+      message: result.error?.message ?? null,
+      details: result.error?.details ?? null,
+      hint: result.error?.hint ?? null,
+    });
+    const errorCode = result.error?.code;
+    const errorKey = errorCode === "23505" ? "duplikat"
+      : errorCode === "42703" || errorCode === "PGRST204" ? "migrasi_email"
+      : "simpan";
+    redirect("/admin/siswa?error=" + errorKey);
   }
   await logActivity(supabase, {
     action: editing ? "update" : "create",
