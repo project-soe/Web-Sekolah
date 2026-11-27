@@ -61,7 +61,7 @@ insert into public.role_permissions(role_id,permission_id)
 
 create or replace function public.my_teacher_attendance_roster(p_date date default (now() at time zone 'Asia/Jakarta')::date)
 returns table(class_group_id uuid,class_name text,academic_year text,attendance_date date,
- session_id uuid,session_status text,student_id uuid,nis text,full_name text,
+ session_id uuid,entry_id uuid,session_status text,student_id uuid,nis text,full_name text,
  attendance_status text,attendance_note text)
 language plpgsql stable security definer set search_path=''
 as $$
@@ -74,7 +74,7 @@ begin
   raise exception 'Tanggal absensi di luar rentang 7 hari' using errcode='22023';
  end if;
  return query
- select cg.id,cg.name,ay.name,p_date,s.id,s.status,st.id,st.nis,st.full_name,e.status,e.note
+ select cg.id,cg.name,ay.name,p_date,s.id,e.id,s.status,st.id,st.nis,st.full_name,e.status,e.note
  from public.class_groups cg join public.academic_years ay on ay.id=cg.academic_year_id
  join public.student_class_enrollments en on en.class_group_id=cg.id and en.academic_year_id=cg.academic_year_id and en.ended_at is null
  join public.students st on st.id=en.student_id and st.status='active' and st.archived_at is null
