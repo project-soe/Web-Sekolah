@@ -26,6 +26,12 @@ function getSignupErrorMessage(code: string | undefined, message: string | undef
       return "Pendaftaran akun sedang dinonaktifkan. Hubungi admin sekolah.";
     case "email_provider_disabled":
       return "Pendaftaran dengan email sedang tidak tersedia. Hubungi admin sekolah.";
+    case "email_address_not_authorized":
+      return "Supabase belum mengizinkan pengiriman email ke alamat ini. SMTP kustom sekolah belum aktif atau email pengirim belum terverifikasi.";
+    case "smtp_error":
+      return "Supabase gagal mengirim email verifikasi. Periksa konfigurasi SMTP dan alamat pengirim pada pengaturan Authentication Supabase.";
+    case "unexpected_failure":
+      return "Layanan autentikasi gagal memproses pendaftaran. Periksa log Auth Supabase; jika email verifikasi gagal dikirim, SMTP kustom perlu dikonfigurasi.";
     case "validation_failed":
       return "Data akun ditolak oleh layanan autentikasi. Periksa format email dan ketentuan password.";
     default:

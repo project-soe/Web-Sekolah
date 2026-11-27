@@ -1289,3 +1289,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Perbaikan pada branch `fix/student-otp-resend-flow`: respons resend sukses kini mengaktifkan tahap OTP dan membawa email yang diminta; UI memakai email dari respons resend untuk form verifikasi. Jika resend gagal/rate-limit, tahap OTP tidak diaktifkan oleh aksi resend.
 - Terapkan pola state yang sama pada aktivasi Guru agar state verifikasi dan email tetap konsisten.
 - Belum ada perubahan database, migrasi, konfigurasi Supabase, atau deployment. Perlu CI dan browser QA setelah PR ditinjau/digabung.
+
+
+## 2026-11-27 — Diagnosis kegagalan signup setelah peralihan OTP
+
+- Audit kode pada `main` menemukan pesan generik pendaftaran berasal dari fallback `getSignupErrorMessage()` saat Supabase Auth mengembalikan error yang belum dipetakan.
+- Peralihan ke OTP membuat keberhasilan signup bergantung pada pengiriman email konfirmasi. Catatan konfigurasi sebelumnya menegaskan SMTP kustom Supabase dan template `{{ .Token }}` belum disiapkan; SMTP bawaan Supabase memiliki pembatasan penerima/kuota dan bukan solusi pengiriman produksi.
+- Memetakan kode Auth `email_address_not_authorized`, `smtp_error`, dan `unexpected_failure` ke pesan yang lebih spesifik agar kendala provider tidak lagi tampil sebagai error duplikasi email yang ambigu.
+- **Batas perbaikan:** perubahan kode tidak dapat mengaktifkan SMTP atau mengubah konfigurasi Supabase. Signup end-to-end dengan OTP tetap belum dapat dinyatakan pulih sebelum SMTP aktif, template OTP memakai `{{ .Token }}`, dan satu uji email nyata berhasil.
+- Tidak mengubah database, migrasi, konfigurasi Supabase, atau project lain.

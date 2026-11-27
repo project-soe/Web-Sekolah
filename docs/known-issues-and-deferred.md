@@ -119,3 +119,13 @@ Urutan desain yang disarankan:
 - Perbaikan disiapkan pada branch `fix/student-otp-resend-flow`: resend sukses mengembalikan `awaitingOtp` dan email, lalu UI menampilkan form OTP untuk email tersebut. Resend gagal/rate-limit tetap menampilkan error tanpa menganggap kode terkirim.
 - Pola state/email resend juga diselaraskan pada aktivasi Guru.
 - Status: menunggu CI, review PR, deployment Worker, dan uji browser. Tidak ada perubahan Supabase/database.
+
+
+## 10. Signup OTP — kegagalan pengiriman email
+
+- **Gejala production yang dilaporkan (2026-11-27):** simulasi pendaftaran siswa menampilkan pesan generik “Layanan autentikasi menolak pendaftaran...”.
+- **Temuan kode:** pesan tersebut adalah fallback ketika Supabase Auth mengembalikan kode error yang belum dipetakan; aplikasi sebelumnya tidak membedakan email penerima yang belum diizinkan dan kegagalan SMTP.
+- **Prasyarat eksternal:** SMTP kustom Supabase belum dikonfirmasi aktif. OTP Signup memerlukan email konfirmasi benar-benar dikirim; template Signup/Confirmation harus menyertakan `{{ .Token }}`. SMTP bawaan Supabase dibatasi untuk pengujian dan kuotanya rendah.
+- **Perbaikan kode:** memetakan `email_address_not_authorized`, `smtp_error`, dan `unexpected_failure` menjadi pesan yang menjelaskan kemungkinan masalah provider/SMTP.
+- **Belum terselesaikan secara end-to-end:** konfigurasi SMTP harus diselesaikan di Dashboard Supabase, lalu lakukan satu tes terkontrol. Jangan mengulang signup berkali-kali karena bisa menghabiskan kuota email.
+- Tidak ada perubahan database/migrasi atau konfigurasi Supabase pada perbaikan ini.
