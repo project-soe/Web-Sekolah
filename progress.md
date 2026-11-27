@@ -1332,3 +1332,6 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Perubahan berada di branch `fix/student-save-and-registration-approval`; CI, pengujian migrasi, dan verifikasi production belum dilakukan. Migrasi harus diterapkan ke Supabase setelah memeriksa migration list remote dan memastikan urutan migrasi.
 
 - Temuan tambahan dari CI database: migrasi students foundation memakai grant per kolom untuk melindungi status/audit. Karena itu menambahkan `students.email` tanpa grant eksplisit membuat insert/update oleh role `authenticated` ditolak walaupun kolom sudah ada. Migrasi perbaikan kini memberikan `INSERT(email)` dan `UPDATE(email)`; database test menegaskan kedua privilege tersebut tersedia.
+
+- Audit migrasi lanjutan juga menemukan migrasi email PR #8 mengganti RPC klaim undangan dan tanpa sengaja menghilangkan guard akun Auth harus nonaktif/belum dihapus. Migrasi perbaikan terbaru memulihkan guard tersebut sambil mempertahankan pencocokan email undangan; guard yang sama dipertahankan pada RPC persetujuan mandiri.
+- Fixture database dirapikan agar perubahan data uji dilakukan sebagai admin dan alamat email undangan sesuai dengan alamat Auth.
