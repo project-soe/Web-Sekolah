@@ -19,7 +19,7 @@ export async function createStudentPortalInvitation(_prev: PortalInvitationState
   const { data, error } = await supabase.rpc("create_student_portal_invitation", { p_student_id: studentId });
   if (error || typeof data !== "string") {
     console.error("[admin:student-portal] Invitation creation failed:", error?.code ?? "invalid_result");
-    return { error: error?.code === "23505" ? "Siswa sudah memiliki akun Portal Siswa." : "Undangan gagal dibuat. Pastikan siswa masih aktif." };
+    return { error: error?.code === "23505" ? "Siswa sudah memiliki akun Portal Siswa." : error?.code === "22023" ? "Isi alamat email siswa terlebih dahulu pada data siswa." : "Undangan gagal dibuat. Pastikan siswa masih aktif dan email siswa sudah diisi." };
   }
   await logActivity(supabase, { action: "create", module: "student_portal", entityType: "student", entityId: studentId, summary: "Membuat undangan Portal Siswa" });
   revalidatePath("/admin/siswa/" + studentId);
