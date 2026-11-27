@@ -645,6 +645,8 @@ values
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
 select set_config('test.permissions', 'students:view,students:update', false);
 set role authenticated;
+update public.students set email = 'active-claim@example.test'
+where id = '60000000-0000-4000-8000-000000000013';
 select public.create_student_portal_invitation('60000000-0000-4000-8000-000000000013') as active_claim_token \gset
 select set_config('test.portal_active_claim_token', :'active_claim_token', false);
 
