@@ -1298,3 +1298,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memetakan kode Auth `email_address_not_authorized`, `smtp_error`, dan `unexpected_failure` ke pesan yang lebih spesifik agar kendala provider tidak lagi tampil sebagai error duplikasi email yang ambigu.
 - **Batas perbaikan:** perubahan kode ini hanya memperjelas pesan error; tidak mengubah konfigurasi SMTP/Supabase. Status keberhasilan signup end-to-end tetap perlu divalidasi melalui uji email nyata.
 - Tidak mengubah database, migrasi, konfigurasi Supabase, atau project lain.
+
+
+## 2026-11-27 — Diagnostik lanjutan signup OTP
+- Pengguna melaporkan pesan generik signup tetap muncul setelah pemetaan error pada PR #5.
+- Audit menunjukkan fallback masih menyamarkan seluruh kode Auth yang belum dikenal; log signup juga hanya mencatat kode/status tanpa pesan provider.
+- Branch `fix/auth-signup-diagnostic-errors` mengubah fallback agar menampilkan kode Auth dan status HTTP (tanpa menampilkan pesan provider mentah kepada pengguna), serta mencatat `error.message` di log server untuk diagnosis.
+- Perubahan ini belum membuktikan atau memperbaiki akar kegagalan provider. Setelah deployment, satu percobaan terkontrol diperlukan untuk memperoleh kode diagnostik; jika pesan generik lama tetap tampil persis, periksa deployment Worker atau jalur form/action yang sedang dipakai.
+- Tidak ada perubahan database, migrasi, konfigurasi Supabase, atau project lain. CI dan deployment belum diverifikasi.
