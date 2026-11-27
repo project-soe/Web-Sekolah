@@ -16,6 +16,8 @@
 \i supabase/migrations/20261124340000_student_portal_account_onboarding.sql
 \i supabase/migrations/20261124350000_student_portal_onboarding_account_state_guard.sql
 \i supabase/migrations/20261124360000_teacher_account_invitations.sql
+\i supabase/migrations/20261127300000_student_portal_invitation_email_binding.sql
+\i supabase/migrations/20261127310000_student_portal_registration_identity_normalization.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -570,6 +572,9 @@ reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000004', false);
 select set_config('test.permissions', '', false);
 set role authenticated;
+update public.students
+set full_name = '  SISWA   MANDIRI  ', nis = ' PORTAL-SELF '
+where id = '60000000-0000-4000-8000-000000000012';
 select public.submit_student_portal_registration('Siswa Mandiri', 'PORTAL-SELF', '2009-03-04');
 
 reset role;
