@@ -16,6 +16,8 @@
 \i supabase/migrations/20261124340000_student_portal_account_onboarding.sql
 \i supabase/migrations/20261124350000_student_portal_onboarding_account_state_guard.sql
 \i supabase/migrations/20261124360000_teacher_account_invitations.sql
+\i supabase/migrations/20261127300000_student_portal_invitation_email_binding.sql
+\i supabase/migrations/20261127310000_student_portal_registration_identity_normalization.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -55,8 +57,10 @@ begin
     raise exception 'authenticated unexpectedly has direct lifecycle/audit column privileges';
   end if;
   if not has_column_privilege('authenticated', 'public.students', 'full_name', 'INSERT')
-    or not has_column_privilege('authenticated', 'public.students', 'full_name', 'UPDATE') then
-    raise exception 'authenticated is missing expected master-data column privileges';
+    or not has_column_privilege('authenticated', 'public.students', 'full_name', 'UPDATE')
+    or not has_column_privilege('authenticated', 'public.students', 'email', 'INSERT')
+    or not has_column_privilege('authenticated', 'public.students', 'email', 'UPDATE') then
+    raise exception 'authenticated is missing expected master-data column privileges, including student email';
   end if;
 end;
 $$;
@@ -535,6 +539,8 @@ values
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
 select set_config('test.permissions', 'students:view,students:update', false);
 set role authenticated;
+update public.students set email = 'student-invite@example.test'
+where id = '60000000-0000-4000-8000-000000000011';
 select public.create_student_portal_invitation('60000000-0000-4000-8000-000000000011') as portal_invite_token \gset
 
 reset role;
@@ -567,6 +573,9 @@ end;
 $portal$;
 
 reset role;
+update public.students
+set full_name = '  SISWA   MANDIRI  ', nis = ' PORTAL-SELF '
+where id = '60000000-0000-4000-8000-000000000012';
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000004', false);
 select set_config('test.permissions', '', false);
 set role authenticated;
@@ -633,6 +642,8 @@ values
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
 select set_config('test.permissions', 'students:view,students:update', false);
 set role authenticated;
+update public.students set email = 'already-active-claim@example.test'
+where id = '60000000-0000-4000-8000-000000000013';
 select public.create_student_portal_invitation('60000000-0000-4000-8000-000000000013') as active_claim_token \gset
 select set_config('test.portal_active_claim_token', :'active_claim_token', false);
 
