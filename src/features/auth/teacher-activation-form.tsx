@@ -9,9 +9,11 @@ export function TeacherActivationForm({ token }: { token: string }) {
   const [state, action, pending] = useActionState(registerTeacherAccount, {});
   const [otpState, otpAction, otpPending] = useActionState(verifyTeacherAccountOtp, {});
   const [resendState, resendAction, resendPending] = useActionState(resendTeacherAccountOtp, {});
+  const awaitingOtp = Boolean(state.awaitingOtp || resendState.awaitingOtp);
+  const otpEmail = resendState.awaitingOtp ? resendState.email : state.email;
   return (
     <>
-    <form action={action} hidden={Boolean(state.awaitingOtp)} className="flex flex-col gap-4">
+    <form action={action} hidden={awaitingOtp} className="flex flex-col gap-4">
       <input type="hidden" name="invitation_token" value={token} />
       <Field id="email" label="Email undangan" required>
         <Input id="email" name="email" type="email" autoComplete="email" required />
@@ -26,11 +28,11 @@ export function TeacherActivationForm({ token }: { token: string }) {
       {state.message && <p role="status" className="text-sm text-success">{state.message}</p>}
       <Button type="submit" size="lg" loading={pending}>Buat akun dan kirim kode OTP</Button>
     </form>
-    {state.awaitingOtp && <section className="flex flex-col gap-3">
+    {awaitingOtp && <section className="flex flex-col gap-3">
       <p role="status" className="text-sm text-success">{state.message}</p>
-      <p className="text-sm text-muted-foreground">Masukkan kode OTP 6 digit yang dikirim ke {state.email}.</p>
+      <p className="text-sm text-muted-foreground">Masukkan kode OTP 6 digit yang dikirim ke {otpEmail}.</p>
       <form action={otpAction} className="flex flex-col gap-3">
-        <input type="hidden" name="email" value={state.email ?? ""} />
+        <input type="hidden" name="email" value={otpEmail ?? ""} />
         <Field id="teacher_otp" label="Kode OTP 6 digit" required>
           <Input id="teacher_otp" name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required />
         </Field>

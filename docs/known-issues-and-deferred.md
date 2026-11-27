@@ -112,3 +112,10 @@ Urutan desain yang disarankan:
 - Sebelum merge/deploy, uji signup Portal Siswa undangan, pendaftaran mandiri, aktivasi Guru, OTP salah/kedaluwarsa, resend/rate-limit, serta callback link lama.
 - **CI run `45833840670` sukses penuh** pada commit `62c78826c4c36507490798f20bc9d4e8331b6d3e`: lint, typecheck, unit test, build, database assertions, dan concurrency tests.
 - Browser QA end-to-end, pengiriman email nyata, verifikasi kuota provider, serta perubahan template Supabase masih belum dilakukan. Tidak ada migrasi/database production yang dijalankan.
+
+
+## 9. Alur input OTP setelah kirim ulang
+- Audit pada 2026-11-27 menemukan bug UI: resend OTP Portal Siswa sukses tidak mengaktifkan state tampilan form input OTP; kolom hanya muncul setelah signup awal.
+- Perbaikan disiapkan pada branch `fix/student-otp-resend-flow`: resend sukses mengembalikan `awaitingOtp` dan email, lalu UI menampilkan form OTP untuk email tersebut. Resend gagal/rate-limit tetap menampilkan error tanpa menganggap kode terkirim.
+- Pola state/email resend juga diselaraskan pada aktivasi Guru.
+- Status: menunggu CI, review PR, deployment Worker, dan uji browser. Tidak ada perubahan Supabase/database.
