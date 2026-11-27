@@ -20,7 +20,7 @@ export async function verifyTeacherAccountOtp(
 ): Promise<{ error?: string; message?: string; awaitingOtp?: boolean; email?: string }> {
   const parsed = z.object({
     email: z.email().transform((value) => value.trim().toLowerCase()),
-    token: z.string().trim().regex(/^\d{6}$/, "Masukkan kode OTP 6 digit."),
+    token: z.string().trim().regex(/^\d{8}$/, "Masukkan kode OTP 8 digit."),
   }).safeParse({
     email: String(formData.get("email") ?? "").trim(),
     token: String(formData.get("token") ?? "").trim(),
@@ -115,7 +115,7 @@ export async function registerTeacherAccount(
       await supabase.auth.updateUser({ data: { teacher_invitation_token: null } });
       redirect("/ruang-guru");
     }
-    return { message: "Kode verifikasi 6 digit telah dikirim ke email undangan.", awaitingOtp: true, email: input.email };
+    return { message: "Kode verifikasi 8 digit telah dikirim ke email undangan.", awaitingOtp: true, email: input.email };
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error) throw error;
     console.error("[auth:teacher] Signup unexpected error:", error instanceof Error ? error.message : "Unknown");
