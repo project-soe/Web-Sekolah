@@ -1,139 +1,63 @@
 # Known Issues, Deferred Tests, and Follow-ups
 
-> Dokumen kerja untuk mencatat pengujian yang belum dilakukan, hasil yang belum terkonfirmasi, kendala eksternal, dan tindak lanjut. Status di sini bukan berarti semua item adalah bug aplikasi.
+> Daftar ini hanya memuat pekerjaan yang masih tertunda atau belum diverifikasi. Portal Siswa dikeluarkan dari daftar setelah pengguna berhasil menyelesaikan simulasi pendaftaran dan login ke portal pada 2026-11-27.
 
-**Terakhir diperbarui:** 2026-11-26  
-**Branch saat pencatatan:** `main`  
-**Commit dasar audit:** `d5e8401541b2bafcc835e27b23ed06441fc3cbdd`
+**Terakhir diperbarui:** 2026-11-27  
+**Branch pembaruan:** `docs/attendance-module-design`
 
-## 1. Ditunda oleh kendala eksternal
-
-### Portal Siswa — email konfirmasi pendaftaran
-
-- **Status:** Ditunda; belum dinyatakan lulus uji browser end-to-end.
-- **Kendala:** Pengiriman email bawaan Supabase memiliki batas sangat rendah (catatan implementasi saat ini: 2 email/jam untuk seluruh project). Pengujian berulang dapat menghabiskan kuota project.
-- **Yang sudah tersedia:** signup dua jalur (undangan admin dan daftar mandiri), callback `/auth/callback`, pemulihan pengajuan setelah konfirmasi, permintaan kirim ulang, serta countdown minimum 60 detik.
-- **Batasan penting:** countdown 60 detik adalah kontrol pengalaman pengguna, bukan pengganti rate limit server/provider dan bukan jaminan email akan terkirim.
-- **Tindak lanjut:** jangan melakukan percobaan email berulang. Ketika siap, evaluasi konfigurasi SMTP kustom yang sesuai anggaran atau tunggu kuota provider tersedia; lalu lakukan satu rangkaian uji terkontrol.
-
-## 2. Verifikasi production dan browser yang masih perlu dilakukan
-
-### Portal Siswa
-
-- [ ] Uji tautan konfirmasi pada domain production dan pastikan tidak kembali ke `localhost`.
-- [ ] Pastikan Supabase Auth **Site URL** memakai domain production dan **Redirect URLs** mengizinkan URL callback `/auth/callback` yang tepat.
-- [ ] Uji alur undangan admin: buat token, gunakan token, tetapkan password, klaim undangan, dan login ke `/portal`.
-- [ ] Uji daftar mandiri setelah email tersedia: konfirmasi email, lanjutkan pengajuan, pastikan request muncul di `/admin/akses-siswa`, lalu uji approve/reject.
-- [ ] Uji token salah/kedaluwarsa, identitas tidak cocok, akun sudah tertaut, serta pemulihan pengajuan.
-- [ ] Uji kirim ulang email secara terbatas dan pastikan pesan rate-limit tidak mendorong signup berulang.
-
-### Lifecycle siswa dan kelas
+## 1. Lifecycle siswa dan kelas
 
 - [x] Uji browser perubahan status siswa menjadi `transferred` telah dilaporkan berhasil oleh pengguna.
 - [ ] Uji alur `withdrawn` melalui UI dan verifikasi penutupan enrollment, pelepasan kapasitas, serta retensi histori.
 - [ ] Uji penempatan individual, termasuk akun tanpa permission `students:view`.
 - [ ] Uji kenaikan kelas massal pada tahun ajaran berikutnya, termasuk rollback ketika kapasitas tidak cukup.
 - [ ] Uji kelulusan kelas XII, tanggal kelulusan, status akhir, dan riwayat status.
-- [ ] Sebelum deployment migrasi lifecycle, cocokkan seluruh urutan migrasi dengan remote Supabase dan pastikan backup dapat digunakan. Status CI disposable tidak membuktikan migrasi production telah diterapkan.
+- [ ] Verifikasi fitur arsip dan pemulihan siswa setelah migrasi lengkap `20261127320000_student_archive.sql` dipastikan diterapkan. Kolom `archived_at` pernah ditambahkan manual; keberadaan RPC dan trigger harus diverifikasi sebelum fitur dianggap siap.
+- [ ] Sebelum deployment migrasi lifecycle/arsip, cocokkan urutan migrasi dengan remote Supabase dan pastikan backup dapat digunakan.
 
-### Cloudflare/OpenNext dan website publik
+## 2. Undangan akun guru — perlu verifikasi sebelum digunakan
+
+- Implementasi undangan akun guru sudah digabung ke `main` melalui PR #1.
+- Migrasi `20261124360000_teacher_account_invitations.sql` dan status penerapannya perlu dikonfirmasi dari migration list remote.
+- Admin membuat undangan untuk email yang sama dengan `teachers.email`; token disimpan sebagai hash, berlaku 24 jam, dan dapat dicabut/diganti.
+- Tautan undangan saat ini disalin admin dan dikirim melalui kanal resmi; belum ada integrasi pengiriman email otomatis.
+- CI #312 dan #313 sukses: lint, typecheck, unit test, build, database assertions, dan concurrency tests.
+- [ ] Browser QA token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun yang sudah memiliki role, duplikasi link, dan redirect guru/admin/siswa.
+- [ ] Verifikasi role dan redirect pada domain production.
+- `/ruang-guru` masih landing awal; roster kelas dan absensi belum tersedia.
+
+## 3. Cloudflare/OpenNext dan website publik
 
 - [ ] Jalankan preview Worker dan browser QA pada environment yang sesuai.
 - [ ] Periksa responsivitas, navigasi, aksesibilitas dasar, gambar/storage, dan halaman publik/admin.
 - [ ] Pastikan domain production yang digunakan aplikasi sama dengan origin redirect Auth.
 
-## 3. Status CI terakhir
+## 4. Status CI dan batas verifikasi
 
-- **CI #303:** sukses pada commit dasar audit.
+- **CI #303:** sukses pada commit dasar audit 2026-11-26.
 - Job `check`: lint, typecheck, unit test, dan build sukses.
 - Job `database-tests`: migrasi serta assertion database pada PostgreSQL disposable sukses, termasuk tes konkurensi aktivasi tahun ajaran dan kapasitas kelas.
-- **Bukan bukti:** CI tidak mengirim email nyata, tidak menguji browser production, dan tidak menerapkan migrasi ke Supabase production.
-
-## 4. Catatan migrasi database
-
-- Progress historis mencatat migrasi lifecycle siswa `2900`–`3300` belum diterapkan ke production pada pemeriksaan 2026-11-25.
-- Progress historis juga mencatat migrasi Portal Siswa `3400` dan hardening `3500` belum diterapkan oleh asisten. Status remote terkini harus diperiksa ulang; jangan mengasumsikan masih pending ataupun sudah diterapkan.
-- Sebelum tindakan apa pun, jalankan pemeriksaan migration list remote pada project Website Sekolah yang benar, tinjau selisih Local/Remote, pastikan backup, lalu minta persetujuan eksplisit pengguna.
-- Jangan menjalankan SQL secara manual atau `db push` bila ada versi tak dikenal atau riwayat yang tidak sinkron.
-- Project Supabase kedua tidak boleh disentuh.
+- CI bukan bukti pengiriman email nyata, browser QA production, atau penerapan migrasi ke Supabase production.
+- Riwayat migrasi dan hasil verifikasi production harus diperbarui berdasarkan output CLI terbaru, bukan catatan historis.
 
 ## 5. Aturan menutup item
 
-Pindahkan item dari daftar tertunda hanya setelah ada bukti yang jelas: hasil browser dari pengguna, output CLI, status CI yang cocok dengan commit, atau verifikasi konfigurasi yang dapat diperiksa. Catat tanggal, lingkungan, hasil, dan batas cakupan uji. Jika gagal, catat gejala dan langkah reproduksi; jangan menghapus jejak kegagalan.
+Pindahkan item dari daftar tertunda hanya setelah ada bukti jelas: hasil browser dari pengguna, output CLI, status CI yang cocok dengan commit, atau verifikasi konfigurasi. Catat tanggal, environment, hasil, dan cakupan uji. Jangan menghapus jejak kegagalan yang masih relevan.
 
-## 6. Kandidat fase pengembangan berikutnya
+## 6. Fase pengembangan berikutnya — Modul Absensi Siswa
 
-**Modul Absensi Siswa** — masih tahap rekomendasi/perancangan, belum diimplementasikan.
+**Status:** rancangan domain awal sudah dibuat di [attendance-module-design.md](attendance-module-design.md). Belum ada migrasi atau kode absensi.
 
-Urutan desain yang disarankan:
-1. Sepakati siapa yang boleh mencatat, mengoreksi, melihat, dan mengunci absensi.
-2. Definisikan status kehadiran dan aturan izin/sakit/alpa/terlambat.
-3. Tentukan keunikan pencatatan (siswa + tanggal + sesi/rombel) dan penanganan perpindahan siswa.
-4. Rancang audit trail koreksi, pembatasan tanggal, serta rekap harian/bulanan.
-5. Tentukan informasi yang boleh dilihat siswa pada Portal Siswa.
-6. Baru susun migrasi, database tests, server actions/RPC, UI, dan dokumentasi.
+Rancangan awal mengusulkan absensi harian per rombel, guru wali kelas sebagai pencatat, status hadir/terlambat/sakit/izin/alpa, submit dan lock, koreksi admin dengan alasan serta audit trail, rekap, dan tampilan read-only untuk siswa pada Portal Siswa.
 
+Sebelum migrasi, kunci keputusan domain yang tercantum pada dokumen rancangan: satu atau beberapa sesi per hari, siapa pencatat, batas input mundur, status/rumus rekap, serta hak koreksi setelah submit.
 
+## 7. Catatan keamanan dan database
 
-## 7. Undangan akun guru — perlu verifikasi sebelum digunakan
-- Implementasi undangan akun guru sudah digabung ke `main` melalui PR #1 (commit `7ec5cf7589c351f49e4fedddc106c074faf66a02`).
-- Migrasi `20261124360000_teacher_account_invitations.sql` belum diterapkan ke Supabase production.
-- Admin hanya dapat membuat undangan untuk email yang sama dengan `teachers.email`. Token disimpan dalam bentuk hash, berlaku 24 jam, dan dapat dicabut/diganti.
-- Guru harus mendaftar dengan email undangan, menetapkan password, lalu memverifikasi email. Callback akan mengklaim undangan dan memberi role guru.
-- Tautan saat ini disalin admin dan dikirim melalui kanal resmi sekolah; belum ada integrasi pengiriman email otomatis.
-- CI #312 dan #313 sukses: lint, typecheck, unit test, build, database assertions, dan concurrency tests. Browser QA tetap diperlukan untuk token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun yang sudah memiliki role, duplikasi link, dan redirect guru/admin/siswa.
-- `/ruang-guru` masih landing awal; belum menyediakan data kelas atau absensi.
-- Tidak ada perubahan pada Supabase remote.
-
-
-### Riwayat CI undangan guru
-- CI #305 gagal pada typecheck (nilai action log `revoke`) dan database fixture (role guru belum tersedia); keduanya telah diperbaiki.
-- CI #306: lint, typecheck, dan unit test sukses; database test gagal karena nilai permission fixture belum sinkron dengan `teacher_accounts:manage`. Perbaikan permission, validasi email sebelum signup, dan assertion validasi pasangan token/email sudah dibuat pada commit terbaru. Menunggu hasil CI ulang.
-- CI #307: typecheck dan unit test sukses; database test gagal karena delimiter SQL pada RPC validasi undangan. Perbaikan delimiter dan grant eksplisit sudah dibuat; menunggu hasil CI terbaru.
-- Audit keamanan tambahan memperluas guard trigger aktivasi akun agar link guru yang dibuat oleh RPC klaim terverifikasi menjadi prasyarat aktivasi. Assertion database kini menolak aktivasi sebelum link dan memeriksa aktivasi setelah klaim.
-- CI #309: database job gagal di bootstrap trigger fixture (delimiter dollar-quote). Sudah diganti delimiter bernama; menunggu pemeriksaan ulang.
-- Fixture database kini memberi grant UPDATE pada profil akun dan memverifikasi trigger menolak aktivasi mandiri sebelum `teacher_user_links` tersedia; hasil CI ulang masih ditunggu.
-- CI #311: uji pra-klaim berhasil mencapai guard, tetapi pemeriksaan status sesudahnya gagal karena fixture tidak memberi SELECT users. Pemeriksaan status dipindahkan ke role reset; menunggu CI ulang.
-- **CI #312 sukses** pada commit `0da2e49b687fe89a0091a01cad3bb2e2ccc1ffae`: lint, typecheck, unit test, build, seluruh assertion migrasi database, dan dua concurrency tests lulus. Browser QA dan verifikasi Supabase production masih belum dilakukan.
-
-
-### Status setelah merge undangan guru
-- Kode dan migrasi sudah ada di `main`; migrasi `20261124360000_teacher_account_invitations.sql` belum diterapkan ke Supabase production.
-- CI #312 (commit kode) dan #313 (head PR final) seluruhnya sukses.
-- Belum dilakukan browser QA email konfirmasi pada domain production.
-- Belum ada email undangan otomatis; admin menyalin tautan dan mengirim melalui kanal sekolah.
-- `/ruang-guru` masih landing awal, tanpa roster dan absensi.
-
-
-## 8. Verifikasi email OTP — konfigurasi dan QA wajib
-- Branch kerja: `feat/email-otp-verification`; belum digabung ke `main`.
-- Kode mengalihkan signup Portal Siswa (undangan dan mandiri) serta aktivasi undangan Guru ke OTP 6 digit Supabase Auth.
-- **Tindakan dashboard yang masih diperlukan:** ubah template email Signup/Confirmation Supabase agar menyertakan `{{ .Token }}`. Jika template masih hanya memakai `{{ .ConfirmationURL }}`, kode OTP tidak akan tersedia untuk pengguna.
-- Sebelum merge/deploy, uji signup Portal Siswa undangan, pendaftaran mandiri, aktivasi Guru, OTP salah/kedaluwarsa, resend/rate-limit, serta callback link lama.
-- **CI run `45833840670` sukses penuh** pada commit `62c78826c4c36507490798f20bc9d4e8331b6d3e`: lint, typecheck, unit test, build, database assertions, dan concurrency tests.
-- Browser QA end-to-end, pengiriman email nyata, verifikasi kuota provider, serta perubahan template Supabase masih belum dilakukan. Tidak ada migrasi/database production yang dijalankan.
-
-
-## 9. Alur input OTP setelah kirim ulang
-- Audit pada 2026-11-27 menemukan bug UI: resend OTP Portal Siswa sukses tidak mengaktifkan state tampilan form input OTP; kolom hanya muncul setelah signup awal.
-- Perbaikan disiapkan pada branch `fix/student-otp-resend-flow`: resend sukses mengembalikan `awaitingOtp` dan email, lalu UI menampilkan form OTP untuk email tersebut. Resend gagal/rate-limit tetap menampilkan error tanpa menganggap kode terkirim.
-- Pola state/email resend juga diselaraskan pada aktivasi Guru.
-- Status: menunggu CI, review PR, deployment Worker, dan uji browser. Tidak ada perubahan Supabase/database.
-
-
-## 10. Signup OTP — kegagalan pengiriman email
-
-- **Gejala production yang dilaporkan (2026-11-27):** simulasi pendaftaran siswa menampilkan pesan generik “Layanan autentikasi menolak pendaftaran...”.
-- **Temuan kode:** pesan tersebut adalah fallback ketika Supabase Auth mengembalikan kode error yang belum dipetakan; aplikasi sebelumnya tidak membedakan email penerima yang belum diizinkan dan kegagalan SMTP.
-- **Konfigurasi eksternal:** pengguna mengonfirmasi SMTP kustom Supabase telah diselesaikan pada 2026-11-26. Pastikan template Confirm signup menyertakan `{{ .Token }}` dan verifikasi pengiriman email melalui satu uji terkontrol.
-- **Perbaikan kode:** memetakan `email_address_not_authorized`, `smtp_error`, dan `unexpected_failure` menjadi pesan yang menjelaskan kemungkinan masalah provider/SMTP.
-- **Validasi lanjutan:** lakukan satu tes signup terkontrol untuk memastikan email OTP benar-benar diterima. Jangan mengulang signup berkali-kali karena dapat memicu rate limit.
-- Tidak ada perubahan database/migrasi atau konfigurasi Supabase pada perbaikan ini.
-
-
-## 2026-11-27 — Signup OTP masih mengembalikan pesan generik
-- Pengguna mengonfirmasi setelah PR #5 digabung, browser masih menampilkan pesan generik lama.
-- Audit kode: fallback `getSignupErrorMessage()` tetap menggabungkan semua kode Auth tak dikenal ke satu kalimat; log sebelumnya tidak mencatat pesan provider.
-- Perbaikan diagnostik disiapkan pada branch `fix/auth-signup-diagnostic-errors`: fallback baru menampilkan kode Auth/status HTTP yang aman, sementara pesan provider dicatat pada log server saja. Ini membedakan error Auth yang belum dipetakan dari Worker/jalur aplikasi yang belum memuat kode terbaru.
-- Tindak lanjut: tunggu CI dan deployment branch setelah PR ditinjau/digabung; lakukan satu uji signup saja, catat kode yang tampil, lalu cocokkan dengan Supabase Auth Logs. Jangan mengulang percobaan berkali-kali.
-- Belum ada perubahan Supabase, SMTP, database, migrasi, atau deployment.
+- Semua data absensi harus privat; tidak ada akses anon/public.
+- RLS dan pemeriksaan permission server/database wajib. Menyembunyikan tombol di UI bukan kontrol keamanan.
+- Guru hanya boleh mengakses kelas yang ditugaskan melalui relasi `teacher_user_links` dan `class_groups.homeroom_teacher_id`.
+- Siswa hanya boleh membaca absensi miliknya sendiri melalui relasi akun Portal Siswa.
+- Mutasi sensitif dan koreksi harus atomik melalui RPC; histori koreksi tidak boleh dapat diubah/dihapus oleh role aplikasi.
+- Jangan menjalankan `db push` atau mengubah Supabase production tanpa pemeriksaan migration list, review SQL, backup, dan persetujuan eksplisit pengguna.
+- Project Supabase kedua tidak boleh disentuh.
