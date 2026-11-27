@@ -10,7 +10,7 @@ import { loginSchema, studentPortalSignupSchema } from "./schema";
 export type LoginState = { error?: string; email?: string };
 export type SignupState = { error?: string; message?: string; email?: string; awaitingOtp?: boolean };
 
-function getSignupErrorMessage(code: string | undefined, message: string | undefined): string {
+function getSignupErrorMessage(code: string | undefined, message: string | undefined, status: number | undefined): string {
   switch (code) {
     case "user_already_exists":
     case "email_exists":
@@ -38,7 +38,7 @@ function getSignupErrorMessage(code: string | undefined, message: string | undef
       if (message?.toLowerCase().includes("database error saving new user")) {
         return "Layanan gagal menyiapkan profil akun di database. Data siswa belum diproses; silakan hubungi admin sekolah.";
       }
-      return "Layanan autentikasi menolak pendaftaran. Periksa apakah email sudah digunakan, lalu coba kembali beberapa saat lagi.";
+      return `Layanan autentikasi menolak pendaftaran (kode: ${code ?? "tidak tersedia"}, HTTP: ${status ?? "tidak diketahui"}). Catat kode ini untuk admin sekolah agar penyebabnya dapat diperiksa di log Supabase Auth.`;
   }
 }
 
@@ -140,8 +140,12 @@ export async function registerStudentPortal(_prev: SignupState, formData: FormDa
       options: { data: metadata },
     });
     if (error) {
-      console.error("[auth:portal] Signup failed:", { code: error.code ?? "unknown", status: error.status ?? null });
-      return { error: getSignupErrorMessage(error.code, error.message), email: input.email };
+      console.error("[auth:portal] Signup failed:", {
+        code: error.code ?? null,
+        status: error.status ?? null,
+        message: error.message,
+      });
+      return { error: getSignupErrorMessage(error.code, error.message, error.status), email: input.email };
     }
     if (!data.session) {
       return {

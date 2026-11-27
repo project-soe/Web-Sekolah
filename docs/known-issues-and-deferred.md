@@ -129,3 +129,11 @@ Urutan desain yang disarankan:
 - **Perbaikan kode:** memetakan `email_address_not_authorized`, `smtp_error`, dan `unexpected_failure` menjadi pesan yang menjelaskan kemungkinan masalah provider/SMTP.
 - **Validasi lanjutan:** lakukan satu tes signup terkontrol untuk memastikan email OTP benar-benar diterima. Jangan mengulang signup berkali-kali karena dapat memicu rate limit.
 - Tidak ada perubahan database/migrasi atau konfigurasi Supabase pada perbaikan ini.
+
+
+## 2026-11-27 — Signup OTP masih mengembalikan pesan generik
+- Pengguna mengonfirmasi setelah PR #5 digabung, browser masih menampilkan pesan generik lama.
+- Audit kode: fallback `getSignupErrorMessage()` tetap menggabungkan semua kode Auth tak dikenal ke satu kalimat; log sebelumnya tidak mencatat pesan provider.
+- Perbaikan diagnostik disiapkan pada branch `fix/auth-signup-diagnostic-errors`: fallback baru menampilkan kode Auth/status HTTP yang aman, sementara pesan provider dicatat pada log server saja. Ini membedakan error Auth yang belum dipetakan dari Worker/jalur aplikasi yang belum memuat kode terbaru.
+- Tindak lanjut: tunggu CI dan deployment branch setelah PR ditinjau/digabung; lakukan satu uji signup saja, catat kode yang tampil, lalu cocokkan dengan Supabase Auth Logs. Jangan mengulang percobaan berkali-kali.
+- Belum ada perubahan Supabase, SMTP, database, migrasi, atau deployment.
