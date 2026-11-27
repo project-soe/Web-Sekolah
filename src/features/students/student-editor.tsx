@@ -5,7 +5,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { saveStudent } from "./student-actions";
 
 export type StudentEditorValues = {
-  id?: string; nis?: string; nisn?: string | null; full_name?: string; gender?: "male" | "female";
+  id?: string; nis?: string; nisn?: string | null; full_name?: string; email?: string | null; gender?: "male" | "female";
   birth_place?: string | null; birth_date?: string | null; address?: string | null;
   guardian_name?: string | null; guardian_phone?: string | null; department_id?: string | null;
   enrollment_year?: number; notes?: string | null;
@@ -19,6 +19,7 @@ export function StudentEditor({ initial = {}, departments }: { initial?: Student
       <Field id="nis" label="NIS" required><Input id="nis" name="nis" required maxLength={30} defaultValue={initial.nis ?? ""} /></Field>
       <Field id="nisn" label="NISN" hint="Opsional, 10 digit."><Input id="nisn" name="nisn" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} defaultValue={initial.nisn ?? ""} /></Field>
       <Field id="full_name" label="Nama lengkap" required><Input id="full_name" name="full_name" required minLength={2} maxLength={150} defaultValue={initial.full_name ?? ""} /></Field>
+      <Field id="email" label="Email siswa" hint="Isi email yang akan digunakan siswa untuk membuat akun Portal Siswa."><Input id="email" name="email" type="email" maxLength={254} defaultValue={initial.email ?? ""} /></Field>
       <Field id="gender" label="Jenis kelamin" required><Select id="gender" name="gender" required defaultValue={initial.gender ?? ""}><option value="" disabled>Pilih jenis kelamin</option><option value="male">Laki-laki</option><option value="female">Perempuan</option></Select></Field>
       <Field id="birth_place" label="Tempat lahir"><Input id="birth_place" name="birth_place" maxLength={100} defaultValue={initial.birth_place ?? ""} /></Field>
       <Field id="birth_date" label="Tanggal lahir"><Input id="birth_date" name="birth_date" type="date" defaultValue={initial.birth_date ?? ""} /></Field>
