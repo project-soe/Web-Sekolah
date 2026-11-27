@@ -26,6 +26,7 @@ export async function saveStudent(formData: FormData): Promise<void> {
     nis: input.nis,
     nisn: input.nisn || null,
     full_name: input.full_name,
+    email: input.email ? input.email.toLowerCase() : null,
     gender: input.gender,
     birth_place: input.birth_place || null,
     birth_date: input.birth_date || null,

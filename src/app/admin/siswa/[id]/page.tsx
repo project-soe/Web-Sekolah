@@ -24,7 +24,7 @@ export default async function StudentDetailPage({ params, searchParams }: { para
   const query = await searchParams;
   const supabase = await createClient();
   const [{ data: student, error }, { data: history }, { data: portalAccount }] = await Promise.all([
-    supabase.from("students").select("id, nis, nisn, full_name, gender, birth_place, birth_date, address, guardian_name, guardian_phone, enrollment_year, status, graduation_date, notes, departments(name)").eq("id", id).maybeSingle(),
+    supabase.from("students").select("id, nis, nisn, full_name, email, gender, birth_place, birth_date, address, guardian_name, guardian_phone, enrollment_year, status, graduation_date, notes, departments(name)").eq("id", id).maybeSingle(),
     supabase.from("student_status_history").select("id, old_status, new_status, changed_at").eq("student_id", id).order("changed_at", { ascending: false }).limit(50),
     can(session.access, "students:update")
       ? supabase.from("student_portal_accounts").select("user_id, linked_at").eq("student_id", id).maybeSingle()
@@ -38,6 +38,7 @@ export default async function StudentDetailPage({ params, searchParams }: { para
     {query.saved === "lifecycle" ? <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Status siswa berhasil diperbarui. Penempatan kelas aktif ditutup dan riwayat tetap tersimpan.</p> : query.saved && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Data siswa berhasil disimpan.</p>}
     <Card><CardContent className="grid gap-5 sm:grid-cols-2">
       <div><p className="text-xs text-muted-foreground">NISN</p><p className="mt-1 font-medium">{student.nisn ?? "—"}</p></div>
+      <div><p className="text-xs text-muted-foreground">Email siswa</p><p className="mt-1 font-medium">{student.email ?? "Belum diisi"}</p></div>
       <div><p className="text-xs text-muted-foreground">Jenis kelamin</p><p className="mt-1 font-medium">{student.gender === "male" ? "Laki-laki" : "Perempuan"}</p></div>
       <div><p className="text-xs text-muted-foreground">Tempat, tanggal lahir</p><p className="mt-1 font-medium">{student.birth_place ?? "—"}, {formatDate(student.birth_date)}</p></div>
       <div><p className="text-xs text-muted-foreground">Tahun masuk</p><p className="mt-1 font-medium">{student.enrollment_year}</p></div>
@@ -50,7 +51,7 @@ export default async function StudentDetailPage({ params, searchParams }: { para
     </CardContent></Card>
     {can(session.access, "students:update") && student.status === "active" && <Card><CardContent className="flex flex-col gap-3">
       <div><h2 className="font-semibold">Akun Portal Siswa</h2><p className="text-sm text-muted-foreground">Buat undangan khusus agar siswa dapat membuat akun dan terhubung dengan data induk ini.</p></div>
-      {portalAccount ? <p className="text-sm text-success">Siswa ini sudah terhubung ke akun Portal Siswa.</p> : <StudentPortalInvitationForm studentId={student.id} />}
+      {portalAccount ? <p className="text-sm text-success">Siswa ini sudah terhubung ke akun Portal Siswa.</p> : student.email ? <StudentPortalInvitationForm studentId={student.id} email={student.email} /> : <p className="text-sm text-muted-foreground">Isi email siswa melalui tombol Edit data sebelum membuat undangan Portal Siswa. Email ini akan menjadi satu-satunya email yang dapat mengklaim undangan.</p>}
     </CardContent></Card>}
     {student.status === "active" && can(session.access, "students:update") && can(session.access, "classes:view") && can(session.access, "classes:update") && <Card><CardContent className="flex flex-col gap-3">
       <div><h2 className="font-semibold">Proses status akademik</h2><p className="text-sm text-muted-foreground">Gunakan hanya jika siswa benar-benar pindah sekolah atau mengundurkan diri. Penempatan pada tahun ajaran aktif akan ditutup, kapasitas kelas dibebaskan, dan riwayat tetap disimpan.</p></div>

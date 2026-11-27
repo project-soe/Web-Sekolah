@@ -15,7 +15,7 @@ export default async function EditStudentPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const supabase = await createClient();
   const [{ data: student, error }, { data: departments }] = await Promise.all([
-    supabase.from("students").select("id, nis, nisn, full_name, gender, birth_place, birth_date, address, guardian_name, guardian_phone, department_id, enrollment_year, status, graduation_date, notes").eq("id", id).maybeSingle(),
+    supabase.from("students").select("id, nis, nisn, full_name, email, gender, birth_place, birth_date, address, guardian_name, guardian_phone, department_id, enrollment_year, status, graduation_date, notes").eq("id", id).maybeSingle(),
     supabase.from("departments").select("id, name").order("name"),
   ]);
   if (error || !student) notFound();

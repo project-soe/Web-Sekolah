@@ -12,6 +12,7 @@ export const studentInputSchema = z.object({
   nis: z.string().trim().min(1, "NIS wajib diisi").max(30),
   nisn: z.string().trim().max(10).regex(/^$|^\d{10}$/, "NISN harus 10 digit").optional().default(""),
   full_name: z.string().trim().min(2, "Nama minimal 2 karakter").max(150),
+  email: z.union([z.email("Alamat email tidak valid"), z.literal("")]).optional().default(""),
   gender: z.enum(["male", "female"]),
   birth_place: z.string().trim().max(100).optional().default(""),
   birth_date: dateOnly.optional().default(""),
