@@ -104,3 +104,59 @@ export async function changeStudentLifecycle(formData: FormData): Promise<void> 
   revalidatePath("/admin/kelas");
   redirect("/admin/siswa/" + parsed.data.student_id + "?saved=lifecycle");
 }
+
+
+export async function archiveStudent(formData: FormData): Promise<void> {
+  const studentId = String(formData.get("student_id") ?? "");
+  const confirmation = String(formData.get("confirmation") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(studentId) || confirmation !== "HAPUS") {
+    redirect("/admin/siswa?error=validasi");
+  }
+
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (!can(session.access, "students:delete")) redirect("/admin/siswa/" + studentId + "?error=akses");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("archive_student", { p_student_id: studentId });
+  if (error) {
+    console.error("admin_student_archive_failed", { code: error.code, message: error.message });
+    const key = error.code === "42501" ? "akses"
+      : error.code === "P0002" ? "tidak_ditemukan"
+      : error.code === "23514" ? "arsip_terkait"
+      : "arsip";
+    redirect("/admin/siswa/" + studentId + "?error=" + key);
+  }
+
+  await logActivity(supabase, {
+    action: "delete", module: "students", entityType: "student", entityId: studentId,
+    summary: "Mengarsipkan data siswa",
+  });
+  revalidatePath("/admin/siswa");
+  revalidatePath("/admin/siswa/" + studentId);
+  redirect("/admin/siswa?archived=1&saved=archived");
+}
+
+export async function restoreStudent(formData: FormData): Promise<void> {
+  const studentId = String(formData.get("student_id") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(studentId)) redirect("/admin/siswa?error=validasi");
+
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (!can(session.access, "students:update")) redirect("/admin/siswa/" + studentId + "?error=akses");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("restore_archived_student", { p_student_id: studentId });
+  if (error) {
+    console.error("admin_student_restore_failed", { code: error.code, message: error.message });
+    redirect("/admin/siswa/" + studentId + "?error=" + (error.code === "42501" ? "akses" : "arsip"));
+  }
+
+  await logActivity(supabase, {
+    action: "restore", module: "students", entityType: "student", entityId: studentId,
+    summary: "Memulihkan data siswa dari arsip",
+  });
+  revalidatePath("/admin/siswa");
+  revalidatePath("/admin/siswa/" + studentId);
+  redirect("/admin/siswa/" + studentId + "?saved=restored");
+}
