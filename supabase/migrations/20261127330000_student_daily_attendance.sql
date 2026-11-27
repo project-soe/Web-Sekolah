@@ -70,7 +70,8 @@ begin
  if not public.has_permission('attendance:view_own_class') and not public.has_permission('attendance:view_all') then
   raise exception 'Tidak memiliki izin melihat absensi' using errcode='42501';
  end if;
- if p_date>(now() at time zone 'Asia/Jakarta')::date or p_date<(now() at time zone 'Asia/Jakarta')::date-7 then
+ if not public.has_permission('attendance:view_all') and
+   (p_date>(now() at time zone 'Asia/Jakarta')::date or p_date<(now() at time zone 'Asia/Jakarta')::date-7) then
   raise exception 'Tanggal absensi di luar rentang 7 hari' using errcode='22023';
  end if;
  return query
