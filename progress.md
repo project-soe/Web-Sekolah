@@ -4,16 +4,16 @@
 
 ## Status saat ini
 
-- **Tanggal audit:** 2026-11-26.
-- **Branch:** `main`.
-- **Commit terbaru yang diaudit:** `d5e8401541b2bafcc835e27b23ed06441fc3cbdd` — `feat(portal): add confirmation resend cooldown timer`.
-- **CI terbaru:** GitHub Actions #303 pada commit tersebut berstatus `success`. Job `check` (lint, typecheck, unit test, build) dan `database-tests` seluruhnya sukses. Ini bukan bukti pengiriman email nyata atau uji browser.
-- **Tahap fungsional:** website publik dan CMS delapan domain; fondasi administrasi siswa/kelas/tahun ajaran dan lifecycle siswa; onboarding serta dashboard awal Portal Siswa.
-- **Fokus berikutnya yang direkomendasikan:** perancangan Modul Absensi Siswa. Mulai dari aturan domain dan matriks hak akses, kemudian skema/migrasi, RPC/query, UI guru/admin, rekap, dan integrasi tampilan Portal Siswa.
-- **Pengujian yang ditunda:** browser QA pendaftaran Portal Siswa yang membutuhkan email konfirmasi Supabase. Lihat [docs/known-issues-and-deferred.md](docs/known-issues-and-deferred.md).
-- **Catatan deployment database:** jangan menyimpulkan migrasi sudah diterapkan hanya dari CI. Riwayat progress mencatat beberapa migrasi lifecycle/onboarding belum diterapkan atau belum dikonfirmasi pada Supabase production. Periksa `supabase migration list --remote` pada project Website Sekolah yang benar sebelum tindakan deployment.
-- **Deployment aplikasi:** konfigurasi menggunakan Cloudflare Workers/OpenNext (`wrangler.jsonc`). Domain production, Site URL Supabase, dan daftar redirect URL harus dipastikan cocok sebelum uji email end-to-end.
-- **Aturan kerja:** jangan mengklaim build/typecheck/test/migrasi/browser QA berhasil tanpa bukti. Jangan melakukan `db push` atau mengubah production database tanpa persetujuan eksplisit. Jangan menyentuh project Supabase kedua.
+- **Tanggal pembaruan:** 2026-11-27.
+- **Branch kerja dokumentasi:** `docs/attendance-module-design`.
+- **CI terakhir yang tercatat:** GitHub Actions #303 sukses pada audit 2026-11-26 (lint, typecheck, unit test, build, dan database-tests). CI tersebut tidak memverifikasi perubahan sesi ini.
+- **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan dashboard awal Portal Siswa.
+- **Portal Siswa:** pada 2026-11-27 pengguna mengonfirmasi simulasi pendaftaran berhasil dan akun dapat masuk ke portal. Item QA pendaftaran Portal Siswa dihapus dari daftar deferred atas konfirmasi tersebut; jangan mengklaim seluruh skenario edge-case telah diuji.
+- **Fokus pengembangan:** Modul Absensi Siswa. Rancangan domain awal tersedia di [docs/attendance-module-design.md](docs/attendance-module-design.md). Belum ada migrasi atau implementasi absensi; keputusan domain perlu dikunci sebelum membuat skema.
+- **Daftar deferred aktif:** [docs/known-issues-and-deferred.md](docs/known-issues-and-deferred.md), kini berfokus pada lifecycle siswa/kelas, verifikasi undangan guru, arsip siswa, dan browser QA Cloudflare/public site.
+- **Database production:** jangan menyimpulkan migrasi diterapkan hanya dari CI. Periksa `supabase migration list --remote`, review SQL, backup, dan minta persetujuan eksplisit sebelum deployment. Jangan menyentuh project Supabase kedua.
+- **Deployment aplikasi:** Cloudflare Workers/OpenNext (`wrangler.jsonc`).
+- **Aturan kerja:** jangan mengklaim build/typecheck/test/migrasi/browser QA berhasil tanpa bukti.
 
 ## Ringkasan arsitektur
 
@@ -1346,3 +1346,13 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan database assertions untuk pengarsipan dan pemulihan serta memastikan riwayat status tetap tersimpan.
 - Migrasi baru: `20261127320000_student_archive.sql`. Migrasi belum diterapkan ke Supabase production; perlu diperiksa dan diterapkan setelah PR lulus CI.
 - Menunggu CI dan uji browser setelah merge/deploy. Tidak ada perubahan pada database production.
+
+
+## 2026-11-27 — Portal Siswa diverifikasi dan rancangan Modul Absensi dimulai
+
+- Pengguna mengonfirmasi simulasi pendaftaran Portal Siswa berhasil dan akun dapat login ke portal. Daftar deferred tidak lagi mencantumkan kendala email/OTP maupun browser QA pendaftaran Portal Siswa. Cakupan konfirmasi adalah simulasi alur pendaftaran sampai masuk portal; tidak menyatakan semua edge-case telah diuji.
+- Menghapus bagian Portal Siswa dari `docs/known-issues-and-deferred.md` dan merapikan daftar tertunda agar hanya berisi pekerjaan yang masih relevan.
+- Membuat `docs/attendance-module-design.md` sebagai rancangan domain awal Modul Absensi Siswa.
+- Rancangan awal: satu sesi absensi harian per rombel; guru wali kelas mencatat; status present/late/sick/excused/absent; draft-submit-lock; koreksi admin dengan alasan dan histori; rekap dari sesi final; Portal Siswa hanya membaca absensi milik sendiri.
+- Belum ada perubahan aplikasi, migrasi, konfigurasi, atau database production. Belum menjalankan lint/typecheck/test karena perubahan hanya dokumentasi.
+- Keputusan yang harus dikunci sebelum migrasi: jumlah sesi per hari, otorisasi guru pencatat, batas input mundur, status/rumus rekap, dan hak koreksi setelah submit.
