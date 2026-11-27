@@ -15,11 +15,11 @@
 
 ## 2. Modul Absensi Siswa
 
-- [ ] Review dan jalankan CI PR #12 sampai seluruh job hijau.
-- [ ] Browser QA pencatatan guru: kelas wali yang benar, draft parsial, submit lengkap, dan batas 7 hari.
+- [x] PR #12 sudah merged; CI #367 sukses pada head commit PR (lint, typecheck, unit test, build, database assertions, dan concurrency tests).
+- [ ] Browser QA pencatatan guru: kelas wali yang benar, draft parsial, submit lengkap, dan pemilihan tanggal hari ini hingga 7 hari sebelumnya. Audit kode menemukan date picker belum tersedia pada versi awal; perbaikan UI sedang dikerjakan di branch `fix/teacher-attendance-date-range`.
 - [ ] Browser QA admin: rekap harian, koreksi dengan alasan, lock dan unlock.
 - [ ] Browser QA Portal Siswa: hanya riwayat siswa yang sedang login yang tampil.
-- [ ] Verifikasi migration list remote, review SQL, dan pastikan backup sebelum menerapkan 20261127330000_student_daily_attendance.sql ke Supabase production.
+- [ ] Verifikasi migration list remote, review SQL, dan pastikan backup sebelum menerapkan 20261127330000_student_daily_attendance.sql ke Supabase production. Migrasi belum diterapkan.
 - [ ] Tahap lanjutan: rekap bulanan/persentase, filter periode, ekspor, kalender libur, dan absensi per mata pelajaran bila dibutuhkan.
 
 ## 3. Undangan akun guru
