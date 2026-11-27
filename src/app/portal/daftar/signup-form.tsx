@@ -76,11 +76,11 @@ export function StudentPortalSignupForm({ recoveryMode = false }: { recoveryMode
     </form>
     {awaitingOtp && <section className="rounded-xl border border-primary/30 bg-muted/40 p-4">
       <h2 className="font-semibold">Verifikasi email dengan kode OTP</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Kode verifikasi telah dikirim ke {otpEmail}. Masukkan 6 digit kode tersebut.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Kode verifikasi telah dikirim ke {otpEmail}. Masukkan 8 digit kode tersebut.</p>
       <form action={otpAction} className="mt-3 flex flex-col gap-3">
         <input type="hidden" name="email" value={otpEmail ?? ""} />
-        <Field id="student_otp" label="Kode verifikasi 6 digit" required>
-          <Input id="student_otp" name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required />
+        <Field id="student_otp" label="Kode verifikasi 8 digit" required>
+          <Input id="student_otp" name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" maxLength={8} required />
         </Field>
         {otpState.error && <p role="alert" className="text-sm text-danger">{otpState.error}</p>}
         <Button type="submit" size="lg" loading={otpPending}>Verifikasi kode</Button>
