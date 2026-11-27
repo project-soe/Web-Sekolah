@@ -92,7 +92,6 @@ export default async function TeacherPortalPage({
         const first = students[0];
         const status = first.session_status;
         const editable = !status || status === "draft";
-        const complete = students.every((student) => student.attendance_status !== null);
         return (
           <section key={classId} className="overflow-hidden rounded-xl border border-border bg-card">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
@@ -143,7 +142,7 @@ export default async function TeacherPortalPage({
               {editable ? (
                 <div className="flex flex-wrap justify-end gap-2">
                   <button formAction={saveAttendanceDraft} className="min-h-10 rounded-lg border border-border px-4 text-sm font-medium hover:bg-muted">Simpan draft</button>
-                  <button formAction={submitAttendance} className="min-h-10 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90" disabled={!complete}>Kirim absensi</button>
+                  <button formAction={submitAttendance} className="min-h-10 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90" >Kirim absensi</button>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">Absensi sudah dikirim. Hubungi admin sekolah jika perlu koreksi.</p>
