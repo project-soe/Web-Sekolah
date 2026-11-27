@@ -537,6 +537,8 @@ values
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
 select set_config('test.permissions', 'students:view,students:update', false);
 set role authenticated;
+update public.students set email = 'student-invite@example.test'
+where id = '60000000-0000-4000-8000-000000000011';
 select public.create_student_portal_invitation('60000000-0000-4000-8000-000000000011') as portal_invite_token \gset
 
 reset role;
@@ -572,6 +574,9 @@ reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000004', false);
 select set_config('test.permissions', '', false);
 set role authenticated;
+update public.students
+set full_name = '  SISWA   MANDIRI  ', nis = ' PORTAL-SELF '
+where id = '60000000-0000-4000-8000-000000000012';
 update public.students
 set full_name = '  SISWA   MANDIRI  ', nis = ' PORTAL-SELF '
 where id = '60000000-0000-4000-8000-000000000012';
