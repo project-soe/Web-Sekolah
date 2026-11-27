@@ -1335,3 +1335,14 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 
 - Audit migrasi lanjutan juga menemukan migrasi email PR #8 mengganti RPC klaim undangan dan tanpa sengaja menghilangkan guard akun Auth harus nonaktif/belum dihapus. Migrasi perbaikan terbaru memulihkan guard tersebut sambil mempertahankan pencocokan email undangan; guard yang sama dipertahankan pada RPC persetujuan mandiri.
 - Fixture database dirapikan agar perubahan data uji dilakukan sebagai admin dan alamat email undangan sesuai dengan alamat Auth.
+
+
+## 2026-11-27 — Arsip data siswa dari dashboard admin
+
+- Menambahkan aksi **Arsipkan siswa** pada halaman detail siswa. Aksi memerlukan permission `students:delete` dan konfirmasi teks `HAPUS`; data aktif disembunyikan dari daftar utama.
+- Penghapusan dibuat sebagai soft-delete melalui kolom `students.archived_at`, bukan hard-delete, agar riwayat status, penempatan kelas, dan audit akademik tidak rusak atau hilang.
+- Dashboard memiliki tampilan **Lihat arsip** dan halaman detail arsip menyediakan aksi pemulihan dengan permission `students:update`.
+- RPC database memeriksa permission dan menolak pengarsipan jika siswa masih terhubung ke akun Portal Siswa, memiliki undangan yang belum kedaluwarsa, atau masih mempunyai penempatan kelas aktif. Undangan baru juga ditolak untuk siswa yang sudah diarsipkan.
+- Menambahkan database assertions untuk pengarsipan dan pemulihan serta memastikan riwayat status tetap tersimpan.
+- Migrasi baru: `20261127320000_student_archive.sql`. Migrasi belum diterapkan ke Supabase production; perlu diperiksa dan diterapkan setelah PR lulus CI.
+- Menunggu CI dan uji browser setelah merge/deploy. Tidak ada perubahan pada database production.
