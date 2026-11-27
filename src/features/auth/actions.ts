@@ -11,6 +11,7 @@ export type LoginState = { error?: string; email?: string };
 export type SignupState = { error?: string; message?: string; email?: string; awaitingOtp?: boolean };
 
 const SMTP_CREDENTIALS_ERROR = "Supabase ditolak oleh server Gmail karena username atau App Password SMTP tidak valid. Admin sekolah perlu memperbarui kredensial SMTP di Supabase Authentication → SMTP Settings menggunakan Google App Password, bukan password login Gmail.";
+const SMTP_DELIVERY_ERROR = "Supabase Auth gagal mengirim email verifikasi. Periksa Auth Logs. Jika log menunjukkan Gmail SMTP 535 5.7.8 BadCredentials, admin perlu memperbarui password SMTP menggunakan Google App Password, bukan password login Gmail.";
 
 function isGmailSmtpBadCredentials(message: string | undefined): boolean {
   const normalized = message?.toLowerCase() ?? "";
@@ -41,7 +42,7 @@ function getSignupErrorMessage(code: string | undefined, message: string | undef
     case "smtp_error":
       return "Supabase gagal mengirim email verifikasi. Periksa konfigurasi SMTP dan alamat pengirim pada pengaturan Authentication Supabase.";
     case "unexpected_failure":
-      return "Layanan autentikasi gagal memproses pendaftaran. Periksa log Auth Supabase; jika email verifikasi gagal dikirim, SMTP kustom perlu dikonfigurasi.";
+      return SMTP_DELIVERY_ERROR;
     case "validation_failed":
       return "Data akun ditolak oleh layanan autentikasi. Periksa format email dan ketentuan password.";
     default:
@@ -325,6 +326,9 @@ export async function resendStudentPortalConfirmation(
       });
       if (isGmailSmtpBadCredentials(error.message)) {
         return { error: SMTP_CREDENTIALS_ERROR, email: parsed.data };
+      }
+      if (error.code === "unexpected_failure" && error.status === 500) {
+        return { error: SMTP_DELIVERY_ERROR, email: parsed.data };
       }
       if (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit") {
         return { error: "Permintaan email terlalu sering. Tunggu beberapa menit sebelum meminta kode baru.", email: parsed.data };
