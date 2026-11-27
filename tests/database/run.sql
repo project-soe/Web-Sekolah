@@ -18,6 +18,7 @@
 \i supabase/migrations/20261124360000_teacher_account_invitations.sql
 \i supabase/migrations/20261127300000_student_portal_invitation_email_binding.sql
 \i supabase/migrations/20261127310000_student_portal_registration_identity_normalization.sql
+\i supabase/migrations/20261127320000_student_archive.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
@@ -788,6 +789,46 @@ end;
 $teacher_invite$;
 
 reset role;
+
+
+\echo '14. Verify safe student archiving and restoration'
+reset role;
+insert into public.students (id, nis, full_name, gender, enrollment_year)
+values ('60000000-0000-4000-8000-000000000015', 'ARCHIVE-001', 'Siswa Arsip', 'male', 2026);
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'students:delete', false);
+set role authenticated;
+select public.archive_student('60000000-0000-4000-8000-000000000015');
+
+reset role;
+do $student_archive$
+begin
+  if (select archived_at is null from public.students where id = '60000000-0000-4000-8000-000000000015') then
+    raise exception 'Archive RPC did not mark the student as archived';
+  end if;
+  if not exists (select 1 from public.student_status_history where student_id = '60000000-0000-4000-8000-000000000015') then
+    raise exception 'Archiving unexpectedly removed student status history';
+  end if;
+end;
+$student_archive$;
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'students:update', false);
+set role authenticated;
+select public.restore_archived_student('60000000-0000-4000-8000-000000000015');
+
+reset role;
+do $student_archive$
+begin
+  if (select archived_at is not null from public.students where id = '60000000-0000-4000-8000-000000000015') then
+    raise exception 'Restore RPC did not clear archived_at';
+  end if;
+  if (select count(*) from public.student_status_history where student_id = '60000000-0000-4000-8000-000000000015') <> 1 then
+    raise exception 'Restore changed the immutable student status history';
+  end if;
+end;
+$student_archive$;
 
 \echo 'Database migration assertions passed.'
 
