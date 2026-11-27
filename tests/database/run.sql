@@ -57,8 +57,10 @@ begin
     raise exception 'authenticated unexpectedly has direct lifecycle/audit column privileges';
   end if;
   if not has_column_privilege('authenticated', 'public.students', 'full_name', 'INSERT')
-    or not has_column_privilege('authenticated', 'public.students', 'full_name', 'UPDATE') then
-    raise exception 'authenticated is missing expected master-data column privileges';
+    or not has_column_privilege('authenticated', 'public.students', 'full_name', 'UPDATE')
+    or not has_column_privilege('authenticated', 'public.students', 'email', 'INSERT')
+    or not has_column_privilege('authenticated', 'public.students', 'email', 'UPDATE') then
+    raise exception 'authenticated is missing expected master-data column privileges, including student email';
   end if;
 end;
 $$;
