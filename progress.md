@@ -5,14 +5,16 @@
 ## Status saat ini
 
 - **Tanggal pembaruan:** 2026-11-27.
-- **Branch implementasi:** feat/student-attendance-daily; PR #12 terbuka.
+- **Branch utama:** `main`; PR #12 Modul Absensi Siswa sudah merged pada 2026-11-27 (merge commit `c7c15aa0bd2aee942a7e30563f10fa53fe27d03b`).
+- **CI PR #12:** run #367 pada commit `0a56f8933d6315d6ddc9bbbe428f49921cbb9fa8` sukses. Job `check` (lint, typecheck, unit test, build) dan `database-tests` (migrasi, assertions, concurrency tests) seluruhnya hijau.
 - **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan tahap pertama Modul Absensi Siswa.
 - **Portal Siswa:** pengguna mengonfirmasi simulasi pendaftaran berhasil dan akun dapat login pada 2026-11-27. Item pengujian pendaftaran Portal Siswa dihapus dari daftar deferred; cakupan konfirmasi tidak berarti seluruh edge-case sudah diuji.
-- **Modul Absensi:** migrasi 20261127330000_student_daily_attendance.sql, UI guru, rekap/koreksi admin, dan tampilan riwayat Portal Siswa disiapkan pada PR #12. CI sedang berjalan saat catatan ini dibuat; jangan menyatakan lulus sebelum hasil final.
-- **Rancangan dan keputusan domain:** docs/attendance-module-design.md.
-- **Daftar tertunda:** docs/known-issues-and-deferred.md.
+- **Modul Absensi:** migrasi `20261127330000_student_daily_attendance.sql`, UI guru, rekap/koreksi admin, dan tampilan riwayat Portal Siswa sudah masuk main. Browser QA guru/admin/siswa masih tertunda.
+- **Perbaikan lanjutan absensi:** audit menemukan UI guru belum menyediakan pemilihan tanggal mundur meski RPC mengizinkan hari ini hingga 7 hari sebelumnya. Perbaikan dikerjakan pada branch `fix/teacher-attendance-date-range`; belum ada CI/PR untuk perubahan ini.
+- **Rancangan dan keputusan domain:** `docs/attendance-module-design.md`.
+- **Daftar tertunda:** `docs/known-issues-and-deferred.md`.
 - **Database production:** migrasi absensi belum diterapkan. Periksa migration list remote, review SQL, pastikan backup, dan minta persetujuan eksplisit sebelum deployment. Jangan sentuh project Supabase kedua.
-- **Deployment aplikasi:** Cloudflare Workers/OpenNext (wrangler.jsonc).
+- **Deployment aplikasi:** Cloudflare Workers/OpenNext (`wrangler.jsonc`).
 - **Aturan kerja:** jangan mengklaim build/typecheck/test/migrasi/browser QA berhasil tanpa bukti.
 
 ## Ringkasan arsitektur
@@ -1357,3 +1359,12 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Route /ruang-guru menampilkan roster wali kelas dan form draft/submit. Route /admin/absensi menyediakan rekap harian, koreksi, dan lock/unlock. Portal Siswa menampilkan riwayat kehadiran pribadi.
 - Database test runner diperbarui untuk menerapkan migrasi dan memeriksa akses tabel serta keberadaan RPC/permission.
 - Tidak ada migrasi production yang dijalankan. Browser QA belum dilakukan. Rekap bulanan/persentase dan ekspor masih tahap berikutnya.
+
+
+## 2026-11-27 — Modul Absensi masuk main dan audit lanjutan
+
+- PR #12 `feat(attendance): implement daily student attendance` merged ke `main` pada merge commit `c7c15aa0bd2aee942a7e30563f10fa53fe27d03b`.
+- CI #367 pada commit head PR `0a56f8933d6315d6ddc9bbbe428f49921cbb9fa8` sukses: lint, typecheck, unit test, build, database assertions, serta concurrency tests.
+- Audit pasca-merge menemukan ketidaksesuaian UI: RPC membatasi input guru dari hari ini sampai 7 hari sebelumnya, tetapi halaman `/ruang-guru` selalu mengirim tanggal hari ini dan tidak menyediakan date picker.
+- Perbaikan pemilihan tanggal sedang dikerjakan pada branch `fix/teacher-attendance-date-range`. Pilihan tanggal divalidasi di server dan batas database tetap menjadi enforcement utama.
+- Browser QA absensi dengan akun guru wali kelas, admin, dan siswa masih belum dilakukan. Migrasi absensi belum diterapkan ke Supabase production; tidak ada perubahan production database pada pekerjaan ini.
