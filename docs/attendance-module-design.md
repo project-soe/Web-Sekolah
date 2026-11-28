@@ -38,7 +38,7 @@
 ## Batas tahap pertama dan tindak lanjut
 
 - Belum ada absensi per mata pelajaran, jadwal pelajaran, GPS/biometrik, notifikasi orang tua, kalender libur, atau ekspor.
-- Rekap harian tetap tersedia. Rekap bulanan per rombel sedang diimplementasikan pada branch `feat/attendance-monthly-summary` melalui RPC admin yang hanya menghitung sesi `submitted`/`locked`.
+- Rekap harian dan rekap bulanan per rombel sudah tersedia pada main melalui RPC admin yang hanya menghitung sesi `submitted`/`locked`.
 - Definisi persentase pada tahap ini: `(Hadir + Terlambat) / seluruh status tercatat × 100`; status draft dikecualikan. Filter bulan tersedia pada rekap admin; ekspor laporan belum termasuk tahap ini.
 - Perlu browser QA dengan akun guru yang benar-benar terhubung ke wali kelas, admin, dan siswa.
 - Migrasi 20261127330000_student_daily_attendance.sql belum diterapkan ke Supabase production. Periksa seluruh migration list remote dan tinjau SQL sebelum deployment.
@@ -50,4 +50,12 @@
 - Hanya sesi berstatus `submitted` atau `locked` dihitung. Draft dan hari tanpa sesi tidak menjadi denominator.
 - Hasil per rombel mencakup jumlah sesi, jumlah catatan siswa-hari, hitungan Hadir/Terlambat/Sakit/Izin/Alpa, dan persentase hadir.
 - Persentase dihitung sebagai `(present + late) / seluruh entri status tercatat × 100`, dibulatkan dua desimal. Terlambat dihitung sebagai hadir.
-- Implementasi berada pada branch `feat/attendance-monthly-summary`; migration belum diterapkan pada Supabase production sampai pemeriksaan riwayat dan persetujuan deployment.
+- PR #16 sudah merged dan pengguna mengonfirmasi migrasi `20261128090000_student_attendance_monthly_summary.sql` telah diterapkan ke Supabase production (2026-11-28).
+
+
+## Ekspor rekap bulanan — 2026-11-28
+- Ekspor CSV sedang dikerjakan pada branch `feat/attendance-monthly-csv-export`.
+- Endpoint direncanakan di `/api/admin/absensi/export?month=YYYY-MM`; hanya sesi dengan permission `attendance:view_all` dapat mengunduh.
+- Data diambil dari RPC `admin_attendance_monthly_summary`, sehingga definisi angka ekspor sama dengan dashboard.
+- CSV menggunakan UTF-8 BOM, escaping nilai, dan mitigasi formula injection pada teks untuk mengurangi risiko saat dibuka di spreadsheet.
+- Tidak memerlukan migrasi database baru; CI dan browser QA menunggu.
