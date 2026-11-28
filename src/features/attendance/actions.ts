@@ -11,7 +11,7 @@ type AttendanceEntryInput = { student_id: string; status: string; note: string |
 const attendanceStatuses = new Set(["present", "late", "sick", "excused", "absent"]);
 
 function isCalendarDate(value: string): boolean {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
+  if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)) return false;
   const [year, month, day] = value.split("-").map(Number);
   const parsed = new Date(Date.UTC(year, month - 1, day));
   return parsed.getUTCFullYear() === year
@@ -22,7 +22,7 @@ function isCalendarDate(value: string): boolean {
 async function persistAttendance(formData: FormData, submit: boolean): Promise<void> {
   const classGroupId = String(formData.get("class_group_id") ?? "");
   const attendanceDate = String(formData.get("attendance_date") ?? "");
-  if (!/^[0-9a-f-]{36}$/i.test(classGroupId) || !/^\d{4}-\d{2}-\d{2}$/.test(attendanceDate)) {
+  if (!/^[0-9a-f-]{36}$/i.test(classGroupId) || !isCalendarDate(attendanceDate)) {
     redirect("/ruang-guru?error=validasi");
   }
   const session = await getSession();
