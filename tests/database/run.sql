@@ -1335,6 +1335,18 @@ from public.students st
 join public.student_class_enrollments en on en.student_id=st.id
 where st.id in ('60000000-0000-4000-8000-000000000016','60000000-0000-4000-8000-000000000017');
 
+-- A draft session in the same month must not affect the finalized monthly summary.
+insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status)
+values ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-11-13','draft');
+insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status)
+select
+ case when st.id='60000000-0000-4000-8000-000000000016' then '80000000-0000-4000-8000-000000000003'::uuid else '80000000-0000-4000-8000-000000000004'::uuid end,
+ '70000000-0000-4000-8000-000000000002',st.id,en.id,
+ case when st.id='60000000-0000-4000-8000-000000000016' then 'late' else 'sick' end
+from public.students st
+join public.student_class_enrollments en on en.student_id=st.id
+where st.id in ('60000000-0000-4000-8000-000000000016','60000000-0000-4000-8000-000000000017');
+
 select set_config('test.permissions','attendance:view_all',false);
 set role authenticated;
 do $attendance_monthly$
@@ -1344,6 +1356,7 @@ begin
  if result.class_group_id <> '20000000-0000-4000-8000-000000000001'
    or result.session_count <> 1 or result.student_day_count <> 2
    or result.present_count <> 1 or result.absent_count <> 1
+   or result.late_count <> 0 or result.sick_count <> 0 or result.excused_count <> 0
    or result.attendance_percentage <> 50.00 then
   raise exception 'Monthly attendance aggregation returned unexpected values: %', row_to_json(result);
  end if;
