@@ -1313,7 +1313,7 @@ begin
 end;
 $attendance_migration$;
 
-\\echo '15b. Verify attendance teacher draft, submit, admin correction, and lock lifecycle'
+\echo '15b. Verify attendance teacher draft, submit, admin correction, and lock lifecycle'
 reset role;
 insert into public.students (id, nis, full_name, gender, enrollment_year)
 values
