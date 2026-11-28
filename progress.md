@@ -2829,3 +2829,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Database regression tests mencakup undangan dicabut/kedaluwarsa/sudah diklaim, email Auth belum diverifikasi, akun yang sudah memiliki role, dan profil guru yang sudah tertaut.
 - Perbaikan fixture memastikan role uji benar-benar tersimpan sebelum skenario authenticated dijalankan. Tidak ada migrasi baru, perubahan database production, atau deployment.
 - Tindak lanjut tersisa: browser QA alur undangan guru (token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun existing-role, duplikasi link, dan redirect role), serta verifikasi migration `20261124360000_teacher_account_invitations.sql` pada project Supabase Website Sekolah setelah pemeriksaan migration history dan backup.
+
+## 2026-11-28 — Dokumentasi QA lanjutan setelah PR #24
+- PR #24 dokumentasi regression test undangan guru sudah merged ke `main`; pengguna mengonfirmasi sukses.
+- Merge commit PR #24: `9b880232c038fe96f4141cb5fdcbce9ba6f9e914`.
+- Audit ulang migrasi `20261124360000_teacher_account_invitations.sql`: token disimpan sebagai SHA-256, masa berlaku 24 jam, email diverifikasi dan dicocokkan, klaim mengunci baris undangan, dan pemeriksaan akun/role/link dilakukan di database.
+- Tidak dilakukan koneksi atau perubahan pada Supabase production. Status penerapan migrasi masih harus diverifikasi setelah persetujuan eksplisit dan pemeriksaan project/migration history.
+- Langkah paling dekat: browser QA manual alur undangan guru; setelah itu browser QA absensi yang masih tertunda. Kalender pendidikan pada PR #2 adalah implementasi lama yang tidak boleh digabung tanpa audit kompatibilitas terhadap modul absensi harian yang kini ada di main.
