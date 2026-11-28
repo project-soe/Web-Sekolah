@@ -1,3 +1,8 @@
+### Hardening server action absensi guru — 2026-11-28
+- Input tanggal kini harus merupakan tanggal kalender nyata; status siswa dibatasi ke nilai domain, ID siswa harus UUID, field siswa duplikat ditolak, dan catatan maksimal 500 karakter.
+- Regression test server action guru mencakup validasi input, autentikasi/permission, payload RPC, serta urutan penyimpanan draft sebelum submit.
+- Perubahan hanya pada validasi server dan unit tests; tidak ada migrasi atau perubahan database production.
+
 ### Hardening validasi lock/unlock absensi — 2026-11-28
 - Server action kini menolak nilai `locked` selain literal `true`/`false`, agar input malformed tidak ditafsirkan sebagai unlock.
 - Alasan unlock wajib 5–500 karakter; alasan lock opsional dan maksimal 500 karakter.
