@@ -354,7 +354,7 @@ $$;
 select set_config('test.permissions', 'classes:view,classes:create,classes:update,students:view,students:create,students:update', false);
 
 \echo 'Verify withdrawal closes active enrollment, releases capacity, and preserves history'
-do $
+do $$
 declare
   enrollment_id uuid;
   closed_count integer;
@@ -415,7 +415,7 @@ begin
     null;
   end;
 end;
-$;
+$$;
 
 insert into public.academic_years (id, name, start_date, end_date)
 values ('10000000-0000-4000-8000-000000000003', '2028/2029', '2028-07-01', '2029-06-30');
