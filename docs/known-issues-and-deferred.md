@@ -21,7 +21,10 @@
 - [ ] Browser QA admin lanjutan: koreksi dengan alasan, lock dan unlock.
 - [ ] Browser QA Portal Siswa: hanya riwayat siswa yang sedang login yang tampil.
 - [ ] Verifikasi migration list remote, review SQL, dan pastikan backup sebelum menerapkan 20261127330000_student_daily_attendance.sql ke Supabase production. Migrasi belum diterapkan.
-- [ ] Tahap lanjutan: rekap bulanan/persentase, filter periode, dan ekspor (perlu keputusan definisi persentase kehadiran); kalender libur dan absensi per mata pelajaran tetap opsi pengembangan berikutnya.
+- [x] Rekap bulanan per rombel, filter bulan, distribusi status, dan persentase hadir sudah merged melalui PR #16; pengguna mengonfirmasi migration `20261128090000_student_attendance_monthly_summary.sql` sudah dideploy.
+- [ ] Browser QA rekap bulanan: ganti bulan, validasi angka per rombel, dan pastikan draft tidak masuk statistik.
+- [ ] Ekspor CSV rekap bulanan sedang dikerjakan pada branch `feat/attendance-monthly-csv-export`; uji unduh dan isi file setelah merge/deploy.
+- [ ] Kalender libur dan absensi per mata pelajaran tetap opsi pengembangan berikutnya.
 
 ## 3. Undangan akun guru
 
@@ -49,3 +52,9 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti: hasil browser dari 
 
 - Rancangan dan keputusan domain: attendance-module-design.md.
 - Catatan serah terima: progress.md.
+
+
+### Pembaruan 2026-11-28 — Rekap bulanan
+- PR #15 dan PR #16 telah merged; pengguna mengonfirmasi CI #375 hijau dan migrasi rekap bulanan sudah dideploy.
+- Rekap bulanan dan definisi persentase tidak lagi menjadi pekerjaan implementasi tertunda; browser QA bulan/angka tetap menunggu.
+- Ekspor CSV sedang dikerjakan pada branch `feat/attendance-monthly-csv-export`.
