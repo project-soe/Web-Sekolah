@@ -2798,3 +2798,7 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
  pada blok test hasil integrasi; diperbaiki pada commit lanjutan dan menunggu CI ulang.
 - Tidak ada migrasi production yang dijalankan.
 
+## 2026-11-28 — Penguatan regression test arsip siswa
+- Menambahkan skenario database untuk memastikan arsip ditolak jika siswa masih memiliki penempatan kelas aktif, akun Portal Siswa tertaut, atau undangan Portal Siswa yang belum kedaluwarsa.
+- Menambahkan skenario lifecycle: tutup penempatan melalui RPC withdrawn, arsipkan siswa, lalu pastikan enrollment, histori kelas, dan pelepasan kapasitas tetap terjaga.
+- Pengujian production/browser belum dilakukan. Migrasi 20261127320000_student_archive.sql tidak dijalankan pada Supabase production.
