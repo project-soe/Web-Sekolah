@@ -310,7 +310,7 @@ reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
 select set_config('test.permissions', 'classes:update,students:update', false);
 set role authenticated;
-do $
+do $$
 declare
   affected_rows integer;
 begin
@@ -325,14 +325,14 @@ begin
   get diagnostics affected_rows = row_count;
   if affected_rows <> 0 then raise exception 'Unauthorized enrollment update affected % rows', affected_rows; end if;
 end;
-$;
+$$;
 reset role;
-do $
+do $$
 begin
   if exists (select 1 from public.student_class_enrollments where student_id = '60000000-0000-4000-8000-000000000004' and academic_year_id = '10000000-0000-4000-8000-000000000001') then raise exception 'Unauthorized insert persisted'; end if;
   if not exists (select 1 from public.student_class_enrollments where student_id = '60000000-0000-4000-8000-000000000001' and academic_year_id = '10000000-0000-4000-8000-000000000001' and class_group_id = '20000000-0000-4000-8000-000000000002') then raise exception 'Unauthorized update changed class'; end if;
 end;
-$;
+$$;
 \echo '7. Verify atomic academic-year activation and rollback'
 do $$
 declare
