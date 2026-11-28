@@ -1504,6 +1504,60 @@ begin
  from public.my_teacher_attendance_roster((now() at time zone 'Asia/Jakarta')::date - 1) r
  where r.class_group_id='20000000-0000-4000-8000-000000000001';
 
+ -- Direct RPC calls must not bypass the payload contract enforced by the server action.
+ begin
+  perform public.save_class_attendance(
+   '20000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Jakarta')::date - 1,
+   null
+  );
+  raise exception 'NULL attendance payload unexpectedly accepted';
+ exception when invalid_parameter_value then null;
+ end;
+ begin
+  perform public.save_class_attendance(
+   '20000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Jakarta')::date - 1,
+   '{"student_id":"60000000-0000-4000-8000-000000000022"}'::jsonb
+  );
+  raise exception 'Non-array attendance payload unexpectedly accepted';
+ exception when invalid_parameter_value then null;
+ end;
+ begin
+  perform public.save_class_attendance(
+   '20000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Jakarta')::date - 1,
+   jsonb_build_array(
+    jsonb_build_object('student_id','60000000-0000-4000-8000-000000000022','status','present'),
+    jsonb_build_object('student_id','60000000-0000-4000-8000-000000000022','status','absent')
+   )
+  );
+  raise exception 'Duplicate student entries unexpectedly accepted';
+ exception when check_violation then null;
+ end;
+ begin
+  perform public.save_class_attendance(
+   '20000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Jakarta')::date - 1,
+   jsonb_build_array(jsonb_build_object(
+    'student_id','60000000-0000-4000-8000-000000000022','status','unknown'
+   ))
+  );
+  raise exception 'Unknown attendance status unexpectedly accepted';
+ exception when check_violation then null;
+ end;
+ begin
+  perform public.save_class_attendance(
+   '20000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Jakarta')::date - 1,
+   jsonb_build_array(jsonb_build_object(
+    'student_id','60000000-0000-4000-8000-000000000022','status','present','note',repeat('x',501)
+   ))
+  );
+  raise exception 'Oversized attendance note unexpectedly accepted';
+ exception when invalid_parameter_value then null;
+ end;
+
  v_session:=public.save_class_attendance(
   '20000000-0000-4000-8000-000000000001',
   (now() at time zone 'Asia/Jakarta')::date - 1,
