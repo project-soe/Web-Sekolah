@@ -1502,7 +1502,8 @@ begin
   raise exception 'Attendance correction or original second entry was not preserved';
  end if;
  if (select count(*) from public.attendance_entry_history
-     where entry_id in (select id from public.attendance_entries where session_id=v_session)) <> 3 then
+     where entry_id in (select id from public.attendance_entries where session_id=v_session))
+    <> (select count(*) + 1 from public.attendance_entries where session_id=v_session) then
   raise exception 'Expected one correction audit and one unlock audit per entry';
  end if;
  if not exists (
