@@ -1170,6 +1170,20 @@ reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000011', false);
 select set_config('test.permissions', '', false);
 set role authenticated;
+do $teacher_existing_role_fixture$
+begin
+  if auth.uid() is distinct from '50000000-0000-4000-8000-000000000011'::uuid then
+    raise exception 'Existing-role fixture JWT subject mismatch: %', auth.uid();
+  end if;
+  if not exists (
+    select 1 from public.user_roles
+    where user_id = '50000000-0000-4000-8000-000000000011'
+  ) then
+    raise exception 'Existing-role fixture was not persisted in public.user_roles';
+  end if;
+end;
+$teacher_existing_role_fixture$;
+
 do $teacher_invitation_rejected$
 begin
   begin
