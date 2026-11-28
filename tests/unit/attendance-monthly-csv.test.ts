@@ -53,6 +53,25 @@ describe("buildMonthlyAttendanceCsv", () => {
     },
   );
 
+  it.each(["\\u00a0=1+1", "\\u3000@SUM(1,1)", "\\uFEFF+1"])(
+    "neutralizes formula prefixes after Unicode whitespace (%j)",
+    (value) => {
+      const csv = buildMonthlyAttendanceCsv([{
+        class_name: value,
+        academic_year: "2026/2027",
+        session_count: 1,
+        student_day_count: 1,
+        present_count: 1,
+        late_count: 0,
+        sick_count: 0,
+        excused_count: 0,
+        absent_count: 0,
+        attendance_percentage: 100,
+      }]);
+      expect(csv).toContain('"\\'" + value + '"');
+    },
+  );
+
   it("neutralizes formula-like values in numeric fields received as strings", () => {
     const csv = buildMonthlyAttendanceCsv([{
       class_name: "X RPL",
