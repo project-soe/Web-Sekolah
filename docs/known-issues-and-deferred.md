@@ -1,3 +1,8 @@
+### Validasi payload RPC absensi pada database — 2026-11-28
+- RPC `save_class_attendance` diperketat agar payload NULL/non-array, elemen non-object, siswa duplikat, status tidak dikenal, dan catatan lebih dari 500 karakter ditolak walaupun RPC dipanggil langsung.
+- Regression tests database mencakup bypass server action untuk kasus payload malformed.
+- Migration baru hanya ada di repository/PR; belum diterapkan ke Supabase production. Rekonsiliasi migration history, backup, dan persetujuan tetap wajib.
+
 ### Hardening server action absensi guru — 2026-11-28
 - Input tanggal kini harus merupakan tanggal kalender nyata; status siswa dibatasi ke nilai domain, ID siswa harus UUID, field siswa duplikat ditolak, dan catatan maksimal 500 karakter.
 - Regression test server action guru mencakup validasi input, autentikasi/permission, payload RPC, serta urutan penyimpanan draft sebelum submit.
