@@ -8,6 +8,17 @@ import { createClient } from "@/lib/supabase/server";
 
 type AttendanceEntryInput = { student_id: string; status: string; note: string | null };
 
+const attendanceStatuses = new Set(["present", "late", "sick", "excused", "absent"]);
+
+function isCalendarDate(value: string): boolean {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return parsed.getUTCFullYear() === year
+    && parsed.getUTCMonth() === month - 1
+    && parsed.getUTCDate() === day;
+}
+
 async function persistAttendance(formData: FormData, submit: boolean): Promise<void> {
   const classGroupId = String(formData.get("class_group_id") ?? "");
   const attendanceDate = String(formData.get("attendance_date") ?? "");
@@ -21,15 +32,22 @@ async function persistAttendance(formData: FormData, submit: boolean): Promise<v
   }
 
   const entries: AttendanceEntryInput[] = [];
+  const seenStudentIds = new Set<string>();
   for (const [key, value] of formData.entries()) {
     if (!key.startsWith("status:")) continue;
     const studentId = key.slice("status:".length);
-    if (!/^[0-9a-f-]{36}$/i.test(studentId)) continue;
-    entries.push({
-      student_id: studentId,
-      status: String(value),
-      note: String(formData.get("note:" + studentId) ?? "").trim() || null,
-    });
+    const status = String(value);
+    const note = String(formData.get("note:" + studentId) ?? "").trim();
+    if (
+      !/^[0-9a-f-]{36}$/i.test(studentId) ||
+      seenStudentIds.has(studentId) ||
+      (status !== "" && !attendanceStatuses.has(status)) ||
+      note.length > 500
+    ) {
+      redirect("/ruang-guru?date=" + encodeURIComponent(attendanceDate) + "&error=validasi");
+    }
+    seenStudentIds.add(studentId);
+    entries.push({ student_id: studentId, status, note: note || null });
   }
 
   const supabase = await createClient();
