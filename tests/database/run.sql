@@ -1397,14 +1397,33 @@ do $attendance_teacher_lifecycle$
 declare
  v_session uuid;
  v_roster_count integer;
+ v_fixture_count integer;
+ v_complete_entries jsonb;
 begin
- select count(*) into v_roster_count
+ select count(*),count(*) filter (where r.student_id in (
+   '60000000-0000-4000-8000-000000000022','60000000-0000-4000-8000-000000000023'
+ ))
+ into v_roster_count,v_fixture_count
  from public.my_teacher_attendance_roster((now() at time zone 'Asia/Jakarta')::date - 1) r
- where r.class_group_id='20000000-0000-4000-8000-000000000001'
-   and r.student_id in ('60000000-0000-4000-8000-000000000022','60000000-0000-4000-8000-000000000023');
- if v_roster_count <> 2 then
-  raise exception 'Linked homeroom teacher roster returned % fixture students, expected 2',v_roster_count;
+ where r.class_group_id='20000000-0000-4000-8000-000000000001';
+ if v_fixture_count <> 2 then
+  raise exception 'Linked homeroom teacher roster returned % fixture students, expected 2',v_fixture_count;
  end if;
+ if v_roster_count < 2 then
+  raise exception 'Linked homeroom teacher roster returned only % active students',v_roster_count;
+ end if;
+
+ select jsonb_agg(jsonb_build_object(
+   'student_id',r.student_id,
+   'status',case
+     when r.student_id='60000000-0000-4000-8000-000000000023' then 'sick'
+     else 'present'
+   end,
+   'note',case when r.student_id='60000000-0000-4000-8000-000000000023' then 'Surat keterangan' else null end
+ ))
+ into v_complete_entries
+ from public.my_teacher_attendance_roster((now() at time zone 'Asia/Jakarta')::date - 1) r
+ where r.class_group_id='20000000-0000-4000-8000-000000000001';
 
  v_session:=public.save_class_attendance(
   '20000000-0000-4000-8000-000000000001',
@@ -1416,7 +1435,7 @@ begin
  begin
   perform public.submit_class_attendance(v_session);
   raise exception 'Incomplete attendance draft was unexpectedly submitted';
- exception when sqlstate 'P0001' then
+ exception when check_violation then
   if sqlerrm <> 'Semua siswa harus memiliki status sebelum absensi dikirim' then
    raise;
   end if;
@@ -1425,10 +1444,7 @@ begin
  perform public.save_class_attendance(
   '20000000-0000-4000-8000-000000000001',
   (now() at time zone 'Asia/Jakarta')::date - 1,
-  jsonb_build_array(
-   jsonb_build_object('student_id','60000000-0000-4000-8000-000000000022','status','present'),
-   jsonb_build_object('student_id','60000000-0000-4000-8000-000000000023','status','sick','note','Surat keterangan')
-  )
+  v_complete_entries
  );
  perform public.submit_class_attendance(v_session);
 
