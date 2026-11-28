@@ -4,6 +4,12 @@
 
 **Terakhir diperbarui:** 2026-11-28
 
+### Pembaruan browser QA undangan guru — 2026-11-28
+- [x] Happy path: pengguna berhasil membuat undangan, menyelesaikan verifikasi OTP, dan masuk ke `/ruang-guru`.
+- [ ] Edge-case browser: token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun existing-role, tautan duplikat, dan login ulang setelah logout.
+- [ ] Verifikasi migrasi production `20261124360000_teacher_account_invitations.sql` tetap terpisah dan belum dilakukan.
+- Prioritas QA berikutnya berpindah ke modul Absensi guru/admin/siswa, kemudian rekap bulanan dan ekspor CSV.
+
 ### Pembaruan PR #24 — 2026-11-28
 - PR #24 dokumentasi status regression test undangan guru sudah merged; merge commit `9b880232c038fe96f4141cb5fdcbce9ba6f9e914`.
 - Audit statis migrasi undangan guru telah dilakukan. Penerapan production belum diverifikasi dan tidak ada koneksi/perubahan database production.
@@ -42,7 +48,8 @@
 ## 3. Undangan akun guru
 
 - [x] Regression test database undangan guru: token dicabut/kedaluwarsa/telah dipakai, email belum diverifikasi, akun sudah memiliki role, dan profil yang sudah tertaut tidak dapat diundang ulang; PR #23 sudah merged dan CI hijau dikonfirmasi pengguna.
-- [ ] Browser QA token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun yang sudah memiliki role, duplikasi link, serta redirect role.
+- [x] Browser QA happy-path: undangan berhasil dibuat, OTP diverifikasi, dan akun berhasil masuk ke `/ruang-guru` (dikonfirmasi pengguna, 2026-11-28).
+- [ ] Browser QA edge-case: token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun yang sudah memiliki role, tautan duplikat, dan redirect role.
 - [ ] Verifikasi migrasi 20261124360000_teacher_account_invitations.sql pada Supabase production.
 - Tautan undangan saat ini disalin admin dan dikirim melalui kanal resmi; belum ada email otomatis.
 

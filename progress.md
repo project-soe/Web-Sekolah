@@ -5,6 +5,7 @@
 ## Status saat ini
 
 - **Tanggal pembaruan:** 2026-11-28.
+- Browser QA happy-path undangan guru dikonfirmasi pengguna: undangan dibuat, OTP berhasil diverifikasi, dan akun berhasil masuk ke `/ruang-guru`. Edge-case undangan dan verifikasi migrasi production tetap tertunda.
 - PR #17 ekspor CSV absensi bulanan sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau. Browser QA unduhan masih tertunda.
 - PR #18 regression test lifecycle withdrawn sudah merged (merge commit `42b884b39db0b2c4a94ccf540edd36c1f7954d9d`); CI #393 sukses. Browser QA alur withdrawn masih tertunda.
 - **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), PR #14 (idempotensi migrasi arsip siswa), PR #15 (pembaruan dokumentasi QA), dan PR #16 (rekap bulanan absensi), PR #17 (ekspor CSV), dan PR #18 (regression test lifecycle withdrawn) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
@@ -2836,3 +2837,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Audit ulang migrasi `20261124360000_teacher_account_invitations.sql`: token disimpan sebagai SHA-256, masa berlaku 24 jam, email diverifikasi dan dicocokkan, klaim mengunci baris undangan, dan pemeriksaan akun/role/link dilakukan di database.
 - Tidak dilakukan koneksi atau perubahan pada Supabase production. Status penerapan migrasi masih harus diverifikasi setelah persetujuan eksplisit dan pemeriksaan project/migration history.
 - Langkah paling dekat: browser QA manual alur undangan guru; setelah itu browser QA absensi yang masih tertunda. Kalender pendidikan pada PR #2 adalah implementasi lama yang tidak boleh digabung tanpa audit kompatibilitas terhadap modul absensi harian yang kini ada di main.
+
+
+## 2026-11-28 — Browser QA happy-path undangan akun guru
+- Pengguna mengonfirmasi simulasi undangan guru berjalan mulus: proses aktivasi/OTP berhasil dan akun dapat masuk ke `/ruang-guru`.
+- Ini menutup verifikasi browser untuk alur normal saja. Token salah/kedaluwarsa/dicabut/dipakai ulang, email tidak cocok/belum terverifikasi, akun existing-role, penggunaan tautan duplikat, dan login ulang setelah logout belum dikonfirmasi.
+- Migrasi `20261124360000_teacher_account_invitations.sql` pada Supabase production masih belum diverifikasi; tidak ada akses atau perubahan database production pada QA ini.
+- Fokus QA berikutnya: modul Absensi (pencatatan guru, koreksi dan lock/unlock admin, riwayat Portal Siswa, rekap bulanan, serta ekspor CSV).
