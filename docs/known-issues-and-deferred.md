@@ -4,6 +4,11 @@
 
 **Terakhir diperbarui:** 2026-11-28
 
+### Pembaruan PR #24 — 2026-11-28
+- PR #24 dokumentasi status regression test undangan guru sudah merged; merge commit `9b880232c038fe96f4141cb5fdcbce9ba6f9e914`.
+- Audit statis migrasi undangan guru telah dilakukan. Penerapan production belum diverifikasi dan tidak ada koneksi/perubahan database production.
+- Prioritas QA berikutnya: alur undangan guru, lalu absensi guru/admin/siswa. Migrasi production tetap memerlukan pemeriksaan migration history, backup, dan persetujuan eksplisit.
+
 ### Pembaruan PR #23 — 2026-11-28
 - Regression test guard undangan akun guru sudah merged melalui PR #23; fixture role existing-account diperbaiki agar benar-benar tersimpan sebelum pengujian authenticated.
 - Item database regression test ditutup. Browser QA dan verifikasi migrasi production tetap tertunda; tidak ada perubahan database production.
