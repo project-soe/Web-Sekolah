@@ -354,7 +354,9 @@ $$;
 select set_config('test.permissions', 'classes:view,classes:create,classes:update,students:view,students:create,students:update', false);
 
 \echo 'Verify withdrawal closes active enrollment, releases capacity, and preserves history'
-do $$
+insert into public.students (id, nis, nisn, full_name, gender, department_id, enrollment_year)
+values ('60000000-0000-4000-8000-000000000006', 'NIS-006', '1234567895', 'Siswa Uji Withdrawal', 'female', '30000000-0000-4000-8000-000000000001', 2027);
+do $
 declare
   v_enrollment_id uuid;
   closed_count integer;
@@ -363,7 +365,7 @@ declare
 begin
   insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
   values (
-    '60000000-0000-4000-8000-000000000004',
+    '60000000-0000-4000-8000-000000000006',
     '10000000-0000-4000-8000-000000000002',
     '20000000-0000-4000-8000-000000000003'
   ) returning id into v_enrollment_id;
