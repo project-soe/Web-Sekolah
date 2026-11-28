@@ -18,9 +18,10 @@ export function LoginForm() {
       </Field>
       {state.error && <p role="alert" className="text-sm text-danger">{state.error}</p>}
       <Button type="submit" size="lg" loading={pending}>Masuk</Button>
-      <p className="text-center text-sm text-muted-foreground">
-        Siswa belum memiliki akun? <Link href="/portal/daftar" className="font-medium text-primary hover:underline">Daftar Portal Siswa</Link>
-      </p>
+      <div className="space-y-2 text-center text-sm text-muted-foreground">
+        <p>Siswa belum memiliki akun? <Link href="/portal/daftar" className="font-medium text-primary hover:underline">Daftar Portal Siswa</Link></p>
+        <p>Masuk sebagai guru? <Link href="/guru/masuk" className="font-medium text-primary hover:underline">Login Guru</Link></p>
+      </div>
     </form>
   );
 }
