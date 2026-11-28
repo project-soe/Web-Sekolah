@@ -356,17 +356,17 @@ select set_config('test.permissions', 'classes:view,classes:create,classes:updat
 \echo 'Verify withdrawal closes active enrollment, releases capacity, and preserves history'
 do $$
 declare
-  enrollment_id uuid;
+  v_enrollment_id uuid;
   closed_count integer;
   history_count integer;
-  actor_id uuid := '50000000-0000-4000-8000-000000000001';
+  v_actor_id uuid := '50000000-0000-4000-8000-000000000001';
 begin
   insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
   values (
     '60000000-0000-4000-8000-000000000004',
     '10000000-0000-4000-8000-000000000002',
     '20000000-0000-4000-8000-000000000003'
-  ) returning id into enrollment_id;
+  ) returning id into v_enrollment_id;
 
   closed_count := public.transition_student_status(
     '60000000-0000-4000-8000-000000000004', 'withdrawn'
@@ -382,7 +382,7 @@ begin
 
   if not exists (
     select 1 from public.student_class_enrollments
-    where id = enrollment_id and ended_at is not null and ended_by = actor_id
+    where id = v_enrollment_id and ended_at is not null and ended_by = v_actor_id
   ) then
     raise exception 'Withdrawal did not retain and close the enrollment with the trusted actor';
   end if;
@@ -393,7 +393,7 @@ begin
   end if;
 
   select count(*) into history_count
-  from public.student_class_history where student_class_history.enrollment_id = enrollment_id;
+  from public.student_class_history where student_class_history.v_enrollment_id = v_enrollment_id;
   if history_count <> 1 then
     raise exception 'Withdrawal should preserve the original enrollment history, got % rows', history_count;
   end if;
@@ -401,7 +401,7 @@ begin
   select count(*) into history_count
   from public.student_status_history
   where student_id = '60000000-0000-4000-8000-000000000004'
-    and old_status = 'active' and new_status = 'withdrawn' and changed_by = actor_id;
+    and old_status = 'active' and new_status = 'withdrawn' and changed_by = v_actor_id;
   if history_count <> 1 then
     raise exception 'Withdrawal did not create the expected status audit history';
   end if;
