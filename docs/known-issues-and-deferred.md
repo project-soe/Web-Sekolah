@@ -32,6 +32,7 @@
 
 ## 3. Undangan akun guru
 
+- [x] Regression test database undangan guru: token dicabut/kedaluwarsa/telah dipakai, email belum diverifikasi, akun sudah memiliki role, dan profil yang sudah tertaut tidak dapat diundang ulang.
 - [ ] Browser QA token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun yang sudah memiliki role, duplikasi link, serta redirect role.
 - [ ] Verifikasi migrasi 20261124360000_teacher_account_invitations.sql pada Supabase production.
 - Tautan undangan saat ini disalin admin dan dikirim melalui kanal resmi; belum ada email otomatis.
