@@ -4,6 +4,13 @@
 
 ## Status saat ini
 
+## 2026-11-28 — PR #29 merged: attendance RPC lifecycle tests
+- PR #29 sudah merged ke `main` dengan merge commit `f45800aeff56e0ca512f9cabd7b506ea1090cad6`; pengguna mengonfirmasi CI #427 hijau sebelum merge.
+- Database integration tests sekarang mencakup roster wali kelas, draft parsial yang tidak dapat dikirim, submit lengkap, larangan edit guru setelah submit, koreksi admin beserta audit nilai lama/baru dan alasan, serta lock/unlock dan larangan koreksi saat terkunci.
+- Perubahan PR #29 hanya tests dan dokumentasi; tidak ada migrasi baru, akses/perubahan Supabase production, atau deployment database.
+- Tindak lanjut berikutnya: tambah regression assertion bahwa rekap bulanan mengabaikan sesi draft; browser QA koreksi/lock, riwayat Portal Siswa, rekap bulanan, dan CSV tetap menunggu.
+
+
 - **Tanggal pembaruan:** 2026-11-28.
 - Browser QA happy-path undangan guru dikonfirmasi pengguna: undangan dibuat, OTP berhasil diverifikasi, dan akun berhasil masuk ke `/ruang-guru`. PR #27 memperbaiki kontrol tanggal absensi guru dan petunjuk penugasan wali kelas. PR #28 sudah merged; pengguna mengonfirmasi seluruh browser test untuk form penempatan siswa dan tampilan menu Kelas berhasil.
 - PR #17 ekspor CSV absensi bulanan sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau. Browser QA unduhan masih tertunda.
