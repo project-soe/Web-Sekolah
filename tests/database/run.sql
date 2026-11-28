@@ -1384,8 +1384,10 @@ declare
  v_session uuid:=current_setting('test.attendance_session')::uuid;
  v_entry uuid;
 begin
- select id into v_entry from public.attendance_entries
- where session_id=v_session and student_id='60000000-0000-4000-8000-000000000022';
+ select entry_id into v_entry
+ from public.my_teacher_attendance_roster((now() at time zone 'Asia/Jakarta')::date - 1) r
+ where r.session_id=v_session and r.student_id='60000000-0000-4000-8000-000000000022';
+ if v_entry is null then raise exception 'Admin roster RPC did not return the submitted attendance entry'; end if;
  perform public.correct_attendance_entry(v_entry,'late','Datang pukul 07.20','Koreksi berdasarkan bukti piket');
 
  perform public.set_attendance_session_lock(v_session,true,null);
