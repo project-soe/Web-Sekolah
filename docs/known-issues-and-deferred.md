@@ -12,7 +12,8 @@
 - [ ] Browser QA penempatan individual melalui dashboard, termasuk akun tanpa permission `students:view`.
 - [ ] Uji kenaikan kelas massal pada tahun ajaran berikutnya, termasuk rollback saat kapasitas tidak cukup.
 - [ ] Uji kelulusan kelas XII, tanggal kelulusan, status akhir, dan riwayat status.
-- [ ] Verifikasi fitur arsip/pemulihan siswa setelah migrasi lengkap 20261127320000_student_archive.sql diterapkan. Kolom archived_at pernah ditambahkan manual; pastikan RPC dan trigger tersedia.
+- [x] Regression test database arsip: penolakan untuk siswa dengan penempatan aktif, akun Portal Siswa tertaut, atau undangan aktif; arsip setelah penempatan ditutup tetap mempertahankan enrollment dan histori.
+- [ ] Verifikasi migration `20261127320000_student_archive.sql` pada Supabase production (termasuk RPC dan trigger); lanjutkan browser QA arsip/pemulihan. Kolom `archived_at` pernah ditambahkan manual.
 
 ## 2. Modul Absensi Siswa
 
