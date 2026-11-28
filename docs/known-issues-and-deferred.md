@@ -23,7 +23,7 @@
 - [ ] Verifikasi migration list remote, review SQL, dan pastikan backup sebelum menerapkan 20261127330000_student_daily_attendance.sql ke Supabase production. Migrasi belum diterapkan.
 - [x] Rekap bulanan per rombel, filter bulan, distribusi status, dan persentase hadir sudah merged melalui PR #16; pengguna mengonfirmasi migration `20261128090000_student_attendance_monthly_summary.sql` sudah dideploy.
 - [ ] Browser QA rekap bulanan: ganti bulan, validasi angka per rombel, dan pastikan draft tidak masuk statistik.
-- [ ] Ekspor CSV rekap bulanan sedang dikerjakan pada branch `feat/attendance-monthly-csv-export`; uji unduh dan isi file setelah merge/deploy.
+- [x] Ekspor CSV rekap bulanan sudah merged melalui PR #17 (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); CI hijau dikonfirmasi pengguna.\n- [ ] Browser QA ekspor CSV: unduh dari dashboard, cocokkan isi dengan rekap bulan terpilih, dan buka file pada spreadsheet.
 - [ ] Kalender libur dan absensi per mata pelajaran tetap opsi pengembangan berikutnya.
 
 ## 3. Undangan akun guru
@@ -58,3 +58,8 @@ Pindahkan item dari daftar tertunda hanya setelah ada bukti: hasil browser dari 
 - PR #15 dan PR #16 telah merged; pengguna mengonfirmasi CI #375 hijau dan migrasi rekap bulanan sudah dideploy.
 - Rekap bulanan dan definisi persentase tidak lagi menjadi pekerjaan implementasi tertunda; browser QA bulan/angka tetap menunggu.
 - Ekspor CSV sedang dikerjakan pada branch `feat/attendance-monthly-csv-export`.
+
+
+### Pembaruan 2026-11-28 — Ekspor CSV dan lifecycle siswa
+- PR #17 ekspor CSV sudah merged; pengguna mengonfirmasi CI hijau. Browser QA unduhan dan isi file tetap tertunda.
+- Berikutnya ditambahkan regression test database untuk alur withdrawn: penutupan enrollment aktif, pelepasan kapasitas, serta retensi histori.

@@ -4,7 +4,7 @@
 
 ## Status saat ini
 
-- **Tanggal pembaruan:** 2026-11-28.
+- **Tanggal pembaruan:** 2026-11-28.\n- PR #17 ekspor CSV absensi bulanan sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau. Browser QA unduhan masih tertunda. Regression test database untuk lifecycle withdrawn sedang ditambahkan.
 - **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), PR #14 (idempotensi migrasi arsip siswa), PR #15 (pembaruan dokumentasi QA), dan PR #16 (rekap bulanan absensi) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
 - **CI:** PR #12 (run #367), PR #13 (termasuk run #371), dan PR #14 (run #370) dikonfirmasi pengguna seluruhnya hijau sebelum merge.
 - **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan tahap pertama Modul Absensi Siswa. Browser QA admin pada 2026-11-28 mengonfirmasi tab Absensi tampil dan rekap harian termuat; koreksi serta lock/unlock belum diuji. Pengguna mengonfirmasi PR #16 sudah merged dan migrasi rekap bulanan sudah dideploy.
@@ -1384,3 +1384,9 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Rekap bulanan menghitung sesi `submitted`/`locked`, distribusi status, dan persentase `(present + late) / seluruh entri × 100`; draft dikecualikan.
 - Pekerjaan berikutnya: ekspor CSV rekap bulanan. Branch `feat/attendance-monthly-csv-export` menambahkan endpoint terproteksi permission `attendance:view_all`, serializer CSV dengan BOM/escaping dan mitigasi formula injection, link unduh pada dashboard, serta unit tests. Menunggu CI dan review.
 - Browser QA rekap bulanan/unduh CSV belum dikonfirmasi. Tidak ada perubahan database production untuk ekspor.
+
+
+## 2026-11-28 — Ekspor CSV absensi bulanan
+- PR #17 sudah merged dengan merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`; pengguna mengonfirmasi CI hijau.
+- Endpoint ekspor mengambil data dari RPC rekap bulanan, menjaga konsistensi dengan dashboard, dan memerlukan `attendance:view_all`.
+- Belum ada migrasi database baru. Browser QA unduh dan validasi isi CSV masih tertunda.
