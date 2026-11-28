@@ -353,6 +353,70 @@ $$;
 
 select set_config('test.permissions', 'classes:view,classes:create,classes:update,students:view,students:create,students:update', false);
 
+\echo 'Verify withdrawal closes active enrollment, releases capacity, and preserves history'
+do $
+declare
+  enrollment_id uuid;
+  closed_count integer;
+  history_count integer;
+  actor_id uuid := '50000000-0000-4000-8000-000000000001';
+begin
+  insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
+  values (
+    '60000000-0000-4000-8000-000000000004',
+    '10000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000003'
+  ) returning id into enrollment_id;
+
+  closed_count := public.transition_student_status(
+    '60000000-0000-4000-8000-000000000004', 'withdrawn'
+  );
+  if closed_count <> 1 then
+    raise exception 'Withdrawal should close exactly one active-year enrollment, got %', closed_count;
+  end if;
+
+  if (select status from public.students
+      where id = '60000000-0000-4000-8000-000000000004') <> 'withdrawn' then
+    raise exception 'Withdrawal did not update the student status';
+  end if;
+
+  if not exists (
+    select 1 from public.student_class_enrollments
+    where id = enrollment_id and ended_at is not null and ended_by = actor_id
+  ) then
+    raise exception 'Withdrawal did not retain and close the enrollment with the trusted actor';
+  end if;
+
+  if (select enrolled_count from public.class_groups
+      where id = '20000000-0000-4000-8000-000000000003') <> 0 then
+    raise exception 'Withdrawal did not release the class capacity slot';
+  end if;
+
+  select count(*) into history_count
+  from public.student_class_history where student_class_history.enrollment_id = enrollment_id;
+  if history_count <> 1 then
+    raise exception 'Withdrawal should preserve the original enrollment history, got % rows', history_count;
+  end if;
+
+  select count(*) into history_count
+  from public.student_status_history
+  where student_id = '60000000-0000-4000-8000-000000000004'
+    and old_status = 'active' and new_status = 'withdrawn' and changed_by = actor_id;
+  if history_count <> 1 then
+    raise exception 'Withdrawal did not create the expected status audit history';
+  end if;
+
+  begin
+    perform public.transition_student_status(
+      '60000000-0000-4000-8000-000000000004', 'withdrawn'
+    );
+    raise exception 'Repeated withdrawal unexpectedly succeeded';
+  exception when check_violation then
+    null;
+  end;
+end;
+$;
+
 insert into public.academic_years (id, name, start_date, end_date)
 values ('10000000-0000-4000-8000-000000000003', '2028/2029', '2028-07-01', '2029-06-30');
 insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity)
