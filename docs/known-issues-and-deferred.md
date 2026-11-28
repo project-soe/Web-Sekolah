@@ -4,6 +4,14 @@
 
 **Terakhir diperbarui:** 2026-11-28
 
+### Temuan browser QA absensi guru — 2026-11-28
+- Pengguna berhasil masuk ke `/ruang-guru` melalui undangan admin, tetapi roster absensi kosong pada 2026-11-28.
+- Pengguna melaporkan pemilih tanggal selalu kembali ke 2026-11-28 ketika memilih tanggal 21–27 November.
+- Audit kode: roster hanya menampilkan rombel yang `class_groups.homeroom_teacher_id` cocok dengan `teacher_user_links.teacher_id` untuk akun login, serta siswa yang masih aktif dan memiliki enrollment aktif.
+- Admin dapat memeriksa penugasan melalui **Admin → Kelas → pilih rombel → Edit data kelas → Wali kelas**. Pastikan profil guru yang diundang dipilih dan siswa aktif sudah ditempatkan pada rombel.
+- PR perbaikan pemilih tanggal terkontrol dan pesan empty-state sedang disiapkan. Belum ada browser QA ulang.
+- Status migrasi dasar absensi perlu direkonsiliasi dengan `supabase migration list --remote`: migration rekap bulanan `20261128090000_student_attendance_monthly_summary.sql` sudah dikonfirmasi pengguna deployed, tetapi status remote migration dasar `20261127330000_student_daily_attendance.sql` belum tercatat ulang pada dokumen. Jangan menjalankan SQL/db push tanpa pemeriksaan history, backup, dan persetujuan eksplisit.
+
 ### Pembaruan browser QA undangan guru — 2026-11-28
 - [x] Happy path: pengguna berhasil membuat undangan, menyelesaikan verifikasi OTP, dan masuk ke `/ruang-guru`.
 - [ ] Edge-case browser: token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun existing-role, tautan duplikat, dan login ulang setelah logout.
@@ -35,11 +43,11 @@
 ## 2. Modul Absensi Siswa
 
 - [x] PR #12 sudah merged; CI #367 sukses pada head commit PR (lint, typecheck, unit test, build, database assertions, dan concurrency tests).
-- [ ] Browser QA pencatatan guru: kelas wali yang benar, draft parsial, submit lengkap, dan pemilihan tanggal hari ini hingga 7 hari sebelumnya. Pemilih tanggal sudah tersedia di main melalui PR #13; uji browser dengan akun wali kelas masih diperlukan.
+- [ ] Browser QA pencatatan guru: roster kelas wali yang benar, draft parsial, submit lengkap, dan pemilihan tanggal hari ini hingga 7 hari sebelumnya. Pengguna melaporkan roster kosong dan tanggal selalu kembali ke 28 November; perbaikan UI pemilih tanggal sedang dibuat pada PR #27.
 - [x] Browser QA admin: tab Absensi tampil di dashboard dan rekap harian termuat (dikonfirmasi pengguna, 2026-11-28).
 - [ ] Browser QA admin lanjutan: koreksi dengan alasan, lock dan unlock.
 - [ ] Browser QA Portal Siswa: hanya riwayat siswa yang sedang login yang tampil.
-- [ ] Verifikasi migration list remote, review SQL, dan pastikan backup sebelum menerapkan 20261127330000_student_daily_attendance.sql ke Supabase production. Migrasi belum diterapkan.
+- [ ] Rekonsiliasi migration list remote untuk `20261127330000_student_daily_attendance.sql` (jangan simpulkan belum diterapkan sebelum memeriksa history; migration rekap bulanan sudah dikonfirmasi deployed). Sebelum tindakan DB, review SQL, pastikan backup, dan minta persetujuan eksplisit.
 - [x] Rekap bulanan per rombel, filter bulan, distribusi status, dan persentase hadir sudah merged melalui PR #16; pengguna mengonfirmasi migration `20261128090000_student_attendance_monthly_summary.sql` sudah dideploy.
 - [ ] Browser QA rekap bulanan: ganti bulan, validasi angka per rombel, dan pastikan draft tidak masuk statistik.
 - [x] Ekspor CSV rekap bulanan sudah merged melalui PR #17 (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); CI hijau dikonfirmasi pengguna.\n- [ ] Browser QA ekspor CSV: unduh dari dashboard, cocokkan isi dengan rekap bulan terpilih, dan buka file pada spreadsheet.

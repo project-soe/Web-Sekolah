@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { logout } from "@/features/auth/actions";
 import { saveAttendanceDraft, submitAttendance } from "@/features/attendance/actions";
+import { AttendanceDatePicker } from "@/features/attendance/attendance-date-picker";
 import { requireTeacher } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
@@ -96,23 +97,12 @@ export default async function TeacherPortalPage({
         <p className="text-sm text-muted-foreground">
           Batas input: hari ini sampai 7 hari kalender ke belakang (Asia/Jakarta).
         </p>
-        <form method="get" className="flex flex-wrap items-end gap-3 pt-2">
-          <label className="grid gap-1 text-sm">
-            Tanggal absensi
-            <input
-              type="date"
-              name="date"
-              value={attendanceDate}
-              min={minDate}
-              max={today}
-              required
-              className="min-h-10 rounded-md border border-border bg-background px-3"
-            />
-          </label>
-          <button type="submit" className="min-h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
-            Tampilkan
-          </button>
-        </form>
+        <AttendanceDatePicker
+          key={attendanceDate}
+          initialDate={attendanceDate}
+          minDate={minDate}
+          maxDate={today}
+        />
       </section>
 
       {params.date && !validDate && (
@@ -120,11 +110,11 @@ export default async function TeacherPortalPage({
       )}
       {params.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger">{messages[params.error] ?? "Terjadi kesalahan."}</p>}
       {params.saved && <p role="status" className="rounded-lg border border-border bg-muted/40 p-3 text-sm">{params.saved === "terkirim" ? "Absensi berhasil dikirim." : "Draft absensi berhasil disimpan."}</p>}
-      {error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger">Gagal memuat roster absensi. Pastikan migrasi absensi sudah diterapkan.</p>}
+      {error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger">Gagal memuat roster absensi. Periksa status migrasi absensi dan akses RPC database.</p>}
 
       {!error && grouped.size === 0 && (
         <div className="rounded-xl border border-border p-6 text-sm text-muted-foreground">
-          Belum ada kelas wali yang ditugaskan ke akun ini, atau belum ada siswa aktif pada rombel.
+          Belum ada siswa aktif yang dapat ditampilkan. Admin perlu memastikan profil guru ini sudah dipilih sebagai Wali Kelas pada Admin → Kelas → pilih rombel → Edit data kelas, dan siswa aktif sudah ditempatkan pada rombel tersebut.
         </div>
       )}
 

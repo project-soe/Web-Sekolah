@@ -5,7 +5,7 @@
 ## Status saat ini
 
 - **Tanggal pembaruan:** 2026-11-28.
-- Browser QA happy-path undangan guru dikonfirmasi pengguna: undangan dibuat, OTP berhasil diverifikasi, dan akun berhasil masuk ke `/ruang-guru`. Edge-case undangan dan verifikasi migrasi production tetap tertunda.
+- Browser QA happy-path undangan guru dikonfirmasi pengguna: undangan dibuat, OTP berhasil diverifikasi, dan akun berhasil masuk ke `/ruang-guru`. Pada QA absensi berikutnya, pengguna melaporkan roster kosong dan pemilih tanggal selalu kembali ke 2026-11-28; investigasi penugasan wali kelas dan perbaikan pemilih tanggal sedang berjalan.
 - PR #17 ekspor CSV absensi bulanan sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau. Browser QA unduhan masih tertunda.
 - PR #18 regression test lifecycle withdrawn sudah merged (merge commit `42b884b39db0b2c4a94ccf540edd36c1f7954d9d`); CI #393 sukses. Browser QA alur withdrawn masih tertunda.
 - **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), PR #14 (idempotensi migrasi arsip siswa), PR #15 (pembaruan dokumentasi QA), dan PR #16 (rekap bulanan absensi), PR #17 (ekspor CSV), dan PR #18 (regression test lifecycle withdrawn) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
@@ -16,7 +16,7 @@
 - **Perbaikan lanjutan absensi:** pemilih tanggal guru (hari ini hingga 7 hari kalender sebelumnya), validasi server, dan retensi tanggal setelah submit/error sudah merged melalui PR #13.
 - **Rancangan dan keputusan domain:** `docs/attendance-module-design.md`.
 - **Daftar tertunda:** `docs/known-issues-and-deferred.md`.
-- **Database production:** migrasi absensi belum diterapkan. Periksa migration list remote, review SQL, pastikan backup, dan minta persetujuan eksplisit sebelum deployment. Jangan sentuh project Supabase kedua.
+- **Database production:** status migrasi dasar absensi perlu direkonsiliasi dengan migration history remote; pengguna sudah mengonfirmasi migrasi rekap bulanan deployed. Jangan jalankan SQL/db push tanpa pemeriksaan history, backup, dan persetujuan eksplisit. Jangan sentuh project Supabase kedua.
 - **Deployment aplikasi:** Cloudflare Workers/OpenNext (`wrangler.jsonc`).
 - **Aturan kerja:** jangan mengklaim build/typecheck/test/migrasi/browser QA berhasil tanpa bukti.
 
@@ -2844,3 +2844,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Ini menutup verifikasi browser untuk alur normal saja. Token salah/kedaluwarsa/dicabut/dipakai ulang, email tidak cocok/belum terverifikasi, akun existing-role, penggunaan tautan duplikat, dan login ulang setelah logout belum dikonfirmasi.
 - Migrasi `20261124360000_teacher_account_invitations.sql` pada Supabase production masih belum diverifikasi; tidak ada akses atau perubahan database production pada QA ini.
 - Fokus QA berikutnya: modul Absensi (pencatatan guru, koreksi dan lock/unlock admin, riwayat Portal Siswa, rekap bulanan, serta ekspor CSV).
+
+## 2026-11-28 — Temuan QA absensi guru dan perbaikan pemilih tanggal
+- Pengguna berhasil masuk ke `/ruang-guru` melalui undangan admin, tetapi roster kosong pada 2026-11-28 dan pemilih tanggal selalu kembali ke tanggal 28 ketika memilih rentang 21–28.
+- Audit kode menemukan query roster dibatasi oleh relasi `teacher_user_links` → `teachers` → `class_groups.homeroom_teacher_id`; roster juga hanya mengikutkan siswa aktif dengan enrollment aktif. Login guru yang sukses tidak otomatis berarti guru sudah ditetapkan sebagai wali kelas pada rombel.
+- Lokasi pemeriksaan penugasan admin: **Admin → Kelas → pilih rombel → Edit data kelas → Wali kelas**. Pastikan profil guru yang diundang dipilih dan rombel memiliki siswa aktif.
+- Branch `fix/teacher-attendance-date-picker` memindahkan filter tanggal ke client component terkontrol yang menavigasi ke query `?date=YYYY-MM-DD`, dan memperjelas empty-state agar admin tahu penugasan apa yang harus diperiksa.
+- Belum ada hasil CI atau browser QA ulang. Tidak ada perubahan migrasi, Supabase production, atau deployment.
+- Status migration dasar absensi harus diperiksa melalui `supabase migration list --remote`; pengguna sebelumnya mengonfirmasi migration rekap bulanan `20261128090000_student_attendance_monthly_summary.sql` deployed, sehingga catatan lama yang menyebut seluruh migrasi absensi belum diterapkan perlu direkonsiliasi.
