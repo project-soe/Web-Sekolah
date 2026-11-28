@@ -908,6 +908,74 @@ $teacher_invite$;
 reset role;
 
 
+reset role;
+insert into public.students (id, nis, nisn, full_name, gender, department_id, enrollment_year)
+values ('60000000-0000-4000-8000-000000000021', 'ARCHIVE-ENROLL-021', '9876543221',
+        'Siswa Uji Arsip dengan Penempatan', 'male',
+        '30000000-0000-4000-8000-000000000001', 2026);
+insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
+values ('60000000-0000-4000-8000-000000000021',
+        '10000000-0000-4000-8000-000000000002',
+        '20000000-0000-4000-8000-000000000003');
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions',
+  'classes:view,students:view,classes:update,students:update,students:delete', false);
+set role authenticated;
+do $student_archive_guards$
+begin
+  begin
+    perform public.archive_student('60000000-0000-4000-8000-000000000021');
+    raise exception 'Student with an active class placement was unexpectedly archived';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.archive_student('60000000-0000-4000-8000-000000000011');
+    raise exception 'Student with a linked Portal account was unexpectedly archived';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.archive_student('60000000-0000-4000-8000-000000000013');
+    raise exception 'Student with an unexpired invitation was unexpectedly archived';
+  exception when check_violation then null;
+  end;
+end;
+$student_archive_guards$;
+
+-- Close the student's active placement through the lifecycle RPC before archiving.
+select public.transition_student_status(
+  '60000000-0000-4000-8000-000000000021', 'withdrawn'
+);
+select set_config('test.permissions', 'students:delete', false);
+select public.archive_student('60000000-0000-4000-8000-000000000021');
+
+reset role;
+do $student_archive_guards$
+begin
+  if (select archived_at is null from public.students
+      where id = '60000000-0000-4000-8000-000000000021') then
+    raise exception 'Student was not archived after its active placement was closed';
+  end if;
+  if not exists (
+    select 1 from public.student_class_enrollments
+    where student_id = '60000000-0000-4000-8000-000000000021'
+      and ended_at is not null and ended_by = '50000000-0000-4000-8000-000000000001'
+  ) then
+    raise exception 'Archiving removed or failed to retain the closed enrollment';
+  end if;
+  if (select enrolled_count from public.class_groups
+      where id = '20000000-0000-4000-8000-000000000003') <> 0 then
+    raise exception 'Closing the placement did not release the class capacity slot';
+  end if;
+  if not exists (
+    select 1 from public.student_class_history
+    where student_id = '60000000-0000-4000-8000-000000000021'
+  ) then
+    raise exception 'Archiving removed the student class history';
+  end if;
+end;
+$student_archive_guards$;
+
 \echo '14. Verify safe student archiving and restoration'
 reset role;
 insert into public.students (id, nis, full_name, gender, enrollment_year)
