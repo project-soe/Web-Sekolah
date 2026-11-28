@@ -4,6 +4,10 @@
 
 **Terakhir diperbarui:** 2026-11-28
 
+### Pembaruan PR #23 — 2026-11-28
+- Regression test guard undangan akun guru sudah merged melalui PR #23; fixture role existing-account diperbaiki agar benar-benar tersimpan sebelum pengujian authenticated.
+- Item database regression test ditutup. Browser QA dan verifikasi migrasi production tetap tertunda; tidak ada perubahan database production.
+
 ## 1. Lifecycle siswa dan kelas
 
 - [x] Uji browser perubahan status siswa menjadi transferred dilaporkan berhasil.
@@ -32,7 +36,7 @@
 
 ## 3. Undangan akun guru
 
-- [x] Regression test database undangan guru: token dicabut/kedaluwarsa/telah dipakai, email belum diverifikasi, akun sudah memiliki role, dan profil yang sudah tertaut tidak dapat diundang ulang.
+- [x] Regression test database undangan guru: token dicabut/kedaluwarsa/telah dipakai, email belum diverifikasi, akun sudah memiliki role, dan profil yang sudah tertaut tidak dapat diundang ulang; PR #23 sudah merged dan CI hijau dikonfirmasi pengguna.
 - [ ] Browser QA token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun yang sudah memiliki role, duplikasi link, serta redirect role.
 - [ ] Verifikasi migrasi 20261124360000_teacher_account_invitations.sql pada Supabase production.
 - Tautan undangan saat ini disalin admin dan dikirim melalui kanal resmi; belum ada email otomatis.
