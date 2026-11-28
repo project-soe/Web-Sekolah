@@ -1313,6 +1313,122 @@ begin
 end;
 $attendance_migration$;
 
+\\echo '15b. Verify attendance teacher draft, submit, admin correction, and lock lifecycle'
+reset role;
+insert into public.students (id, nis, full_name, gender, enrollment_year)
+values
+ ('60000000-0000-4000-8000-000000000022','ATT-RPC-022','Siswa Uji Absensi Satu','male',2026),
+ ('60000000-0000-4000-8000-000000000023','ATT-RPC-023','Siswa Uji Absensi Dua','female',2026);
+insert into public.student_class_enrollments(student_id,academic_year_id,class_group_id,assigned_by)
+values
+ ('60000000-0000-4000-8000-000000000022','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001'),
+ ('60000000-0000-4000-8000-000000000023','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001');
+
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000007',false);
+select set_config('test.permissions','attendance:view_own_class,attendance:take,attendance:submit',false);
+set role authenticated;
+do $attendance_teacher_lifecycle$
+declare
+ v_session uuid;
+ v_roster_count integer;
+begin
+ select count(*) into v_roster_count
+ from public.my_teacher_attendance_roster((now() at time zone 'Asia/Jakarta')::date - 1) r
+ where r.class_group_id='20000000-0000-4000-8000-000000000001'
+   and r.student_id in ('60000000-0000-4000-8000-000000000022','60000000-0000-4000-8000-000000000023');
+ if v_roster_count <> 2 then
+  raise exception 'Linked homeroom teacher roster returned % fixture students, expected 2',v_roster_count;
+ end if;
+
+ v_session:=public.save_class_attendance(
+  '20000000-0000-4000-8000-000000000001',
+  (now() at time zone 'Asia/Jakarta')::date - 1,
+  jsonb_build_array(jsonb_build_object('student_id','60000000-0000-4000-8000-000000000022','status','present'))
+ );
+ perform set_config('test.attendance_session',v_session::text,false);
+
+ begin
+  perform public.submit_class_attendance(v_session);
+  raise exception 'Incomplete attendance draft was unexpectedly submitted';
+ exception when check_violation then null;
+ end;
+
+ perform public.save_class_attendance(
+  '20000000-0000-4000-8000-000000000001',
+  (now() at time zone 'Asia/Jakarta')::date - 1,
+  jsonb_build_array(
+   jsonb_build_object('student_id','60000000-0000-4000-8000-000000000022','status','present'),
+   jsonb_build_object('student_id','60000000-0000-4000-8000-000000000023','status','sick','note','Surat keterangan')
+  )
+ );
+ perform public.submit_class_attendance(v_session);
+
+ begin
+  perform public.save_class_attendance(
+   '20000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Jakarta')::date - 1,
+   '[]'::jsonb
+  );
+  raise exception 'Submitted attendance session unexpectedly accepted teacher edits';
+ exception when object_not_in_prerequisite_state then null;
+ end;
+end
+$attendance_teacher_lifecycle$;
+reset role;
+
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',false);
+select set_config('test.permissions','attendance:view_all,attendance:correct,attendance:lock',false);
+set role authenticated;
+do $attendance_admin_lifecycle$
+declare
+ v_session uuid:=current_setting('test.attendance_session')::uuid;
+ v_entry uuid;
+begin
+ select id into v_entry from public.attendance_entries
+ where session_id=v_session and student_id='60000000-0000-4000-8000-000000000022';
+ perform public.correct_attendance_entry(v_entry,'late','Datang pukul 07.20','Koreksi berdasarkan bukti piket');
+
+ perform public.set_attendance_session_lock(v_session,true,null);
+ begin
+  perform public.correct_attendance_entry(v_entry,'present',null,'Koreksi setelah lock');
+  raise exception 'Locked attendance session unexpectedly accepted correction';
+ exception when object_not_in_prerequisite_state then null;
+ end;
+
+ perform public.set_attendance_session_lock(v_session,false,'Dibuka untuk pemeriksaan lanjutan');
+end
+$attendance_admin_lifecycle$;
+reset role;
+
+do $attendance_admin_lifecycle_assertions$
+declare
+ v_session uuid:=current_setting('test.attendance_session')::uuid;
+begin
+ if (select status from public.attendance_sessions where id=v_session) <> 'submitted'
+   or (select locked_at from public.attendance_sessions where id=v_session) is not null then
+  raise exception 'Unlock did not restore submitted attendance session state';
+ end if;
+ if (select status from public.attendance_entries
+     where session_id=v_session and student_id='60000000-0000-4000-8000-000000000022') <> 'late'
+   or (select status from public.attendance_entries
+     where session_id=v_session and student_id='60000000-0000-4000-8000-000000000023') <> 'sick' then
+  raise exception 'Attendance correction or original second entry was not preserved';
+ end if;
+ if (select count(*) from public.attendance_entry_history
+     where entry_id in (select id from public.attendance_entries where session_id=v_session)) <> 3 then
+  raise exception 'Expected one correction audit and one unlock audit per entry';
+ end if;
+ if not exists (
+  select 1 from public.attendance_entry_history
+  where entry_id in (select id from public.attendance_entries where session_id=v_session)
+    and old_status='present' and new_status='late'
+    and reason='Koreksi berdasarkan bukti piket'
+ ) then
+  raise exception 'Attendance correction audit did not retain old/new values and reason';
+ end if;
+end
+$attendance_admin_lifecycle_assertions$;
+
 \echo '16. Verify monthly attendance summary permissions and aggregation'
 reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
