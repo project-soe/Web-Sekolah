@@ -91,6 +91,8 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
     {query.error === "siswa" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Siswa tidak ditemukan, tidak aktif, atau sudah diarsipkan.</p>}
     {query.error === "tahun_ajaran" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Penempatan hanya dapat dilakukan pada tahun ajaran aktif.</p>}
     {query.error === "akses" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Akun tidak memiliki permission untuk menempatkan siswa.</p>}
+    {query.error === "kapasitas" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Kapasitas kelas sudah penuh.</p>}
+    {query.error === "kelas" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Kelas tujuan tidak ditemukan.</p>}
     {query.error === "penempatan" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Penempatan siswa gagal disimpan. Periksa kapasitas kelas dan data siswa.</p>}
     {can(session.access, "classes:update") && <Card><CardContent className="flex flex-col gap-4">
       <h2 className="font-semibold">Edit data kelas</h2>
