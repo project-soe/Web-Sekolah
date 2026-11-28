@@ -1313,6 +1313,72 @@ begin
 end;
 $attendance_migration$;
 
+\echo '16. Verify monthly attendance summary permissions and aggregation'
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+insert into public.students (id,nis,full_name,gender,enrollment_year)
+values
+ ('60000000-0000-4000-8000-000000000016','ATT-MONTH-016','Siswa Rekap Hadir','male',2026),
+ ('60000000-0000-4000-8000-000000000017','ATT-MONTH-017','Siswa Rekap Alpa','female',2026);
+insert into public.student_class_enrollments(student_id,academic_year_id,class_group_id,assigned_by)
+values
+ ('60000000-0000-4000-8000-000000000016','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001'),
+ ('60000000-0000-4000-8000-000000000017','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001');
+insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status,submitted_at)
+values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-11-12','submitted',now());
+insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status)
+select
+ case when st.id='60000000-0000-4000-8000-000000000016' then '80000000-0000-4000-8000-000000000001'::uuid else '80000000-0000-4000-8000-000000000002'::uuid end,
+ '70000000-0000-4000-8000-000000000001',st.id,en.id,
+ case when st.id='60000000-0000-4000-8000-000000000016' then 'present' else 'absent' end
+from public.students st
+join public.student_class_enrollments en on en.student_id=st.id
+where st.id in ('60000000-0000-4000-8000-000000000016','60000000-0000-4000-8000-000000000017');
+
+select set_config('test.permissions','attendance:view_all',false);
+set role authenticated;
+do $attendance_monthly$
+declare result record;
+begin
+ select * into result from public.admin_attendance_monthly_summary('2026-11-01');
+ if result.class_group_id <> '20000000-0000-4000-8000-000000000001'
+   or result.session_count <> 1 or result.student_day_count <> 2
+   or result.present_count <> 1 or result.absent_count <> 1
+   or result.attendance_percentage <> 50.00 then
+  raise exception 'Monthly attendance aggregation returned unexpected values: %', row_to_json(result);
+ end if;
+ begin
+  perform * from public.admin_attendance_monthly_summary('2026-11-12');
+  raise exception 'Monthly attendance RPC accepted a non-first day month parameter';
+ exception when invalid_parameter_value then null;
+ end;
+end
+$attendance_monthly$;
+reset role;
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
+select set_config('test.permissions','',false);
+set role authenticated;
+do $attendance_monthly_access$
+begin
+ begin
+  perform * from public.admin_attendance_monthly_summary('2026-11-01');
+  raise exception 'User without attendance:view_all unexpectedly read monthly summary';
+ exception when insufficient_privilege then null;
+ end;
+end
+$attendance_monthly_access$;
+reset role;
+do $attendance_monthly_grants$
+begin
+ if has_function_privilege('anon','public.admin_attendance_monthly_summary(date)','execute') then
+  raise exception 'anon unexpectedly can execute monthly attendance summary';
+ end if;
+ if not has_function_privilege('authenticated','public.admin_attendance_monthly_summary(date)','execute') then
+  raise exception 'authenticated is missing monthly attendance summary RPC execute';
+ end if;
+end
+$attendance_monthly_grants$;
+
 \echo '15b. Verify attendance teacher draft, submit, admin correction, and lock lifecycle'
 reset role;
 insert into public.students (id, nis, full_name, gender, enrollment_year)
@@ -1430,72 +1496,6 @@ begin
  end if;
 end
 $attendance_admin_lifecycle_assertions$;
-
-\echo '16. Verify monthly attendance summary permissions and aggregation'
-reset role;
-select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
-insert into public.students (id,nis,full_name,gender,enrollment_year)
-values
- ('60000000-0000-4000-8000-000000000016','ATT-MONTH-016','Siswa Rekap Hadir','male',2026),
- ('60000000-0000-4000-8000-000000000017','ATT-MONTH-017','Siswa Rekap Alpa','female',2026);
-insert into public.student_class_enrollments(student_id,academic_year_id,class_group_id,assigned_by)
-values
- ('60000000-0000-4000-8000-000000000016','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001'),
- ('60000000-0000-4000-8000-000000000017','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001');
-insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status,submitted_at)
-values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-11-12','submitted',now());
-insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status)
-select
- case when st.id='60000000-0000-4000-8000-000000000016' then '80000000-0000-4000-8000-000000000001'::uuid else '80000000-0000-4000-8000-000000000002'::uuid end,
- '70000000-0000-4000-8000-000000000001',st.id,en.id,
- case when st.id='60000000-0000-4000-8000-000000000016' then 'present' else 'absent' end
-from public.students st
-join public.student_class_enrollments en on en.student_id=st.id
-where st.id in ('60000000-0000-4000-8000-000000000016','60000000-0000-4000-8000-000000000017');
-
-select set_config('test.permissions','attendance:view_all',false);
-set role authenticated;
-do $attendance_monthly$
-declare result record;
-begin
- select * into result from public.admin_attendance_monthly_summary('2026-11-01');
- if result.class_group_id <> '20000000-0000-4000-8000-000000000001'
-   or result.session_count <> 1 or result.student_day_count <> 2
-   or result.present_count <> 1 or result.absent_count <> 1
-   or result.attendance_percentage <> 50.00 then
-  raise exception 'Monthly attendance aggregation returned unexpected values: %', row_to_json(result);
- end if;
- begin
-  perform * from public.admin_attendance_monthly_summary('2026-11-12');
-  raise exception 'Monthly attendance RPC accepted a non-first day month parameter';
- exception when invalid_parameter_value then null;
- end;
-end
-$attendance_monthly$;
-reset role;
-select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
-select set_config('test.permissions','',false);
-set role authenticated;
-do $attendance_monthly_access$
-begin
- begin
-  perform * from public.admin_attendance_monthly_summary('2026-11-01');
-  raise exception 'User without attendance:view_all unexpectedly read monthly summary';
- exception when insufficient_privilege then null;
- end;
-end
-$attendance_monthly_access$;
-reset role;
-do $attendance_monthly_grants$
-begin
- if has_function_privilege('anon','public.admin_attendance_monthly_summary(date)','execute') then
-  raise exception 'anon unexpectedly can execute monthly attendance summary';
- end if;
- if not has_function_privilege('authenticated','public.admin_attendance_monthly_summary(date)','execute') then
-  raise exception 'authenticated is missing monthly attendance summary RPC execute';
- end if;
-end
-$attendance_monthly_grants$;
 
 \echo 'Database migration assertions passed.'
 
