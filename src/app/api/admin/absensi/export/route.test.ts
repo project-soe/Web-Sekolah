@@ -53,7 +53,7 @@ describe("GET /api/admin/absensi/export", () => {
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
-  it.each(["", "2026-00", "2026-13", "2026-1", "2026-11-01", "abcd-11"])(
+  it.each(["", "0000-01", "0000-12", "2026-00", "2026-13", "2026-1", "2026-11-01", "abcd-11"])(
     "rejects invalid month parameter %s",
     async (month) => {
       const response = await GET(request(month));
