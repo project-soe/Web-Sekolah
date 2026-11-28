@@ -41,6 +41,12 @@
 - Regression test guard undangan akun guru sudah merged melalui PR #23; fixture role existing-account diperbaiki agar benar-benar tersimpan sebelum pengujian authenticated.
 - Item database regression test ditutup. Browser QA dan verifikasi migrasi production tetap tertunda; tidak ada perubahan database production.
 
+### Pembaruan PR #29 — 2026-11-28
+- PR #29 sudah merged ke `main` (merge commit `f45800aeff56e0ca512f9cabd7b506ea1090cad6`); pengguna mengonfirmasi CI #427 hijau.
+- Regression test database mencakup siklus guru/admin: roster, draft parsial, submit lengkap, koreksi dan audit, lock/unlock, serta penolakan perubahan setelah submit/lock.
+- Tidak ada migrasi baru atau perubahan Supabase production.
+- Pekerjaan test berikutnya memperkuat rekap bulanan agar sesi draft terbukti tidak ikut dihitung; browser QA tetap terpisah.
+
 ## 1. Lifecycle siswa dan kelas
 
 - [x] Uji browser perubahan status siswa menjadi transferred dilaporkan berhasil.
