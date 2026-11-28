@@ -105,7 +105,8 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
         <button className="w-fit rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground sm:col-span-2">Simpan perubahan</button>
       </form>
     </CardContent></Card>}
-\n    <Card><CardContent className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+    <Card><CardContent className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <div><p className="text-xs text-muted-foreground">Tingkat</p><p className="mt-1 font-semibold">{gradeLabels[classGroup.grade_level] ?? classGroup.grade_level}</p></div>
       <div><p className="text-xs text-muted-foreground">Jurusan</p><p className="mt-1 font-semibold">{department?.name ?? "Belum ditentukan"}</p></div>
       <div><p className="text-xs text-muted-foreground">Wali kelas</p><p className="mt-1 font-semibold">{teacher?.full_name ?? "Belum ditentukan"}</p></div>
