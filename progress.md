@@ -1368,3 +1368,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Audit pasca-merge menemukan ketidaksesuaian UI: RPC membatasi input guru dari hari ini sampai 7 hari sebelumnya, tetapi halaman `/ruang-guru` selalu mengirim tanggal hari ini dan tidak menyediakan date picker.
 - Perbaikan pemilihan tanggal sedang dikerjakan pada branch `fix/teacher-attendance-date-range`. Pilihan tanggal divalidasi di server dan batas database tetap menjadi enforcement utama.
 - Browser QA absensi dengan akun guru wali kelas, admin, dan siswa masih belum dilakukan. Migrasi absensi belum diterapkan ke Supabase production; tidak ada perubahan production database pada pekerjaan ini.
+
+
+## 2026-11-28 — Rekap bulanan absensi admin
+- Implementasi rekap bulanan per rombel sedang dikerjakan pada branch `feat/attendance-monthly-summary`.
+- RPC baru `admin_attendance_monthly_summary(date)` hanya mengembalikan sesi `submitted`/`locked`, membatasi akses dengan `attendance:view_all`, dan menghitung total sesi, catatan siswa per hari, distribusi status, serta persentase hadir.
+- Definisi persentase: `(Hadir + Terlambat) / seluruh status tercatat × 100`; draft tidak masuk pembilang maupun penyebut.
+- Migration baru `20261128090000_student_attendance_monthly_summary.sql`; belum diterapkan ke Supabase production.
+- Database test menambahkan pemeriksaan agregasi 50%, validasi parameter bulan, dan pembatasan permission. CI dan browser QA belum dijalankan.
