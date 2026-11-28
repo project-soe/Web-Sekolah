@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { correctAttendance, setAttendanceLock } from "@/features/attendance/admin-actions";
+import { isCalendarDate } from "@/features/attendance/date";
 
 export const metadata: Metadata = { title: "Rekap Absensi | Admin" };
 export const dynamic = "force-dynamic";
