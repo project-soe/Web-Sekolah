@@ -111,6 +111,18 @@ describe("attendance admin server actions", () => {
         reason: "",
       }))).rejects.toThrow("REDIRECT:/admin/absensi?error=validasi");
 
+      await expect(setAttendanceLock(form({
+        session_id: sessionId,
+        locked: "unlock",
+        reason: "Alasan yang cukup panjang",
+      }))).rejects.toThrow("REDIRECT:/admin/absensi?error=validasi");
+
+      await expect(setAttendanceLock(form({
+        session_id: sessionId,
+        locked: "false",
+        reason: "x".repeat(501),
+      }))).rejects.toThrow("REDIRECT:/admin/absensi?error=validasi");
+
       expect(mocks.getSession).not.toHaveBeenCalled();
       expect(mocks.createClient).not.toHaveBeenCalled();
     });
