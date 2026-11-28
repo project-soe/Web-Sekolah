@@ -1390,3 +1390,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - PR #17 sudah merged dengan merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`; pengguna mengonfirmasi CI hijau.
 - Endpoint ekspor mengambil data dari RPC rekap bulanan, menjaga konsistensi dengan dashboard, dan memerlukan `attendance:view_all`.
 - Belum ada migrasi database baru. Browser QA unduh dan validasi isi CSV masih tertunda.
+
+
+## 2026-11-28 — Penguatan permission penempatan siswa individual
+- CI #394 untuk PR #18 pada head `9159dae72f24cc0d635378cc3c8d0023983ba975` berhasil; PR #18 masih terbuka dan menunggu merge pengguna.
+- Audit menemukan policy RLS INSERT/UPDATE `student_class_enrollments` hanya mewajibkan permission update, sedangkan server action penempatan individual juga mensyaratkan `classes:view` dan `students:view`. Tanpa guard RLS, klien PostgREST berpotensi melewati pemeriksaan view pada server action.
+- Branch `fix/student-enrollment-rbac-guards` menambahkan migrasi `20261128100000_student_enrollment_permission_guards.sql` agar INSERT/UPDATE mensyaratkan keempat permission: `classes:view`, `students:view`, `classes:update`, dan `students:update`.
+- Database test menambahkan skenario akun tanpa permission view: insert harus ditolak dan update tidak boleh mengubah penempatan. Browser QA UI tetap tertunda. Tidak ada migrasi production yang dijalankan.
