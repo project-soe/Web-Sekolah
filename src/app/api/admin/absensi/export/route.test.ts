@@ -81,14 +81,16 @@ describe("GET /api/admin/absensi/export", () => {
     });
 
     const response = await GET(request("2026-11"));
-    const csv = await response.text();
+    const csvBytes = new Uint8Array(await response.arrayBuffer());
+    const csv = new TextDecoder().decode(csvBytes);
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("text/csv; charset=utf-8");
     expect(response.headers.get("content-disposition")).toBe('attachment; filename="rekap-absensi-2026-11.csv"');
     expect(response.headers.get("cache-control")).toBe("private, no-store, max-age=0");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
-    expect(csv.startsWith("\uFEFF")).toBe(true);
+    // Response.text() strips a leading UTF-8 BOM during decoding, so assert its raw bytes.
+    expect(Array.from(csvBytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
     expect(csv).toContain('"X RPL"');
     expect(csv).toContain('"86.67"');
     expect(mocks.rpc).toHaveBeenCalledWith("admin_attendance_monthly_summary", { p_month: "2026-11-01" });
