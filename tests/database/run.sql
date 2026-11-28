@@ -310,7 +310,7 @@ reset role;
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
 select set_config('test.permissions', 'classes:update,students:update', false);
 set role authenticated;
-do $
+do $$
 declare
   affected_rows integer;
 begin
@@ -335,9 +335,9 @@ begin
     raise exception 'Enrollment update unexpectedly affected % rows without view permissions', affected_rows;
   end if;
 end;
-$;
+$$;
 reset role;
-do $
+do $$
 begin
   if exists (
     select 1 from public.student_class_enrollments
@@ -355,7 +355,7 @@ begin
     raise exception 'Unauthorized individual enrollment update changed the class';
   end if;
 end;
-$;
+$$;
 
 \echo '7. Verify atomic academic-year activation and rollback'
 do $$
