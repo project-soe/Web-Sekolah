@@ -393,7 +393,7 @@ begin
   end if;
 
   select count(*) into history_count
-  from public.student_class_history where student_class_history.v_enrollment_id = v_enrollment_id;
+  from public.student_class_history where student_class_history.enrollment_id = v_enrollment_id;
   if history_count <> 1 then
     raise exception 'Withdrawal should preserve the original enrollment history, got % rows', history_count;
   end if;
