@@ -4,13 +4,13 @@
 
 ## Status saat ini
 
-- **Tanggal pembaruan:** 2026-11-27.
-- **Branch utama:** `main`; PR #12 Modul Absensi Siswa sudah merged pada 2026-11-27 (merge commit `c7c15aa0bd2aee942a7e30563f10fa53fe27d03b`).
-- **CI PR #12:** run #367 pada commit `0a56f8933d6315d6ddc9bbbe428f49921cbb9fa8` sukses. Job `check` (lint, typecheck, unit test, build) dan `database-tests` (migrasi, assertions, concurrency tests) seluruhnya hijau.
-- **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan tahap pertama Modul Absensi Siswa.
+- **Tanggal pembaruan:** 2026-11-28.
+- **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), dan PR #14 (idempotensi migrasi arsip siswa) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
+- **CI:** PR #12 (run #367), PR #13 (termasuk run #371), dan PR #14 (run #370) dikonfirmasi pengguna seluruhnya hijau sebelum merge.
+- **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan tahap pertama Modul Absensi Siswa. Browser QA admin pada 2026-11-28 mengonfirmasi tab Absensi tampil dan rekap harian termuat; koreksi serta lock/unlock belum diuji.
 - **Portal Siswa:** pengguna mengonfirmasi simulasi pendaftaran berhasil dan akun dapat login pada 2026-11-27. Item pengujian pendaftaran Portal Siswa dihapus dari daftar deferred; cakupan konfirmasi tidak berarti seluruh edge-case sudah diuji.
 - **Modul Absensi:** migrasi `20261127330000_student_daily_attendance.sql`, UI guru, rekap/koreksi admin, dan tampilan riwayat Portal Siswa sudah masuk main. Browser QA guru/admin/siswa masih tertunda.
-- **Perbaikan lanjutan absensi:** audit menemukan UI guru belum menyediakan pemilihan tanggal mundur meski RPC mengizinkan hari ini hingga 7 hari sebelumnya. Perbaikan dikerjakan pada branch `fix/teacher-attendance-date-range`; belum ada CI/PR untuk perubahan ini.
+- **Perbaikan lanjutan absensi:** pemilih tanggal guru (hari ini hingga 7 hari kalender sebelumnya), validasi server, dan retensi tanggal setelah submit/error sudah merged melalui PR #13.
 - **Rancangan dan keputusan domain:** `docs/attendance-module-design.md`.
 - **Daftar tertunda:** `docs/known-issues-and-deferred.md`.
 - **Database production:** migrasi absensi belum diterapkan. Periksa migration list remote, review SQL, pastikan backup, dan minta persetujuan eksplisit sebelum deployment. Jangan sentuh project Supabase kedua.
@@ -1368,3 +1368,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Audit pasca-merge menemukan ketidaksesuaian UI: RPC membatasi input guru dari hari ini sampai 7 hari sebelumnya, tetapi halaman `/ruang-guru` selalu mengirim tanggal hari ini dan tidak menyediakan date picker.
 - Perbaikan pemilihan tanggal sedang dikerjakan pada branch `fix/teacher-attendance-date-range`. Pilihan tanggal divalidasi di server dan batas database tetap menjadi enforcement utama.
 - Browser QA absensi dengan akun guru wali kelas, admin, dan siswa masih belum dilakukan. Migrasi absensi belum diterapkan ke Supabase production; tidak ada perubahan production database pada pekerjaan ini.
+
+
+## 2026-11-28 — PR absensi/arsip merged dan QA admin awal
+- PR #13 `fix(attendance): allow teachers to select attendance dates` merged ke `main` melalui `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`. Pemilih tanggal guru dan validasi server kini tersedia di main.
+- PR #14 `fix(database): make student archive migration safe to resume` merged ke `main` melalui `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`. Penambahan `students.archived_at` memakai `ADD COLUMN IF NOT EXISTS`, dan database test menguji rerun migrasi.
+- Pengguna mengonfirmasi CI seluruhnya hijau sebelum merge.
+- Browser QA admin: pengguna mengonfirmasi tab Absensi tampil di dashboard admin dan rekap absensi termuat. Cakupan ini hanya memverifikasi tampilan/rekap harian; koreksi, lock/unlock, input guru, dan riwayat Portal Siswa belum terkonfirmasi.
+- Tidak ada migrasi yang diterapkan ke Supabase production. Status migration history dan backup tetap perlu diverifikasi sebelum deployment.
