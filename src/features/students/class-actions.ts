@@ -168,27 +168,32 @@ export async function graduateClassStudents(formData: FormData): Promise<void> {
 }
 
 export async function assignStudentToClass(formData: FormData): Promise<void> {
+  const requestedReturnPath = String(formData.get("return_to") ?? "");
+  const returnPath = /^\/admin\/kelas\/[0-9a-f-]{36}$/i.test(requestedReturnPath)
+    ? requestedReturnPath
+    : "/admin/kelas";
+  const failAt = (code: string): never => redirect(returnPath + "?error=" + code);
   const parsed = classAssignmentSchema.safeParse(Object.fromEntries(formData.entries()));
-  if (!parsed.success) fail("validasi");
+  if (!parsed.success) failAt("validasi");
   const session = await requireClassPermission("classes:update");
-  if (!can(session.access, "classes:view") || !can(session.access, "students:view") || !can(session.access, "students:update")) fail("akses");
+  if (!can(session.access, "classes:view") || !can(session.access, "students:view") || !can(session.access, "students:update")) failAt("akses");
   const supabase = await createClient();
   const { data: activeYear, error: activeYearError } = await supabase.from("academic_years")
     .select("id").eq("is_active", true).maybeSingle();
-  if (activeYearError || !activeYear) fail("tahun_ajaran");
+  if (activeYearError || !activeYear) failAt("tahun_ajaran");
   const { data: target, error: targetError } = await supabase.from("class_groups")
     .select("id, academic_year_id, name").eq("id", parsed.data.class_group_id).maybeSingle();
-  if (targetError || !target) fail("kelas");
-  if (target.academic_year_id !== activeYear.id) fail("tahun_ajaran");
+  if (targetError || !target) failAt("kelas");
+  if (target.academic_year_id !== activeYear.id) failAt("tahun_ajaran");
   const { data: student, error: studentError } = await supabase.from("students")
     .select("id, full_name, status").eq("id", parsed.data.student_id).maybeSingle();
-  if (studentError || !student || student.status !== "active") fail("siswa");
+  if (studentError || !student || student.status !== "active") failAt("siswa");
 
   const { data: previous, error: previousError } = await supabase.from("student_class_enrollments")
     .select("id, class_group_id").eq("student_id", student.id)
     .eq("academic_year_id", target.academic_year_id).maybeSingle();
-  if (previousError) fail("penempatan");
-  if (previous?.class_group_id === target.id) fail("penempatan_sama");
+  if (previousError) failAt("penempatan");
+  if (previous?.class_group_id === target.id) failAt("penempatan_sama");
   const result = previous
     ? await supabase.from("student_class_enrollments")
         .update({ class_group_id: target.id })
@@ -211,6 +216,7 @@ export async function assignStudentToClass(formData: FormData): Promise<void> {
     changes: { academic_year_id: target.academic_year_id, class_group_id: target.id },
   });
   revalidatePath("/admin/kelas");
+  revalidatePath("/admin/kelas/" + target.id);
   revalidatePath("/admin/siswa");
-  redirect("/admin/kelas?saved=penempatan");
+  redirect(returnPath + "?saved=penempatan");
 }
