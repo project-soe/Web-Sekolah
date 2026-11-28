@@ -1,3 +1,8 @@
+### Pembaruan PR #32 dan hardening CSV — 2026-11-28
+- PR #32 sudah merged setelah CI #437 hijau; pengujian endpoint ekspor memeriksa BOM dari raw response bytes karena `Response.text()` menghapus BOM saat decoding.
+- Tindak lanjut regression coverage CSV pada PR #33: menguji formula prefix `=`, `+`, `-`, dan `@`, termasuk ketika didahului whitespace/control characters serta nilai numerik yang diterima sebagai string.
+- Browser QA unduhan CSV dan pencocokan isi file dengan rekap bulan terpilih tetap tertunda.
+
 ### Pembaruan PR #31 — 2026-11-28
 - Regression test riwayat absensi Portal Siswa sudah merged; akun tertaut hanya membaca riwayat miliknya dan sesi final (`submitted`/`locked`), sedangkan sesi `draft` tidak tampil.
 - Merge commit: `6a2b08df11521eb524aa86325570ee3cafedb244`.
