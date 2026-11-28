@@ -1,3 +1,8 @@
+### Hardening formula injection CSV — 2026-11-28
+- Mitigasi formula injection pada ekspor CSV diperluas dari whitespace ASCII menjadi whitespace Unicode, termasuk NBSP, ideographic space, dan BOM sebelum karakter formula.
+- Regression unit tests ditambahkan untuk memastikan nilai teks tetap diperlakukan sebagai teks saat dibuka di spreadsheet.
+- CI dan browser QA unduhan tetap menunggu hasil verifikasi.
+
 ### Validasi payload RPC absensi pada database — 2026-11-28
 - RPC `save_class_attendance` diperketat agar payload NULL/non-array, elemen non-object, siswa duplikat, status tidak dikenal, dan catatan lebih dari 500 karakter ditolak walaupun RPC dipanggil langsung.
 - Regression tests database mencakup bypass server action untuk kasus payload malformed.
