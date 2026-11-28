@@ -14,7 +14,7 @@ export type MonthlyAttendanceCsvRow = {
 function csvCell(value: string | number): string {
   let text = String(value);
   // Prevent spreadsheet formula execution when CSV is opened in Excel/Sheets.
-  if (/^[\u0000-\u0020]*[=+\-@]/.test(text)) text = "'" + text;
+  if (/^\s*[=+\-@]/u.test(text)) text = "'" + text;
   return '"' + text.replaceAll('"', '""') + '"';
 }
 
