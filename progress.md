@@ -1,3 +1,8 @@
+## 2026-11-28 — Validasi tahun pada filter rekap absensi
+- Filter bulan rekap dan endpoint ekspor menolak tahun `0000`, yang lolos format kalender JavaScript tetapi tidak valid untuk tipe tanggal PostgreSQL.
+- Regression route tests mencakup `0000-01` dan `0000-12`; halaman admin memakai fallback bulan berjalan untuk parameter tidak valid.
+- Tidak ada perubahan migrasi atau database production.
+
 ## 2026-11-28 — Hardening formula injection CSV dengan Unicode whitespace
 - Audit ekspor CSV menemukan mitigasi formula injection hanya mengenali whitespace/control ASCII di awal nilai.
 - Guard kini memakai whitespace Unicode JavaScript (`\\s`) agar prefix formula setelah NBSP, ideographic space, atau BOM juga dinetralkan.

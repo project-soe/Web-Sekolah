@@ -1,3 +1,8 @@
+### Validasi tahun filter rekap absensi — 2026-11-28
+- Parameter bulan pada dashboard dan ekspor kini menolak tahun `0000`, sehingga nilai format-valid di JavaScript tidak diteruskan menjadi tanggal yang tidak valid bagi PostgreSQL.
+- Regression tests route ekspor mencakup tahun nol.
+- Tidak ada perubahan migrasi/database production.
+
 ### Hardening formula injection CSV — 2026-11-28
 - Mitigasi formula injection pada ekspor CSV diperluas dari whitespace ASCII menjadi whitespace Unicode, termasuk NBSP, ideographic space, dan BOM sebelum karakter formula.
 - Regression unit tests ditambahkan untuk memastikan nilai teks tetap diperlakukan sebagai teks saat dibuka di spreadsheet.

@@ -7,7 +7,7 @@ import { buildMonthlyAttendanceCsv, type MonthlyAttendanceCsvRow } from "@/featu
 export const dynamic = "force-dynamic";
 
 function isMonth(value: string | null): value is string {
-  if (!value || !/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) return false;
+  if (!value || !/^\d{4}-(0[1-9]|1[0-2])$/.test(value) || Number(value.slice(0, 4)) < 1) return false;
   const date = new Date(value + "-01T00:00:00.000Z");
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 7) === value;
 }
