@@ -1,3 +1,9 @@
+## 2026-11-28 — PR #31 merged; regression coverage ekspor CSV
+- PR #31 tes isolasi riwayat absensi Portal Siswa sudah merged ke `main`; merge commit `6a2b08df11521eb524aa86325570ee3cafedb244`. Pengguna mengonfirmasi PR sukses.
+- Test memastikan akun siswa hanya membaca riwayatnya sendiri dan hanya sesi `submitted`/`locked`, bukan `draft`.
+- Pekerjaan berikutnya pada PR #32: unit test route ekspor CSV untuk autentikasi, permission `attendance:view_all`, validasi bulan, pemanggilan RPC sesuai bulan, header unduhan, dan penanganan error yang tidak membocorkan detail database.
+- PR #32 hanya menambah test dan dokumentasi; tidak ada migrasi atau perubahan Supabase production.
+
 # Progress Pengembangan Website Sekolah
 
 > Dokumen serah terima kerja. Baca sebelum melanjutkan dan perbarui setiap kali ada perubahan kode, database, konfigurasi, keputusan arsitektur, atau hasil pengujian.
