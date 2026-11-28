@@ -2822,3 +2822,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambah uji bahwa email Auth yang belum diverifikasi dan akun yang sudah memiliki role tidak dapat mengklaim undangan; undangan tetap belum terpakai dan tidak membuat link guru.
 - Memastikan profil guru yang sudah tertaut tidak dapat menerima undangan baru.
 - Browser QA alur undangan, termasuk token salah dan redirect role, tetap menunggu. Tidak ada migrasi baru atau perubahan Supabase production.
+
+## 2026-11-28 — Regression test guard undangan akun guru merged
+- PR #23 `test(auth): cover teacher invitation rejection guards` sudah merged ke `main`; pengguna mengonfirmasi CI hijau.
+- Commit head PR: `a65e7107cd73775bdd2267ec3828be29ede67038`.
+- Database regression tests mencakup undangan dicabut/kedaluwarsa/sudah diklaim, email Auth belum diverifikasi, akun yang sudah memiliki role, dan profil guru yang sudah tertaut.
+- Perbaikan fixture memastikan role uji benar-benar tersimpan sebelum skenario authenticated dijalankan. Tidak ada migrasi baru, perubahan database production, atau deployment.
+- Tindak lanjut tersisa: browser QA alur undangan guru (token salah/kedaluwarsa/dicabut/dipakai ulang, email berbeda/belum terverifikasi, akun existing-role, duplikasi link, dan redirect role), serta verifikasi migration `20261124360000_teacher_account_invitations.sql` pada project Supabase Website Sekolah setelah pemeriksaan migration history dan backup.
