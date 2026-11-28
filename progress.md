@@ -1,3 +1,8 @@
+## 2026-11-28 — Regression test aksi admin absensi
+- Menambahkan `tests/unit/attendance-admin-actions.test.ts` untuk menguji validasi UUID/status/alasan, autentikasi, permission `attendance:correct` dan `attendance:lock`, payload RPC koreksi, normalisasi note/reason, serta alur lock/unlock.
+- Perubahan hanya berupa regression tests dan dokumentasi; tidak ada perubahan kode produksi, migrasi, atau akses database production.
+- CI PR masih menunggu. Browser QA koreksi dengan alasan dan lock/unlock tetap harus dilakukan terpisah.
+
 ## 2026-11-28 — PR #31 merged; regression coverage ekspor CSV
 - PR #31 tes isolasi riwayat absensi Portal Siswa sudah merged ke `main`; merge commit `6a2b08df11521eb524aa86325570ee3cafedb244`. Pengguna mengonfirmasi PR sukses.
 - Test memastikan akun siswa hanya membaca riwayatnya sendiri dan hanya sesi `submitted`/`locked`, bukan `draft`.
