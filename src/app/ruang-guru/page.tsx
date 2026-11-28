@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { logout } from "@/features/auth/actions";
 import { saveAttendanceDraft, submitAttendance } from "@/features/attendance/actions";
 import { AttendanceDatePicker } from "@/features/attendance/attendance-date-picker";
+import { isCalendarDate } from "@/features/attendance/date";
 import { requireTeacher } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
