@@ -4,6 +4,13 @@
 
 **Terakhir diperbarui:** 2026-11-28
 
+### Pembaruan QA menu Kelas — 2026-11-28
+- Form penempatan siswa sebelumnya hanya tersedia di bagian bawah halaman `/admin/kelas`, setelah bagian kenaikan kelas dan kelulusan; sekarang dipindahkan tepat setelah daftar kelas.
+- Halaman detail rombel `/admin/kelas/[id]` sekarang menyediakan form penempatan langsung untuk siswa aktif, hanya pada tahun ajaran aktif dan dengan permission `classes:update`, `students:view`, serta `students:update`.
+- Setelah penempatan dari detail rombel, pengguna kembali ke rombel yang sama; pesan sukses dan kegagalan ditampilkan pada halaman tersebut.
+- Ditemukan dan dibersihkan literal `\\n` sebelum komponen ringkasan di halaman detail kelas. Pemeriksaan source search tidak menemukan literal serupa lain di area menu/halaman Kelas.
+- CI dan browser QA setelah perubahan masih menunggu.
+
 ### Temuan browser QA absensi guru — 2026-11-28
 - Pengguna berhasil masuk ke `/ruang-guru` melalui undangan admin, tetapi roster absensi kosong pada 2026-11-28.
 - Pengguna melaporkan pemilih tanggal selalu kembali ke 2026-11-28 ketika memilih tanggal 21–27 November.
