@@ -1,3 +1,8 @@
+## 2026-11-28 — Hardening formula injection CSV dengan Unicode whitespace
+- Audit ekspor CSV menemukan mitigasi formula injection hanya mengenali whitespace/control ASCII di awal nilai.
+- Guard kini memakai whitespace Unicode JavaScript (`\\s`) agar prefix formula setelah NBSP, ideographic space, atau BOM juga dinetralkan.
+- Regression unit tests menambahkan ketiga karakter tersebut; belum mengklaim CI atau browser QA sebelum hasil pipeline/unduhan diverifikasi.
+
 ## 2026-11-28 — Validasi payload RPC absensi pada database
 - RPC `save_class_attendance` kini menolak payload NULL/non-array, elemen non-object, ID siswa kosong, siswa duplikat, status di luar domain, dan catatan lebih dari 500 karakter.
 - Regression database tests memanggil RPC secara langsung untuk membuktikan validasi tidak bergantung pada server action/UI.
