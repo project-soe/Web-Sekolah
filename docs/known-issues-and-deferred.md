@@ -1,3 +1,9 @@
+### Validasi tanggal kalender absensi — 2026-11-28
+- Audit menemukan filter tanggal harian admin sebelumnya hanya memeriksa pola `YYYY-MM-DD`, bukan validitas kalender.
+- Perbaikan menggunakan helper bersama untuk halaman admin, Ruang Guru, dan server action; tanggal mustahil serta tahun `0000` ditolak sebelum query/action, sementara tanggal tahun empat digit awal tetap dapat diparse.
+- Regression tests mencakup tahun kabisat, tanggal invalid, batas tahun, dan format malformed.
+- Perubahan berada di PR dan menunggu CI; tidak ada migrasi atau perubahan database production. Browser QA modul absensi tetap menunggu.
+
 ### Validasi tahun filter rekap absensi — 2026-11-28
 - Parameter bulan pada dashboard dan ekspor kini menolak tahun `0000`, sehingga nilai format-valid di JavaScript tidak diteruskan menjadi tanggal yang tidak valid bagi PostgreSQL.
 - Regression tests route ekspor mencakup tahun nol.
@@ -64,7 +70,7 @@
 - Pengguna melaporkan pemilih tanggal selalu kembali ke 2026-11-28 ketika memilih tanggal 21–27 November.
 - Audit kode: roster hanya menampilkan rombel yang `class_groups.homeroom_teacher_id` cocok dengan `teacher_user_links.teacher_id` untuk akun login, serta siswa yang masih aktif dan memiliki enrollment aktif.
 - Admin dapat memeriksa penugasan melalui **Admin → Kelas → pilih rombel → Edit data kelas → Wali kelas**. Pastikan profil guru yang diundang dipilih dan siswa aktif sudah ditempatkan pada rombel.
-- PR perbaikan pemilih tanggal terkontrol dan pesan empty-state sedang disiapkan. Belum ada browser QA ulang.
+- PR #27 perbaikan pemilih tanggal terkontrol dan pesan empty-state sudah merged. Pengguna belum mengonfirmasi browser QA ulang untuk pencatatan absensi guru.
 - Status migrasi dasar absensi perlu direkonsiliasi dengan `supabase migration list --remote`: migration rekap bulanan `20261128090000_student_attendance_monthly_summary.sql` sudah dikonfirmasi pengguna deployed, tetapi status remote migration dasar `20261127330000_student_daily_attendance.sql` belum tercatat ulang pada dokumen. Jangan menjalankan SQL/db push tanpa pemeriksaan history, backup, dan persetujuan eksplisit.
 
 ### Pembaruan browser QA undangan guru — 2026-11-28
