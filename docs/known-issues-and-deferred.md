@@ -10,7 +10,8 @@
 - [ ] Uji alur withdrawn melalui UI dan verifikasi penutupan enrollment, pelepasan kapasitas, serta retensi histori.
 - [x] Regression test database penempatan individual: INSERT/UPDATE ditolak tanpa permission `students:view` dan `classes:view`; PR #19 menambahkan guard RLS.
 - [ ] Browser QA penempatan individual melalui dashboard, termasuk akun tanpa permission `students:view`.
-- [ ] Uji kenaikan kelas massal pada tahun ajaran berikutnya, termasuk rollback saat kapasitas tidak cukup.
+- [x] Regression test database kenaikan kelas massal: rollback saat kapasitas tidak cukup, penolakan tanpa permission, tingkat tujuan salah, tahun ajaran salah, dan tahun asal tidak aktif; penempatan target tidak berubah pada percobaan yang ditolak.
+- [ ] Browser QA kenaikan kelas massal melalui dashboard dengan data uji.
 - [ ] Uji kelulusan kelas XII, tanggal kelulusan, status akhir, dan riwayat status.
 - [x] Regression test database arsip: penolakan untuk siswa dengan penempatan aktif, akun Portal Siswa tertaut, atau undangan aktif; arsip setelah penempatan ditutup tetap mempertahankan enrollment dan histori.
 - [ ] Verifikasi migration `20261127320000_student_archive.sql` pada Supabase production (termasuk RPC dan trigger); lanjutkan browser QA arsip/pemulihan. Kolom `archived_at` pernah ditambahkan manual.
