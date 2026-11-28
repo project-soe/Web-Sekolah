@@ -31,7 +31,7 @@ export default async function AdminAttendancePage({
   await requirePermission("attendance:view_all");
   const params = await searchParams;
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  const date = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : today;
+  const date = params.date && isCalendarDate(params.date) ? params.date : today;
   const month = params.month && /^\d{4}-(0[1-9]|1[0-2])$/.test(params.month) && Number(params.month.slice(0, 4)) >= 1 ? `${params.month}-01` : `${today.slice(0, 7)}-01`;
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("my_teacher_attendance_roster", { p_date: date });
