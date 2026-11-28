@@ -32,15 +32,25 @@ const statusLabels = [
 const messages: Record<string, string> = {
   akses: "Kamu tidak memiliki izin untuk tindakan tersebut.",
   validasi: "Data absensi tidak valid.",
+  tanggal: "Tanggal absensi hanya dapat dipilih dari hari ini sampai 7 hari kalender ke belakang.",
   simpan: "Gagal menyimpan draft absensi.",
   kirim: "Gagal mengirim absensi.",
   belum_lengkap: "Semua siswa harus memiliki status sebelum absensi dikirim.",
 };
 
+function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return parsed.getUTCFullYear() === year
+    && parsed.getUTCMonth() === month - 1
+    && parsed.getUTCDate() === day;
+}
+
 export default async function TeacherPortalPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; saved?: string }>;
+  searchParams: Promise<{ date?: string; error?: string; saved?: string }>;
 }) {
   const session = await requireTeacher();
   const params = await searchParams;
@@ -50,8 +60,16 @@ export default async function TeacherPortalPage({
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
+  const earliestDate = new Date(today + "T00:00:00.000Z");
+  earliestDate.setUTCDate(earliestDate.getUTCDate() - 7);
+  const minDate = earliestDate.toISOString().slice(0, 10);
+  const requestedDate = params.date ?? today;
+  const validDate = isCalendarDate(requestedDate)
+    && requestedDate >= minDate
+    && requestedDate <= today;
+  const attendanceDate = validDate ? requestedDate : today;
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("my_teacher_attendance_roster", { p_date: today });
+  const { data, error } = await supabase.rpc("my_teacher_attendance_roster", { p_date: attendanceDate });
   const rows = (data ?? []) as RosterRow[];
   const grouped = new Map<string, RosterRow[]>();
   for (const row of rows) {
@@ -75,12 +93,34 @@ export default async function TeacherPortalPage({
 
       <section className="space-y-1">
         <h2 className="text-xl font-semibold">Absensi harian</h2>
-        <p className="text-sm text-muted-foreground">Tanggal {new Intl.DateTimeFormat("id-ID", { dateStyle: "full", timeZone: "Asia/Jakarta" }).format(new Date())}. Batas input: hari ini sampai 7 hari kalender ke belakang.</p>
+        <p className="text-sm text-muted-foreground">
+          Batas input: hari ini sampai 7 hari kalender ke belakang (Asia/Jakarta).
+        </p>
+        <form method="get" className="flex flex-wrap items-end gap-3 pt-2">
+          <label className="grid gap-1 text-sm">
+            Tanggal absensi
+            <input
+              type="date"
+              name="date"
+              value={attendanceDate}
+              min={minDate}
+              max={today}
+              required
+              className="min-h-10 rounded-md border border-border bg-background px-3"
+            />
+          </label>
+          <button type="submit" className="min-h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
+            Tampilkan
+          </button>
+        </form>
       </section>
 
+      {params.date && !validDate && (
+        <p role="alert" className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger">{messages.tanggal}</p>
+      )}
       {params.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger">{messages[params.error] ?? "Terjadi kesalahan."}</p>}
       {params.saved && <p role="status" className="rounded-lg border border-border bg-muted/40 p-3 text-sm">{params.saved === "terkirim" ? "Absensi berhasil dikirim." : "Draft absensi berhasil disimpan."}</p>}
-      {error && <p role="alert" className="rounded-lg border border-danger/30 p-3 text-sm text-danger">Gagal memuat roster absensi. Pastikan migrasi absensi sudah diterapkan.</p>}
+      {error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger">Gagal memuat roster absensi. Pastikan migrasi absensi sudah diterapkan.</p>}
 
       {!error && grouped.size === 0 && (
         <div className="rounded-xl border border-border p-6 text-sm text-muted-foreground">
@@ -100,12 +140,12 @@ export default async function TeacherPortalPage({
                 <p className="text-sm text-muted-foreground">Tahun ajaran {first.academic_year} · {students.length} siswa</p>
               </div>
               <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
-                {status === "locked" ? "Terkunci" : status === "submitted" ? "Terkirim" : "Draft"}
+                {status === "locked" ? "Terkunci" : status === "submitted" ? "Terkirim" : status === "draft" ? "Draft" : "Belum diisi"}
               </span>
             </div>
             <form action={saveAttendanceDraft} className="space-y-4 p-4">
               <input type="hidden" name="class_group_id" value={classId} />
-              <input type="hidden" name="attendance_date" value={today} />
+              <input type="hidden" name="attendance_date" value={attendanceDate} />
               <div className="space-y-3">
                 {students.map((student, index) => (
                   <div key={student.student_id} className="grid gap-2 rounded-lg border border-border/70 p-3 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
@@ -114,10 +154,10 @@ export default async function TeacherPortalPage({
                       <p className="text-xs text-muted-foreground">NIS {student.nis}</p>
                     </div>
                     <div className="space-y-1">
-                      <label htmlFor={`status-${student.student_id}`} className="text-xs text-muted-foreground">Status kehadiran</label>
+                      <label htmlFor={"status-" + student.student_id} className="text-xs text-muted-foreground">Status kehadiran</label>
                       <select
-                        id={`status-${student.student_id}`}
-                        name={`status:${student.student_id}`}
+                        id={"status-" + student.student_id}
+                        name={"status:" + student.student_id}
                         defaultValue={student.attendance_status ?? ""}
                         disabled={!editable}
                         className="min-h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
@@ -128,11 +168,11 @@ export default async function TeacherPortalPage({
                     </div>
                     {editable && (
                       <input
-                        name={`note:${student.student_id}`}
+                        name={"note:" + student.student_id}
                         defaultValue={student.attendance_note ?? ""}
                         maxLength={500}
                         placeholder="Catatan (opsional)"
-                        aria-label={`Catatan ${student.full_name}`}
+                        aria-label={"Catatan " + student.full_name}
                         className="min-h-10 rounded-md border border-border bg-background px-3 text-sm sm:col-span-2"
                       />
                     )}
@@ -142,7 +182,7 @@ export default async function TeacherPortalPage({
               {editable ? (
                 <div className="flex flex-wrap justify-end gap-2">
                   <button formAction={saveAttendanceDraft} className="min-h-10 rounded-lg border border-border px-4 text-sm font-medium hover:bg-muted">Simpan draft</button>
-                  <button formAction={submitAttendance} className="min-h-10 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90" >Kirim absensi</button>
+                  <button formAction={submitAttendance} className="min-h-10 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">Kirim absensi</button>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">Absensi sudah dikirim. Hubungi admin sekolah jika perlu koreksi.</p>

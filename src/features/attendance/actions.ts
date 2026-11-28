@@ -17,7 +17,7 @@ async function persistAttendance(formData: FormData, submit: boolean): Promise<v
   const session = await getSession();
   if (!session) redirect("/login");
   if (!can(session.access, "attendance:take") || (submit && !can(session.access, "attendance:submit"))) {
-    redirect("/ruang-guru?error=akses");
+    redirect("/ruang-guru?date=" + encodeURIComponent(attendanceDate) + "&error=akses");
   }
 
   const entries: AttendanceEntryInput[] = [];
@@ -40,20 +40,20 @@ async function persistAttendance(formData: FormData, submit: boolean): Promise<v
   });
   if (error || typeof sessionId !== "string") {
     console.error("teacher_attendance_save_failed", { code: error?.code ?? null, message: error?.message ?? null });
-    redirect("/ruang-guru?error=" + (error?.code === "42501" ? "akses" : "simpan"));
+    redirect("/ruang-guru?date=" + encodeURIComponent(attendanceDate) + "&error=" + (error?.code === "42501" ? "akses" : "simpan"));
   }
 
   if (submit) {
     const result = await supabase.rpc("submit_class_attendance", { p_session_id: sessionId });
     if (result.error) {
       console.error("teacher_attendance_submit_failed", { code: result.error.code, message: result.error.message });
-      redirect("/ruang-guru?error=" + (result.error.code === "23514" ? "belum_lengkap" : "kirim"));
+      redirect("/ruang-guru?date=" + encodeURIComponent(attendanceDate) + "&error=" + (result.error.code === "23514" ? "belum_lengkap" : "kirim"));
     }
   }
 
   revalidatePath("/ruang-guru");
   revalidatePath("/portal");
-  redirect("/ruang-guru?saved=" + (submit ? "terkirim" : "draft"));
+  redirect("/ruang-guru?date=" + encodeURIComponent(attendanceDate) + "&saved=" + (submit ? "terkirim" : "draft"));
 }
 
 export async function saveAttendanceDraft(formData: FormData) {
