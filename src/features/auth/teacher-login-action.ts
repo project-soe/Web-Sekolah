@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchAccess } from "@/lib/auth/session";
 import { logActivity } from "@/lib/activity/log";
 import { loginSchema } from "./schema";
+import { canUseTeacherLogin } from "./teacher-login-policy";
 
 export type TeacherLoginState = { error?: string; email?: string };
 
@@ -28,7 +29,7 @@ export async function loginTeacher(_prev: TeacherLoginState, formData: FormData)
     }
 
     const access = await fetchAccess(supabase);
-    if (!access || !access.roles.includes("guru")) {
+    if (!access || !canUseTeacherLogin(access.roles)) {
       await supabase.auth.signOut();
       return {
         error: "Akun ini tidak memiliki akses guru. Gunakan halaman masuk sesuai jenis akun.",
