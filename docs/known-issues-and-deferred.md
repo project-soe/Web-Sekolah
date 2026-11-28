@@ -12,7 +12,8 @@
 - [ ] Browser QA penempatan individual melalui dashboard, termasuk akun tanpa permission `students:view`.
 - [x] Regression test database kenaikan kelas massal: rollback saat kapasitas tidak cukup, penolakan tanpa permission, tingkat tujuan salah, tahun ajaran salah, dan tahun asal tidak aktif; penempatan target tidak berubah pada percobaan yang ditolak.
 - [ ] Browser QA kenaikan kelas massal melalui dashboard dengan data uji.
-- [ ] Uji kelulusan kelas XII, tanggal kelulusan, status akhir, dan riwayat status.
+- [x] Regression test database kelulusan massal kelas XII: permission, kelas non-XII, tahun ajaran tidak aktif, tanggal null/tidak valid, rollback tanpa histori parsial, kelulusan sukses, dan penolakan pengulangan.
+- [ ] Browser QA kelulusan kelas XII melalui dashboard, termasuk tanggal kelulusan dan riwayat status.
 - [x] Regression test database arsip: penolakan untuk siswa dengan penempatan aktif, akun Portal Siswa tertaut, atau undangan aktif; arsip setelah penempatan ditutup tetap mempertahankan enrollment dan histori.
 - [ ] Verifikasi migration `20261127320000_student_archive.sql` pada Supabase production (termasuk RPC dan trigger); lanjutkan browser QA arsip/pemulihan. Kolom `archived_at` pernah ditambahkan manual.
 

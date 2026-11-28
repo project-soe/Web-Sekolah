@@ -577,8 +577,11 @@ $promotion_guards$;
 
 \echo '9. Verify atomic bulk graduation for active grade-XII classes'
 insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity)
-values ('20000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000002', 'XII TKJ 1', 12,
-        '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 36);
+values
+  ('20000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000002', 'XII TKJ 1', 12,
+   '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 36),
+  ('20000000-0000-4000-8000-000000000010', '10000000-0000-4000-8000-000000000001', 'XII TKJ Inactive Year', 12,
+   '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 36);
 insert into public.students (id, nis, nisn, full_name, gender, department_id, enrollment_year)
 values
   ('60000000-0000-4000-8000-000000000006', 'NIS-006', '1234567895', 'Calon Lulusan Satu', 'male', '30000000-0000-4000-8000-000000000001', 2025),
@@ -590,8 +593,11 @@ values
   ('60000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006'),
   ('60000000-0000-4000-8000-000000000008', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000006');
 
-do $$
-declare graduated integer; history_count integer; still_active integer;
+do $graduation_guards$
+declare
+  graduated integer;
+  history_count integer;
+  still_active integer;
 begin
   select count(*) into still_active from public.students
   where id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
@@ -606,14 +612,26 @@ begin
   end;
   select count(*) into still_active from public.students
   where id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
-    and status = 'active';
-  if still_active <> 3 then raise exception 'Permission denial changed student statuses'; end if;
+    and status = 'active' and graduation_date is null;
+  if still_active <> 3 then raise exception 'Permission denial changed student lifecycle data'; end if;
 
   perform set_config('test.permissions', 'classes:view,students:view,classes:update,students:update', false);
   begin
     perform public.graduate_class_students('20000000-0000-4000-8000-000000000004', '2027-05-15');
     raise exception 'Expected a non-XII class to be rejected';
   exception when check_violation then null;
+  end;
+
+  begin
+    perform public.graduate_class_students('20000000-0000-4000-8000-000000000010', '2027-05-15');
+    raise exception 'Expected a class from an inactive academic year to be rejected';
+  exception when check_violation then null;
+  end;
+
+  begin
+    perform public.graduate_class_students('20000000-0000-4000-8000-000000000006', null);
+    raise exception 'Expected a null graduation date to be rejected';
+  exception when null_value_not_allowed then null;
   end;
 
   update public.students set birth_date = '2027-06-01'
@@ -627,6 +645,10 @@ begin
   where id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
     and status = 'active' and graduation_date is null;
   if still_active <> 3 then raise exception 'Failed graduation partially changed student records'; end if;
+  select count(*) into history_count from public.student_status_history
+  where student_id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
+    and new_status = 'graduated';
+  if history_count <> 0 then raise exception 'Rejected graduation left partial status-history rows'; end if;
   update public.students set birth_date = null
   where id = '60000000-0000-4000-8000-000000000008';
 
@@ -651,9 +673,12 @@ begin
     raise exception 'Expected repeat graduation with no active students to be rejected';
   exception when no_data_found then null;
   end;
+  select count(*) into history_count from public.student_status_history
+  where student_id in ('60000000-0000-4000-8000-000000000006','60000000-0000-4000-8000-000000000007','60000000-0000-4000-8000-000000000008')
+    and new_status = 'graduated';
+  if history_count <> 3 then raise exception 'Repeat graduation duplicated status-history rows'; end if;
 end;
-$$;
-
+$graduation_guards$;
 
 
 \echo '10. Verify transfer/withdrawal closes active placement without deleting history'
