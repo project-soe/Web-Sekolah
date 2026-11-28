@@ -2920,3 +2920,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Tahap berikutnya memperkuat database integration tests untuk seluruh siklus RPC absensi guru/admin: roster, draft parsial, submit lengkap, koreksi dengan audit, lock/unlock, dan larangan perubahan setelah submit/lock.
 
 
+
+
+## 2026-11-28 — Menu Login Guru
+- Menambahkan entri **Login Guru** pada navigasi publik desktop dan mobile menuju `/guru/masuk`.
+- Menambahkan halaman login guru khusus dengan validasi role server-side; akun tanpa role `guru` langsung di-sign-out dan ditolak.
+- Akun guru dengan hak admin diarahkan ke dashboard admin; guru biasa diarahkan ke Ruang Guru.
+- Menambahkan pengujian kebijakan role login guru. Verifikasi CI berjalan melalui PR; QA browser tetap perlu dilakukan pada preview deployment.

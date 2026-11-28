@@ -38,12 +38,13 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
           <ul className="flex flex-col gap-1">
             {items.map((item) => {
               const isPortal = item.href === "/portal/daftar";
+              const isTeacherLogin = item.href === "/guru/masuk";
               return (
                 <li key={item.href}>
                   <NavLink
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className={isPortal ? "flex min-h-11 items-center rounded-lg bg-amber-500 px-3 text-base font-semibold text-slate-950 hover:bg-amber-400" : "flex min-h-11 items-center rounded-lg px-3 text-base hover:bg-muted"}
+                    className={isPortal ? "flex min-h-11 items-center rounded-lg bg-amber-500 px-3 text-base font-semibold text-slate-950 hover:bg-amber-400" : isTeacherLogin ? "flex min-h-11 items-center rounded-lg border border-primary/30 px-3 text-base font-semibold text-primary hover:bg-primary/5" : "flex min-h-11 items-center rounded-lg px-3 text-base hover:bg-muted"}
                     activeClassName={isPortal ? "ring-2 ring-amber-600 ring-offset-1" : "bg-secondary font-semibold"}
                   >
                     {item.label}
