@@ -111,6 +111,24 @@ begin
     ('60000000-0000-4000-8000-000000000005', 'NIS-005', '1234567894', 'Siswa Aktif Empat', 'male',
      '30000000-0000-4000-8000-000000000001', 2026);
 
+  insert into public.students (
+    id, nis, nisn, full_name, gender, department_id, enrollment_year
+  ) values
+    ('60000000-0000-4000-8000-000000000019', 'NIS-019', '9876543219', 'Siswa Uji Kapasitas Satu', 'male',
+     '30000000-0000-4000-8000-000000000001', 2026),
+    ('60000000-0000-4000-8000-000000000020', 'NIS-020', '9876543220', 'Siswa Uji Kapasitas Dua', 'female',
+     '30000000-0000-4000-8000-000000000001', 2026);
+
+  insert into public.class_groups (
+    id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity
+  ) values (
+    '20000000-0000-4000-8000-000000000007',
+    '10000000-0000-4000-8000-000000000002',
+    'XI TKJ Concurrency', 11,
+    '30000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000001', 1
+  );
+
   if (select count(*) from public.students
       where id between '60000000-0000-4000-8000-000000000001'::uuid and '60000000-0000-4000-8000-000000000005'::uuid
         and status = 'active' and created_by = actor_id) <> 5 then
