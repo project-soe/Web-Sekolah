@@ -4,6 +4,12 @@
 
 ## Status saat ini
 
+## 2026-11-28 — PR #30 merged; student attendance history regression coverage
+- PR #30 sudah merged ke `main` dengan merge commit `ca05bf06d12fb2199ec5885b982bc47deaac570f`; pengguna mengonfirmasi PR sukses.
+- Rekap bulanan kini memiliki regression assertion bahwa sesi draft tidak dihitung; distribusi status dan persentase tetap berasal dari sesi final.
+- Tindak lanjut: uji RPC riwayat absensi Portal Siswa agar hanya menampilkan sesi submitted/locked milik akun siswa yang terhubung; tidak ada migrasi atau perubahan Supabase production.
+
+
 ## 2026-11-28 — PR #29 merged: attendance RPC lifecycle tests
 - PR #29 sudah merged ke `main` dengan merge commit `f45800aeff56e0ca512f9cabd7b506ea1090cad6`; pengguna mengonfirmasi CI #427 hijau sebelum merge.
 - Database integration tests sekarang mencakup roster wali kelas, draft parsial yang tidak dapat dikirim, submit lengkap, larangan edit guru setelah submit, koreksi admin beserta audit nilai lama/baru dan alasan, serta lock/unlock dan larangan koreksi saat terkunci.

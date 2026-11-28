@@ -835,7 +835,73 @@ begin
 end;
 $portal$;
 
+-- Attendance history must be scoped to the linked student and finalized sessions only.
 reset role;
+insert into public.student_class_enrollments(student_id,academic_year_id,class_group_id,assigned_by)
+values ('60000000-0000-4000-8000-000000000011','10000000-0000-4000-8000-000000000001',
+ '20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001');
+insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status,submitted_at,locked_at)
+values
+ ('70000000-0000-4000-8000-000000000011','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-01-10','submitted',now(),null),
+ ('70000000-0000-4000-8000-000000000012','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-01-11','locked',now(),now()),
+ ('70000000-0000-4000-8000-000000000013','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-01-12','draft',null,null);
+insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status,note)
+select
+ case s.id
+  when '70000000-0000-4000-8000-000000000011' then '80000000-0000-4000-8000-000000000011'::uuid
+  when '70000000-0000-4000-8000-000000000012' then '80000000-0000-4000-8000-000000000012'::uuid
+  else '80000000-0000-4000-8000-000000000013'::uuid
+ end,
+ s.id,'60000000-0000-4000-8000-000000000011',en.id,
+ case s.id
+  when '70000000-0000-4000-8000-000000000011' then 'present'
+  when '70000000-0000-4000-8000-000000000012' then 'sick'
+  else 'absent'
+ end,
+ case when s.status='draft' then 'Jangan tampil di portal' else null end
+from public.attendance_sessions s
+join public.student_class_enrollments en on en.student_id='60000000-0000-4000-8000-000000000011'
+ and en.class_group_id=s.class_group_id and en.ended_at is null
+where s.id in ('70000000-0000-4000-8000-000000000011','70000000-0000-4000-8000-000000000012','70000000-0000-4000-8000-000000000013');
+
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',false);
+select set_config('test.permissions','student_portal:view',false);
+set role authenticated;
+do $student_attendance_history$
+declare
+ v_count integer;
+ v_submitted integer;
+ v_locked integer;
+begin
+ select count(*) into v_count from public.my_student_attendance();
+ select count(*) into v_submitted from public.my_student_attendance()
+ where attendance_date='2099-01-10' and class_name is not null and status='present' and note is null;
+ select count(*) into v_locked from public.my_student_attendance()
+ where attendance_date='2099-01-11' and class_name is not null and status='sick' and note is null;
+ if v_count <> 2 or v_submitted <> 1 or v_locked <> 1 then
+  raise exception 'Student attendance history should expose only this student submitted/locked sessions; got count %, submitted %, locked %',
+   v_count,v_submitted,v_locked;
+ end if;
+ if exists (select 1 from public.my_student_attendance() where attendance_date='2099-01-12') then
+  raise exception 'Draft attendance unexpectedly appeared in student history';
+ end if;
+end;
+$student_attendance_history$;
+
+reset role;
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000004',false);
+select set_config('test.permissions','student_portal:view',false);
+set role authenticated;
+do $student_attendance_isolation$
+begin
+ if exists (select 1 from public.my_student_attendance()) then
+  raise exception 'Student portal account unexpectedly read another student attendance history';
+ end if;
+end;
+$student_attendance_isolation$;
+reset role;
+
+
 
 
 \echo '12. Verify onboarding rejects Auth accounts that became active before claim or approval'
@@ -1325,7 +1391,7 @@ values
  ('60000000-0000-4000-8000-000000000016','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001'),
  ('60000000-0000-4000-8000-000000000017','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001');
 insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status,submitted_at)
-values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-11-12','submitted',now());
+values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-02-12','submitted',now());
 insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status)
 select
  case when st.id='60000000-0000-4000-8000-000000000016' then '80000000-0000-4000-8000-000000000001'::uuid else '80000000-0000-4000-8000-000000000002'::uuid end,
@@ -1337,7 +1403,7 @@ where st.id in ('60000000-0000-4000-8000-000000000016','60000000-0000-4000-8000-
 
 -- A draft session in the same month must not affect the finalized monthly summary.
 insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status)
-values ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-11-13','draft');
+values ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-02-13','draft');
 insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status)
 select
  case when st.id='60000000-0000-4000-8000-000000000016' then '80000000-0000-4000-8000-000000000003'::uuid else '80000000-0000-4000-8000-000000000004'::uuid end,
@@ -1352,7 +1418,7 @@ set role authenticated;
 do $attendance_monthly$
 declare result record;
 begin
- select * into result from public.admin_attendance_monthly_summary('2026-11-01');
+ select * into result from public.admin_attendance_monthly_summary('2099-02-01');
  if result.class_group_id <> '20000000-0000-4000-8000-000000000001'
    or result.session_count <> 1 or result.student_day_count <> 2
    or result.present_count <> 1 or result.absent_count <> 1
@@ -1361,7 +1427,7 @@ begin
   raise exception 'Monthly attendance aggregation returned unexpected values: %', row_to_json(result);
  end if;
  begin
-  perform * from public.admin_attendance_monthly_summary('2026-11-12');
+  perform * from public.admin_attendance_monthly_summary('2099-02-12');
   raise exception 'Monthly attendance RPC accepted a non-first day month parameter';
  exception when invalid_parameter_value then null;
  end;
