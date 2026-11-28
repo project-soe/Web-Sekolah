@@ -2927,3 +2927,8 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan halaman login guru khusus dengan validasi role server-side; akun tanpa role `guru` langsung di-sign-out dan ditolak.
 - Akun guru dengan hak admin diarahkan ke dashboard admin; guru biasa diarahkan ke Ruang Guru.
 - Menambahkan pengujian kebijakan role login guru. Verifikasi CI berjalan melalui PR; QA browser tetap perlu dilakukan pada preview deployment.
+
+
+## 2026-11-28 — Akses silang halaman login
+- Menambahkan tautan **Login Guru** langsung pada halaman login umum. Ini penting karena pengguna yang membuka /ruang-guru tanpa sesi akan diarahkan ke /login; jalur guru kini tetap mudah ditemukan tanpa harus kembali ke navigasi publik.
+- Halaman login guru tetap menyediakan tautan kembali ke halaman login umum.
