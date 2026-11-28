@@ -1,3 +1,8 @@
+## 2026-11-28 — Validasi payload RPC absensi pada database
+- RPC `save_class_attendance` kini menolak payload NULL/non-array, elemen non-object, ID siswa kosong, siswa duplikat, status di luar domain, dan catatan lebih dari 500 karakter.
+- Regression database tests memanggil RPC secara langsung untuk membuktikan validasi tidak bergantung pada server action/UI.
+- Perubahan menggunakan migration baru yang mempertahankan signature RPC; belum diterapkan ke Supabase production dan memerlukan pemeriksaan migration history, backup, serta persetujuan eksplisit.
+
 ## 2026-11-28 — Hardening input server action absensi guru
 - Audit menemukan server action guru hanya memeriksa pola tanggal, mengabaikan ID siswa malformed, dan menyerahkan status/catatan tanpa validasi bentuk di boundary aplikasi.
 - Server action kini memvalidasi tanggal kalender nyata, status yang diizinkan, UUID siswa, duplikasi field siswa, serta batas catatan 500 karakter sebelum akses database.
