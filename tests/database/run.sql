@@ -1070,6 +1070,189 @@ begin
 end;
 $student_archive_guards$;
 
+\echo '13b. Verify teacher invitation revocation, expiry, verified email, and existing-role guards'
+reset role;
+insert into public.teachers (id, email) values
+  ('40000000-0000-4000-8000-000000000002', 'teacher-revoked@example.test'),
+  ('40000000-0000-4000-8000-000000000003', 'teacher-expired@example.test'),
+  ('40000000-0000-4000-8000-000000000004', 'teacher-unverified@example.test'),
+  ('40000000-0000-4000-8000-000000000005', 'teacher-existing-role@example.test');
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'teacher_accounts:manage', false);
+set role authenticated;
+select public.create_teacher_account_invitation('40000000-0000-4000-8000-000000000002') as revoked_teacher_token \gset
+select set_config('test.teacher_revoked_token', :'revoked_teacher_token', false);
+select public.revoke_teacher_account_invitation('40000000-0000-4000-8000-000000000002');
+select public.create_teacher_account_invitation('40000000-0000-4000-8000-000000000003') as expired_teacher_token \gset
+select set_config('test.teacher_expired_token', :'expired_teacher_token', false);
+select public.create_teacher_account_invitation('40000000-0000-4000-8000-000000000004') as unverified_teacher_token \gset
+select set_config('test.teacher_unverified_token', :'unverified_teacher_token', false);
+select public.create_teacher_account_invitation('40000000-0000-4000-8000-000000000005') as role_teacher_token \gset
+select set_config('test.teacher_role_token', :'role_teacher_token', false);
+reset role;
+
+update public.teacher_account_invitations
+set expires_at = now() - interval '1 minute'
+where token_hash = extensions.digest(
+  convert_to(current_setting('test.teacher_expired_token'), 'UTF8'), 'sha256'
+);
+
+set role anon;
+do $teacher_invitation_invalid$
+begin
+  if public.validate_teacher_account_invitation(
+    current_setting('test.teacher_revoked_token'), 'teacher-revoked@example.test'
+  ) then raise exception 'Revoked teacher invitation was still valid'; end if;
+  if public.validate_teacher_account_invitation(
+    current_setting('test.teacher_expired_token'), 'teacher-expired@example.test'
+  ) then raise exception 'Expired teacher invitation was still valid'; end if;
+end;
+$teacher_invitation_invalid$;
+reset role;
+
+insert into public.users (id, email, full_name, is_active) values
+  ('50000000-0000-4000-8000-000000000008', 'teacher-revoked@example.test', 'Guru Dicabut', false),
+  ('50000000-0000-4000-8000-000000000009', 'teacher-expired@example.test', 'Guru Kedaluwarsa', false),
+  ('50000000-0000-4000-8000-000000000010', 'teacher-unverified@example.test', 'Guru Belum Verifikasi', false),
+  ('50000000-0000-4000-8000-000000000011', 'teacher-existing-role@example.test', 'Guru Sudah Ber-role', false);
+insert into auth.users (id, email, email_confirmed_at) values
+  ('50000000-0000-4000-8000-000000000008', 'teacher-revoked@example.test', now()),
+  ('50000000-0000-4000-8000-000000000009', 'teacher-expired@example.test', now()),
+  ('50000000-0000-4000-8000-000000000010', 'teacher-unverified@example.test', null),
+  ('50000000-0000-4000-8000-000000000011', 'teacher-existing-role@example.test', now());
+insert into public.roles (slug, name, is_system)
+values ('teacher_invitation_test_role', 'Teacher invitation test role', false)
+on conflict (slug) do nothing;
+insert into public.user_roles (user_id, role_id, assigned_by)
+select '50000000-0000-4000-8000-000000000011', id, '50000000-0000-4000-8000-000000000001'
+from public.roles where slug = 'teacher_invitation_test_role';
+do $teacher_existing_role_seed$
+begin
+  if not exists (
+    select 1 from public.user_roles
+    where user_id = '50000000-0000-4000-8000-000000000011'
+  ) then
+    raise exception 'Existing-role fixture was not inserted';
+  end if;
+end;
+$teacher_existing_role_seed$;
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000008', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+do $teacher_invitation_rejected$
+begin
+  begin
+    perform public.claim_teacher_account_invitation(current_setting('test.teacher_revoked_token'));
+    raise exception 'Revoked teacher invitation was unexpectedly claimed';
+  exception when no_data_found then null;
+  end;
+end;
+$teacher_invitation_rejected$;
+reset role;
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000009', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+do $teacher_invitation_rejected$
+begin
+  begin
+    perform public.claim_teacher_account_invitation(current_setting('test.teacher_expired_token'));
+    raise exception 'Expired teacher invitation was unexpectedly claimed';
+  exception when no_data_found then null;
+  end;
+end;
+$teacher_invitation_rejected$;
+reset role;
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000010', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+do $teacher_invitation_rejected$
+begin
+  begin
+    perform public.claim_teacher_account_invitation(current_setting('test.teacher_unverified_token'));
+    raise exception 'Unverified teacher email was unexpectedly accepted';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$teacher_invitation_rejected$;
+reset role;
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000011', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+do $teacher_existing_role_fixture$
+begin
+  if auth.uid() is distinct from '50000000-0000-4000-8000-000000000011'::uuid then
+    raise exception 'Existing-role fixture JWT subject mismatch: %', auth.uid();
+  end if;
+end;
+$teacher_existing_role_fixture$;
+
+do $teacher_invitation_rejected$
+begin
+  begin
+    perform public.claim_teacher_account_invitation(current_setting('test.teacher_role_token'));
+    raise exception 'Account with an existing role unexpectedly claimed a teacher invitation';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$teacher_invitation_rejected$;
+reset role;
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000007', false);
+select set_config('test.permissions', '', false);
+set role authenticated;
+do $teacher_invitation_rejected$
+begin
+  begin
+    perform public.claim_teacher_account_invitation(current_setting('test.teacher_invite_token'));
+    raise exception 'Previously claimed teacher invitation was unexpectedly reusable';
+  exception when no_data_found then null;
+  end;
+end;
+$teacher_invitation_rejected$;
+reset role;
+
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'teacher_accounts:manage', false);
+set role authenticated;
+do $teacher_invitation_rejected$
+begin
+  begin
+    perform public.create_teacher_account_invitation('40000000-0000-4000-8000-000000000001');
+    raise exception 'Already-linked teacher profile unexpectedly received another invitation';
+  exception when unique_violation then null;
+  end;
+end;
+$teacher_invitation_rejected$;
+reset role;
+
+do $teacher_invitation_rejected$
+begin
+  if exists (select 1 from public.teacher_user_links
+      where teacher_id in ('40000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000003',
+                           '40000000-0000-4000-8000-000000000004','40000000-0000-4000-8000-000000000005')) then
+    raise exception 'Rejected teacher invitation created an account link';
+  end if;
+  if exists (select 1 from public.teacher_account_invitations
+      where token_hash in (
+        extensions.digest(convert_to(current_setting('test.teacher_unverified_token'), 'UTF8'), 'sha256'),
+        extensions.digest(convert_to(current_setting('test.teacher_role_token'), 'UTF8'), 'sha256')
+      ) and claimed_at is not null) then
+    raise exception 'Rejected unverified/existing-role account consumed its invitation';
+  end if;
+  if (select count(*) from public.teacher_account_invitations
+      where token_hash = extensions.digest(convert_to(current_setting('test.teacher_revoked_token'), 'UTF8'), 'sha256')
+        and revoked_at is not null and claimed_at is null) <> 1 then
+    raise exception 'Revoked invitation state was not retained';
+  end if;
+end;
+$teacher_invitation_rejected$;
+
+
 \echo '14. Verify safe student archiving and restoration'
 reset role;
 insert into public.students (id, nis, full_name, gender, enrollment_year)

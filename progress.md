@@ -2815,3 +2815,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memastikan tanggal kelulusan yang melanggar constraint membatalkan seluruh perubahan, termasuk tidak membuat histori status parsial.
 - Memastikan kelulusan sukses menyimpan tanggal dan histori untuk seluruh siswa, sedangkan pemanggilan ulang tanpa siswa aktif ditolak tanpa menggandakan histori.
 - Browser QA dashboard kelulusan tetap menunggu. Tidak ada migrasi baru atau perubahan Supabase production.
+
+
+## 2026-11-28 — Regression test guard undangan akun guru
+- Menambah uji database untuk undangan yang dicabut, kedaluwarsa, dan telah diklaim agar tidak dapat digunakan ulang.
+- Menambah uji bahwa email Auth yang belum diverifikasi dan akun yang sudah memiliki role tidak dapat mengklaim undangan; undangan tetap belum terpakai dan tidak membuat link guru.
+- Memastikan profil guru yang sudah tertaut tidak dapat menerima undangan baru.
+- Browser QA alur undangan, termasuk token salah dan redirect role, tetap menunggu. Tidak ada migrasi baru atau perubahan Supabase production.
