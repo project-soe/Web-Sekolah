@@ -59,3 +59,9 @@
 - Data diambil dari RPC `admin_attendance_monthly_summary`, sehingga definisi angka ekspor sama dengan dashboard.
 - CSV menggunakan UTF-8 BOM, escaping nilai, dan mitigasi formula injection pada teks untuk mengurangi risiko saat dibuka di spreadsheet.
 - Tidak memerlukan migrasi database baru; CI dan browser QA menunggu.
+
+
+## Ekspor rekap bulanan — status 2026-11-28
+- PR #17 sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau.
+- Endpoint `/api/admin/absensi/export?month=YYYY-MM` memakai permission `attendance:view_all` dan RPC rekap yang sama dengan dashboard.
+- CSV memakai UTF-8 BOM, escaping kolom, serta mitigasi formula injection. Browser QA unduh dan pemeriksaan isi file masih menunggu.
