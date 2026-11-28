@@ -2802,3 +2802,9 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Menambahkan skenario database untuk memastikan arsip ditolak jika siswa masih memiliki penempatan kelas aktif, akun Portal Siswa tertaut, atau undangan Portal Siswa yang belum kedaluwarsa.
 - Menambahkan skenario lifecycle: tutup penempatan melalui RPC withdrawn, arsipkan siswa, lalu pastikan enrollment, histori kelas, dan pelepasan kapasitas tetap terjaga.
 - Pengujian production/browser belum dilakukan. Migrasi 20261127320000_student_archive.sql tidak dijalankan pada Supabase production.
+
+## 2026-11-28 — Regression test kenaikan kelas massal
+- Memperluas database assertions untuk menolak kenaikan tanpa `students:update`, target dengan tingkat yang tidak satu tingkat di atas, target pada tahun ajaran yang sama, dan sumber dari tahun ajaran tidak aktif.
+- Memastikan percobaan yang ditolak tidak menambah atau mengubah penempatan siswa pada kelas tujuan yang valid maupun target tidak valid.
+- Skenario rollback kapasitas tidak cukup dan duplikasi penempatan sudah tercakup pada test sebelumnya. Browser QA dashboard tetap menunggu.
+- Tidak ada migrasi baru atau perubahan Supabase production.
