@@ -1384,3 +1384,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Rekap bulanan menghitung sesi `submitted`/`locked`, distribusi status, dan persentase `(present + late) / seluruh entri × 100`; draft dikecualikan.
 - Pekerjaan berikutnya: ekspor CSV rekap bulanan. Branch `feat/attendance-monthly-csv-export` menambahkan endpoint terproteksi permission `attendance:view_all`, serializer CSV dengan BOM/escaping dan mitigasi formula injection, link unduh pada dashboard, serta unit tests. Menunggu CI dan review.
 - Browser QA rekap bulanan/unduh CSV belum dikonfirmasi. Tidak ada perubahan database production untuk ekspor.
+
+
+## 2026-11-28 — Penguatan permission penempatan siswa individual
+- Audit menemukan policy RLS INSERT/UPDATE `student_class_enrollments` hanya mewajibkan permission update, sedangkan server action penempatan individual juga mensyaratkan `classes:view` dan `students:view`. Klien PostgREST berpotensi melewati pemeriksaan view pada server action.
+- Branch `fix/student-enrollment-rbac-guards-main` menambahkan migrasi `20261128100000_student_enrollment_permission_guards.sql`: INSERT/UPDATE kini mensyaratkan `classes:view`, `students:view`, `classes:update`, dan `students:update`.
+- Database test menegaskan insert ditolak dan update tidak mengubah penempatan ketika akun tidak memiliki permission view. Browser QA UI tetap tertunda.
+- Tidak ada migrasi production yang dijalankan. CI dan review PR #19 menunggu.
