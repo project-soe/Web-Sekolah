@@ -47,6 +47,11 @@
 - Tidak ada migrasi baru atau perubahan Supabase production.
 - Pekerjaan test berikutnya memperkuat rekap bulanan agar sesi draft terbukti tidak ikut dihitung; browser QA tetap terpisah.
 
+### Pembaruan PR #30 — 2026-11-28
+- PR #30 sudah merged ke `main` (merge commit `ca05bf06d12fb2199ec5885b982bc47deaac570f`); pengguna mengonfirmasi PR sukses.
+- Rekap bulanan diuji agar sesi draft dan status di dalamnya tidak ikut dihitung.
+- Lanjutan test: isolasi riwayat absensi siswa untuk sesi submitted/locked saja; browser QA riwayat Portal Siswa, rekap bulanan, dan ekspor CSV masih menunggu.
+
 ## 1. Lifecycle siswa dan kelas
 
 - [x] Uji browser perubahan status siswa menjadi transferred dilaporkan berhasil.
