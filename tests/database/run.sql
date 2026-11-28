@@ -355,7 +355,7 @@ select set_config('test.permissions', 'classes:view,classes:create,classes:updat
 
 \echo 'Verify withdrawal closes active enrollment, releases capacity, and preserves history'
 insert into public.students (id, nis, nisn, full_name, gender, department_id, enrollment_year)
-values ('60000000-0000-4000-8000-000000000006', 'NIS-006', '1234567895', 'Siswa Uji Withdrawal', 'female', '30000000-0000-4000-8000-000000000001', 2027);
+values ('60000000-0000-4000-8000-000000000018', 'NIS-018', '1234567898', 'Siswa Uji Withdrawal', 'female', '30000000-0000-4000-8000-000000000001', 2027);
 do $$
 declare
   v_enrollment_id uuid;
@@ -365,20 +365,20 @@ declare
 begin
   insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
   values (
-    '60000000-0000-4000-8000-000000000006',
+    '60000000-0000-4000-8000-000000000018',
     '10000000-0000-4000-8000-000000000002',
     '20000000-0000-4000-8000-000000000003'
   ) returning id into v_enrollment_id;
 
   closed_count := public.transition_student_status(
-    '60000000-0000-4000-8000-000000000006', 'withdrawn'
+    '60000000-0000-4000-8000-000000000018', 'withdrawn'
   );
   if closed_count <> 1 then
     raise exception 'Withdrawal should close exactly one active-year enrollment, got %', closed_count;
   end if;
 
   if (select status from public.students
-      where id = '60000000-0000-4000-8000-000000000006') <> 'withdrawn' then
+      where id = '60000000-0000-4000-8000-000000000018') <> 'withdrawn' then
     raise exception 'Withdrawal did not update the student status';
   end if;
 
@@ -402,7 +402,7 @@ begin
 
   select count(*) into history_count
   from public.student_status_history
-  where student_id = '60000000-0000-4000-8000-000000000006'
+  where student_id = '60000000-0000-4000-8000-000000000018'
     and old_status = 'active' and new_status = 'withdrawn' and changed_by = v_actor_id;
   if history_count <> 1 then
     raise exception 'Withdrawal did not create the expected status audit history';
@@ -410,7 +410,7 @@ begin
 
   begin
     perform public.transition_student_status(
-      '60000000-0000-4000-8000-000000000006', 'withdrawn'
+      '60000000-0000-4000-8000-000000000018', 'withdrawn'
     );
     raise exception 'Repeated withdrawal unexpectedly succeeded';
   exception when check_violation then
