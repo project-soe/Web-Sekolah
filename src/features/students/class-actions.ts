@@ -174,26 +174,26 @@ export async function assignStudentToClass(formData: FormData): Promise<void> {
     : "/admin/kelas";
   const failAt = (code: string): never => redirect(returnPath + "?error=" + code);
   const parsed = classAssignmentSchema.safeParse(Object.fromEntries(formData.entries()));
-  if (!parsed.success) failAt("validasi");
+  if (!parsed.success) return failAt("validasi");
   const session = await requireClassPermission("classes:update");
-  if (!can(session.access, "classes:view") || !can(session.access, "students:view") || !can(session.access, "students:update")) failAt("akses");
+  if (!can(session.access, "classes:view") || !can(session.access, "students:view") || !can(session.access, "students:update")) return failAt("akses");
   const supabase = await createClient();
   const { data: activeYear, error: activeYearError } = await supabase.from("academic_years")
     .select("id").eq("is_active", true).maybeSingle();
-  if (activeYearError || !activeYear) failAt("tahun_ajaran");
+  if (activeYearError || !activeYear) return failAt("tahun_ajaran");
   const { data: target, error: targetError } = await supabase.from("class_groups")
     .select("id, academic_year_id, name").eq("id", parsed.data.class_group_id).maybeSingle();
-  if (targetError || !target) failAt("kelas");
-  if (target.academic_year_id !== activeYear.id) failAt("tahun_ajaran");
+  if (targetError || !target) return failAt("kelas");
+  if (target.academic_year_id !== activeYear.id) return failAt("tahun_ajaran");
   const { data: student, error: studentError } = await supabase.from("students")
     .select("id, full_name, status").eq("id", parsed.data.student_id).maybeSingle();
-  if (studentError || !student || student.status !== "active") failAt("siswa");
+  if (studentError || !student || student.status !== "active") return failAt("siswa");
 
   const { data: previous, error: previousError } = await supabase.from("student_class_enrollments")
     .select("id, class_group_id").eq("student_id", student.id)
     .eq("academic_year_id", target.academic_year_id).maybeSingle();
-  if (previousError) failAt("penempatan");
-  if (previous?.class_group_id === target.id) failAt("penempatan_sama");
+  if (previousError) return failAt("penempatan");
+  if (previous?.class_group_id === target.id) return failAt("penempatan_sama");
   const result = previous
     ? await supabase.from("student_class_enrollments")
         .update({ class_group_id: target.id })
