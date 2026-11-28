@@ -6,6 +6,11 @@ import { correctAttendance, setAttendanceLock } from "@/features/attendance/admi
 export const metadata: Metadata = { title: "Rekap Absensi | Admin" };
 export const dynamic = "force-dynamic";
 
+type MonthlyRow = {
+  class_group_id: string; class_name: string; academic_year: string;
+  session_count: number; student_day_count: number; present_count: number; late_count: number;
+  sick_count: number; excused_count: number; absent_count: number; attendance_percentage: number;
+};
 type Row = {
   class_group_id: string; class_name: string; academic_year: string; attendance_date: string;
   session_id: string | null; entry_id: string | null; session_status: "draft" | "submitted" | "locked" | null;
@@ -21,14 +26,17 @@ const errors: Record<string, string> = {
 
 export default async function AdminAttendancePage({
   searchParams,
-}: { searchParams: Promise<{ date?: string; error?: string; saved?: string }> }) {
+}: { searchParams: Promise<{ date?: string; month?: string; error?: string; saved?: string }> }) {
   await requirePermission("attendance:view_all");
   const params = await searchParams;
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const date = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : today;
+  const month = params.month && /^\d{4}-(0[1-9]|1[0-2])$/.test(params.month) ? `${params.month}-01` : `${today.slice(0, 7)}-01`;
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("my_teacher_attendance_roster", { p_date: date });
   const rows = (data ?? []) as Row[];
+  const { data: monthlyData, error: monthlyError } = await supabase.rpc("admin_attendance_monthly_summary", { p_month: month });
+  const monthlyRows = (monthlyData ?? []) as MonthlyRow[];
   const groups = new Map<string, Row[]>();
   for (const row of rows) {
     const list = groups.get(row.class_group_id) ?? [];
@@ -42,7 +50,51 @@ export default async function AdminAttendancePage({
         <h1 className="text-2xl font-bold">Rekap dan koreksi absensi</h1>
         <p className="text-sm text-muted-foreground">Rekap harian berdasarkan sesi yang sudah dibuat. Draft tidak dihitung sebagai data final.</p>
       </header>
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <div>
+          <h2 className="font-semibold">Rekap bulanan per rombel</h2>
+          <p className="text-sm text-muted-foreground">Hanya sesi terkirim dan terkunci yang dihitung. Persentase hadir = (Hadir + Terlambat) ÷ seluruh status tercatat.</p>
+        </div>
+        <form className="flex flex-wrap items-end gap-3">
+          <input type="hidden" name="date" value={date} />
+          <label className="grid gap-1 text-sm">Bulan
+            <input type="month" name="month" defaultValue={month.slice(0, 7)} className="min-h-10 rounded-md border border-border bg-background px-3" />
+          </label>
+          <button className="min-h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">Tampilkan rekap</button>
+        </form>
+        {monthlyError && <p role="alert" className="text-sm text-danger">Gagal memuat rekap bulanan. Pastikan migrasi rekap absensi sudah diterapkan.</p>}
+        {!monthlyError && monthlyRows.length === 0 && <p className="text-sm text-muted-foreground">Belum ada sesi absensi final pada bulan ini.</p>}
+        {!monthlyError && monthlyRows.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="border-b border-border text-xs text-muted-foreground">
+                <tr>
+                  <th className="p-2">Rombel</th><th className="p-2 text-right">Sesi</th>
+                  <th className="p-2 text-right">Hadir</th><th className="p-2 text-right">Terlambat</th>
+                  <th className="p-2 text-right">Sakit</th><th className="p-2 text-right">Izin</th>
+                  <th className="p-2 text-right">Alpa</th><th className="p-2 text-right">Persentase hadir</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {monthlyRows.map((item) => (
+                  <tr key={item.class_group_id}>
+                    <td className="p-2"><span className="font-medium">{item.class_name}</span><span className="block text-xs text-muted-foreground">{item.academic_year} · {item.student_day_count} catatan siswa</span></td>
+                    <td className="p-2 text-right tabular-nums">{item.session_count}</td>
+                    <td className="p-2 text-right tabular-nums">{item.present_count}</td>
+                    <td className="p-2 text-right tabular-nums">{item.late_count}</td>
+                    <td className="p-2 text-right tabular-nums">{item.sick_count}</td>
+                    <td className="p-2 text-right tabular-nums">{item.excused_count}</td>
+                    <td className="p-2 text-right tabular-nums">{item.absent_count}</td>
+                    <td className="p-2 text-right font-semibold tabular-nums">{Number(item.attendance_percentage).toFixed(2)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
       <form className="flex flex-wrap items-end gap-3">
+        <input type="hidden" name="month" value={month.slice(0, 7)} />
         <label className="grid gap-1 text-sm">Tanggal
           <input type="date" name="date" defaultValue={date} className="min-h-10 rounded-md border border-border bg-background px-3" />
         </label>
