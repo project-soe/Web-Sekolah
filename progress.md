@@ -5,9 +5,9 @@
 ## Status saat ini
 
 - **Tanggal pembaruan:** 2026-11-28.
-- **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), dan PR #14 (idempotensi migrasi arsip siswa) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
+- **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), PR #14 (idempotensi migrasi arsip siswa), PR #15 (pembaruan dokumentasi QA), dan PR #16 (rekap bulanan absensi) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
 - **CI:** PR #12 (run #367), PR #13 (termasuk run #371), dan PR #14 (run #370) dikonfirmasi pengguna seluruhnya hijau sebelum merge.
-- **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan tahap pertama Modul Absensi Siswa. Browser QA admin pada 2026-11-28 mengonfirmasi tab Absensi tampil dan rekap harian termuat; koreksi serta lock/unlock belum diuji.
+- **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan tahap pertama Modul Absensi Siswa. Browser QA admin pada 2026-11-28 mengonfirmasi tab Absensi tampil dan rekap harian termuat; koreksi serta lock/unlock belum diuji. Pengguna mengonfirmasi PR #16 sudah merged dan migrasi rekap bulanan sudah dideploy.
 - **Portal Siswa:** pengguna mengonfirmasi simulasi pendaftaran berhasil dan akun dapat login pada 2026-11-27. Item pengujian pendaftaran Portal Siswa dihapus dari daftar deferred; cakupan konfirmasi tidak berarti seluruh edge-case sudah diuji.
 - **Modul Absensi:** migrasi `20261127330000_student_daily_attendance.sql`, UI guru, rekap/koreksi admin, dan tampilan riwayat Portal Siswa sudah masuk main. Browser QA guru/admin/siswa masih tertunda.
 - **Perbaikan lanjutan absensi:** pemilih tanggal guru (hari ini hingga 7 hari kalender sebelumnya), validasi server, dan retensi tanggal setelah submit/error sudah merged melalui PR #13.
@@ -1376,3 +1376,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pengguna mengonfirmasi CI seluruhnya hijau sebelum merge.
 - Browser QA admin: pengguna mengonfirmasi tab Absensi tampil di dashboard admin dan rekap absensi termuat. Cakupan ini hanya memverifikasi tampilan/rekap harian; koreksi, lock/unlock, input guru, dan riwayat Portal Siswa belum terkonfirmasi.
 - Tidak ada migrasi yang diterapkan ke Supabase production. Status migration history dan backup tetap perlu diverifikasi sebelum deployment.
+
+
+## 2026-11-28 — Rekap bulanan absensi merged dan deployed
+- PR #15 dokumentasi QA merged (`f283b144781c777f10a7f98d7da463b3ebe6b7ea`).
+- PR #16 rekap bulanan absensi per rombel merged (`fef07c7122728456327fcebe08e76e42c373c26c`). Pengguna mengonfirmasi CI #375 hijau, PR merged, dan migrasi `20261128090000_student_attendance_monthly_summary.sql` sudah diterapkan ke Supabase.
+- Rekap bulanan menghitung sesi `submitted`/`locked`, distribusi status, dan persentase `(present + late) / seluruh entri × 100`; draft dikecualikan.
+- Pekerjaan berikutnya: ekspor CSV rekap bulanan. Branch `feat/attendance-monthly-csv-export` menambahkan endpoint terproteksi permission `attendance:view_all`, serializer CSV dengan BOM/escaping dan mitigasi formula injection, link unduh pada dashboard, serta unit tests. Menunggu CI dan review.
+- Browser QA rekap bulanan/unduh CSV belum dikonfirmasi. Tidak ada perubahan database production untuk ekspor.

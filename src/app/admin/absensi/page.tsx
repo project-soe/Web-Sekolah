@@ -61,6 +61,7 @@ export default async function AdminAttendancePage({
             <input type="month" name="month" defaultValue={month.slice(0, 7)} className="min-h-10 rounded-md border border-border bg-background px-3" />
           </label>
           <button className="min-h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">Tampilkan rekap</button>
+          <a href={`/api/admin/absensi/export?month=${month.slice(0, 7)}`} className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm font-medium hover:bg-muted">Unduh CSV</a>
         </form>
         {monthlyError && <p role="alert" className="text-sm text-danger">Gagal memuat rekap bulanan. Pastikan migrasi rekap absensi sudah diterapkan.</p>}
         {!monthlyError && monthlyRows.length === 0 && <p className="text-sm text-muted-foreground">Belum ada sesi absensi final pada bulan ini.</p>}
