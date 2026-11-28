@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildMonthlyAttendanceCsv } from "@/features/attendance/monthly-csv";
 
 describe("buildMonthlyAttendanceCsv", () => {
-  it("writes UTF-8 BOM, headings, escaped values, and two-decimal percentages", () => {
+  it("writes UTF-8 BOM, quoted headings, escaped values, and two-decimal percentages", () => {
     const csv = buildMonthlyAttendanceCsv([{
       class_name: 'X "RPL", Pagi',
       academic_year: "2026/2027",
@@ -16,9 +16,9 @@ describe("buildMonthlyAttendanceCsv", () => {
       attendance_percentage: 88.095,
     }]);
     expect(csv.startsWith("\uFEFF")).toBe(true);
+    expect(csv).toContain('"Rombel","Tahun ajaran","Jumlah sesi"');
     expect(csv).toContain('"X ""RPL"", Pagi"');
     expect(csv).toContain('"88.10"');
-    expect(csv).toContain("Rombel,Tahun ajaran,Jumlah sesi");
     expect(csv.endsWith("\r\n")).toBe(true);
   });
 
@@ -36,6 +36,6 @@ describe("buildMonthlyAttendanceCsv", () => {
   it("returns headers when there are no final sessions", () => {
     const csv = buildMonthlyAttendanceCsv([]);
     expect(csv.split("\r\n")).toHaveLength(2);
-    expect(csv).toContain("Persentase hadir (%)");
+    expect(csv).toContain('"Persentase hadir (%)"');
   });
 });
