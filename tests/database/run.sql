@@ -1121,9 +1121,22 @@ insert into auth.users (id, email, email_confirmed_at) values
   ('50000000-0000-4000-8000-000000000009', 'teacher-expired@example.test', now()),
   ('50000000-0000-4000-8000-000000000010', 'teacher-unverified@example.test', null),
   ('50000000-0000-4000-8000-000000000011', 'teacher-existing-role@example.test', now());
+insert into public.roles (slug, name, is_system)
+values ('teacher_invitation_test_role', 'Teacher invitation test role', false)
+on conflict (slug) do nothing;
 insert into public.user_roles (user_id, role_id, assigned_by)
 select '50000000-0000-4000-8000-000000000011', id, '50000000-0000-4000-8000-000000000001'
-from public.roles where slug = 'admin_sekolah';
+from public.roles where slug = 'teacher_invitation_test_role';
+do $teacher_existing_role_seed$
+begin
+  if not exists (
+    select 1 from public.user_roles
+    where user_id = '50000000-0000-4000-8000-000000000011'
+  ) then
+    raise exception 'Existing-role fixture was not inserted';
+  end if;
+end;
+$teacher_existing_role_seed$;
 
 select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000008', false);
 select set_config('test.permissions', '', false);
@@ -1174,12 +1187,6 @@ do $teacher_existing_role_fixture$
 begin
   if auth.uid() is distinct from '50000000-0000-4000-8000-000000000011'::uuid then
     raise exception 'Existing-role fixture JWT subject mismatch: %', auth.uid();
-  end if;
-  if not exists (
-    select 1 from public.user_roles
-    where user_id = '50000000-0000-4000-8000-000000000011'
-  ) then
-    raise exception 'Existing-role fixture was not persisted in public.user_roles';
   end if;
 end;
 $teacher_existing_role_fixture$;
