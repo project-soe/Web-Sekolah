@@ -1,3 +1,9 @@
+### Pembaruan PR #31 — 2026-11-28
+- Regression test riwayat absensi Portal Siswa sudah merged; akun tertaut hanya membaca riwayat miliknya dan sesi final (`submitted`/`locked`), sedangkan sesi `draft` tidak tampil.
+- Merge commit: `6a2b08df11521eb524aa86325570ee3cafedb244`.
+- PR #32 menambahkan cakupan unit test route ekspor CSV; hasil CI masih menunggu.
+- Browser QA riwayat Portal Siswa, rekap bulanan, dan unduhan CSV tetap terpisah dan belum dikonfirmasi.
+
 # Known Issues, Deferred Tests, and Follow-ups
 
 > Hanya pekerjaan yang masih tertunda atau belum diverifikasi. Portal Siswa dikeluarkan dari daftar uji pendaftaran setelah pengguna mengonfirmasi simulasi pendaftaran berhasil dan dapat login pada 2026-11-27.
