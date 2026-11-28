@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { can } from "@/lib/rbac/access";
 import { createClient } from "@/lib/supabase/server";
