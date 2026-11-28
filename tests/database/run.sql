@@ -1391,7 +1391,7 @@ values
  ('60000000-0000-4000-8000-000000000016','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001'),
  ('60000000-0000-4000-8000-000000000017','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001');
 insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status,submitted_at)
-values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-01-12','submitted',now());
+values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-02-12','submitted',now());
 insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status)
 select
  case when st.id='60000000-0000-4000-8000-000000000016' then '80000000-0000-4000-8000-000000000001'::uuid else '80000000-0000-4000-8000-000000000002'::uuid end,
@@ -1403,7 +1403,7 @@ where st.id in ('60000000-0000-4000-8000-000000000016','60000000-0000-4000-8000-
 
 -- A draft session in the same month must not affect the finalized monthly summary.
 insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status)
-values ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-11-13','draft');
+values ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-02-13','draft');
 insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status)
 select
  case when st.id='60000000-0000-4000-8000-000000000016' then '80000000-0000-4000-8000-000000000003'::uuid else '80000000-0000-4000-8000-000000000004'::uuid end,
@@ -1418,7 +1418,7 @@ set role authenticated;
 do $attendance_monthly$
 declare result record;
 begin
- select * into result from public.admin_attendance_monthly_summary('2026-11-01');
+ select * into result from public.admin_attendance_monthly_summary('2099-02-01');
  if result.class_group_id <> '20000000-0000-4000-8000-000000000001'
    or result.session_count <> 1 or result.student_day_count <> 2
    or result.present_count <> 1 or result.absent_count <> 1
@@ -1427,7 +1427,7 @@ begin
   raise exception 'Monthly attendance aggregation returned unexpected values: %', row_to_json(result);
  end if;
  begin
-  perform * from public.admin_attendance_monthly_summary('2099-01-12');
+  perform * from public.admin_attendance_monthly_summary('2099-02-12');
   raise exception 'Monthly attendance RPC accepted a non-first day month parameter';
  exception when invalid_parameter_value then null;
  end;
