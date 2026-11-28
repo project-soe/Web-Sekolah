@@ -371,14 +371,14 @@ begin
   ) returning id into v_enrollment_id;
 
   closed_count := public.transition_student_status(
-    '60000000-0000-4000-8000-000000000004', 'withdrawn'
+    '60000000-0000-4000-8000-000000000006', 'withdrawn'
   );
   if closed_count <> 1 then
     raise exception 'Withdrawal should close exactly one active-year enrollment, got %', closed_count;
   end if;
 
   if (select status from public.students
-      where id = '60000000-0000-4000-8000-000000000004') <> 'withdrawn' then
+      where id = '60000000-0000-4000-8000-000000000006') <> 'withdrawn' then
     raise exception 'Withdrawal did not update the student status';
   end if;
 
@@ -402,7 +402,7 @@ begin
 
   select count(*) into history_count
   from public.student_status_history
-  where student_id = '60000000-0000-4000-8000-000000000004'
+  where student_id = '60000000-0000-4000-8000-000000000006'
     and old_status = 'active' and new_status = 'withdrawn' and changed_by = v_actor_id;
   if history_count <> 1 then
     raise exception 'Withdrawal did not create the expected status audit history';
@@ -410,7 +410,7 @@ begin
 
   begin
     perform public.transition_student_status(
-      '60000000-0000-4000-8000-000000000004', 'withdrawn'
+      '60000000-0000-4000-8000-000000000006', 'withdrawn'
     );
     raise exception 'Repeated withdrawal unexpectedly succeeded';
   exception when check_violation then
