@@ -23,7 +23,7 @@ export default async function AdminClassesPage({ searchParams }: {
     supabase.from("teachers").select("id, full_name").order("full_name"),
   ]);
   const { data: students } = canViewStudents
-    ? await supabase.from("students").select("id, nis, full_name").eq("status", "active").order("full_name").limit(500)
+    ? await supabase.from("students").select("id, nis, full_name").eq("status", "active").is("archived_at", null).order("full_name").limit(500)
     : { data: null };
   const activeYear = years?.find((year) => year.is_active) ?? null;
   const { data: classes, error: classesError } = await supabase.from("class_groups")
@@ -98,6 +98,7 @@ export default async function AdminClassesPage({ searchParams }: {
         <Field id="placement_class" label="Kelas"><Select id="placement_class" name="class_group_id" required defaultValue=""><option value="" disabled>Pilih kelas tahun aktif</option>{(classes ?? []).filter((item) => item.academic_year_id === activeYear.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></Field>
         <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Tempatkan siswa</button>
       </form></CardContent></Card>}
+      {(!can(session.access, "classes:update") || !can(session.access, "students:update")) && <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Akun memerlukan permission classes:update dan students:update untuk menempatkan atau memindahkan siswa.</p>}
       {!placements?.length ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada siswa ditempatkan pada tahun ajaran aktif.</p> : <Card><CardContent className="overflow-x-auto p-0"><table className="w-full min-w-[560px] text-left text-sm"><thead className="border-b border-border bg-muted/50"><tr><th className="px-4 py-3">NIS</th><th className="px-4 py-3">Nama siswa</th><th className="px-4 py-3">Kelas</th></tr></thead><tbody className="divide-y divide-border">{placements.map((item) => {const student = Array.isArray(item.students) ? item.students[0] : item.students; const classGroup = Array.isArray(item.class_groups) ? item.class_groups[0] : item.class_groups; return <tr key={item.id}><td className="px-4 py-3 font-mono">{student?.nis ?? "—"}</td><td className="px-4 py-3 font-medium">{student?.full_name ?? "—"}</td><td className="px-4 py-3">{classGroup?.name ?? "—"}</td></tr>;})}</tbody></table></CardContent></Card>}
     </section>}
 
