@@ -33,7 +33,7 @@ describe("buildMonthlyAttendanceCsv", () => {
     expect(csv).toContain('"\'@SUM(1,1)"');
   });
 
-  it.each(["=1+1", "+1+1", "-1+1", "@SUM(1,1)", "\\t=1+1", "\\r+1+1", "\\n-1+1", " \\t@SUM(1,1)"])(
+  it.each(["=1+1", "+1+1", "-1+1", "@SUM(1,1)", "\t=1+1", "\r+1+1", "\n-1+1", " \t@SUM(1,1)"])(
     "neutralizes formula prefixes even after leading whitespace or control characters (%j)",
     (value) => {
       const csv = buildMonthlyAttendanceCsv([{
