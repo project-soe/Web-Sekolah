@@ -5,7 +5,7 @@
 ## Status saat ini
 
 - **Tanggal pembaruan:** 2026-11-28.
-- Browser QA happy-path undangan guru dikonfirmasi pengguna: undangan dibuat, OTP berhasil diverifikasi, dan akun berhasil masuk ke `/ruang-guru`. Pada QA absensi berikutnya, pengguna melaporkan roster kosong dan pemilih tanggal selalu kembali ke 2026-11-28; investigasi penugasan wali kelas dan perbaikan pemilih tanggal sedang berjalan.
+- Browser QA happy-path undangan guru dikonfirmasi pengguna: undangan dibuat, OTP berhasil diverifikasi, dan akun berhasil masuk ke `/ruang-guru`. QA absensi guru menemukan roster kosong dan tanggal filter kembali ke 2026-11-28; PR #27 memperbaiki kontrol tanggal dan memperjelas petunjuk penugasan wali kelas. QA lanjutan menu Kelas menemukan form penempatan sulit ditemukan dan literal `\\n` pada halaman detail; PR #27 kini menempatkan form di dekat daftar kelas dan di halaman detail rombel, serta membersihkan literal tersebut.
 - PR #17 ekspor CSV absensi bulanan sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau. Browser QA unduhan masih tertunda.
 - PR #18 regression test lifecycle withdrawn sudah merged (merge commit `42b884b39db0b2c4a94ccf540edd36c1f7954d9d`); CI #393 sukses. Browser QA alur withdrawn masih tertunda.
 - **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), PR #14 (idempotensi migrasi arsip siswa), PR #15 (pembaruan dokumentasi QA), dan PR #16 (rekap bulanan absensi), PR #17 (ekspor CSV), dan PR #18 (regression test lifecycle withdrawn) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
@@ -2852,3 +2852,11 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Branch `fix/teacher-attendance-date-picker` memindahkan filter tanggal ke client component terkontrol yang menavigasi ke query `?date=YYYY-MM-DD`, dan memperjelas empty-state agar admin tahu penugasan apa yang harus diperiksa.
 - Belum ada hasil CI atau browser QA ulang. Tidak ada perubahan migrasi, Supabase production, atau deployment.
 - Status migration dasar absensi harus diperiksa melalui `supabase migration list --remote`; pengguna sebelumnya mengonfirmasi migration rekap bulanan `20261128090000_student_attendance_monthly_summary.sql` deployed, sehingga catatan lama yang menyebut seluruh migrasi absensi belum diterapkan perlu direkonsiliasi.
+
+
+## 2026-11-28 — Perbaikan penempatan siswa dan tampilan menu Kelas
+- Form penempatan siswa di `/admin/kelas` dipindahkan agar tampil tepat setelah daftar kelas, bukan tersembunyi di bawah proses kenaikan/kelulusan.
+- Halaman detail rombel menambahkan form penempatan siswa aktif untuk tahun ajaran aktif. Form hanya ditampilkan kepada akun dengan permission `classes:update`, `students:view`, dan `students:update`.
+- Action penempatan menerima `return_to` yang dibatasi ke pola path detail kelas UUID, agar pengguna kembali ke kelas yang sedang dikelola dan menerima status berhasil/gagal di halaman yang sama.
+- Literal dua karakter `\\n` yang sebelumnya berada sebelum komponen ringkasan di `src/app/admin/kelas/[id]/page.tsx` dihapus. Menu sidebar `AdminNav` dan konfigurasi label Kelas diperiksa; tidak ditemukan literal newline pada keduanya.
+- Belum ada hasil CI atau browser QA untuk perubahan ini. Tidak ada migrasi, akses/perubahan Supabase production, atau deployment.
