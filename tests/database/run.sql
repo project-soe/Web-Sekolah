@@ -842,9 +842,9 @@ values ('60000000-0000-4000-8000-000000000011','10000000-0000-4000-8000-00000000
  '20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001');
 insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status,submitted_at,locked_at)
 values
- ('70000000-0000-4000-8000-000000000011','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-10-10','submitted',now(),null),
- ('70000000-0000-4000-8000-000000000012','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-10-11','locked',now(),now()),
- ('70000000-0000-4000-8000-000000000013','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-10-12','draft',null,null);
+ ('70000000-0000-4000-8000-000000000011','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-01-10','submitted',now(),null),
+ ('70000000-0000-4000-8000-000000000012','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-01-11','locked',now(),now()),
+ ('70000000-0000-4000-8000-000000000013','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-01-12','draft',null,null);
 insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status,note)
 select
  case s.id
@@ -875,14 +875,14 @@ declare
 begin
  select count(*) into v_count from public.my_student_attendance();
  select count(*) into v_submitted from public.my_student_attendance()
- where attendance_date='2026-10-10' and class_name is not null and status='present' and note is null;
+ where attendance_date='2099-01-10' and class_name is not null and status='present' and note is null;
  select count(*) into v_locked from public.my_student_attendance()
- where attendance_date='2026-10-11' and class_name is not null and status='sick' and note is null;
+ where attendance_date='2099-01-11' and class_name is not null and status='sick' and note is null;
  if v_count <> 2 or v_submitted <> 1 or v_locked <> 1 then
   raise exception 'Student attendance history should expose only this student submitted/locked sessions; got count %, submitted %, locked %',
    v_count,v_submitted,v_locked;
  end if;
- if exists (select 1 from public.my_student_attendance() where attendance_date='2026-10-12') then
+ if exists (select 1 from public.my_student_attendance() where attendance_date='2099-01-12') then
   raise exception 'Draft attendance unexpectedly appeared in student history';
  end if;
 end;
@@ -1391,7 +1391,7 @@ values
  ('60000000-0000-4000-8000-000000000016','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001'),
  ('60000000-0000-4000-8000-000000000017','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001');
 insert into public.attendance_sessions(id,academic_year_id,class_group_id,attendance_date,status,submitted_at)
-values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2026-10-12','submitted',now());
+values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','2099-01-12','submitted',now());
 insert into public.attendance_entries(id,session_id,student_id,enrollment_id,status)
 select
  case when st.id='60000000-0000-4000-8000-000000000016' then '80000000-0000-4000-8000-000000000001'::uuid else '80000000-0000-4000-8000-000000000002'::uuid end,
@@ -1427,7 +1427,7 @@ begin
   raise exception 'Monthly attendance aggregation returned unexpected values: %', row_to_json(result);
  end if;
  begin
-  perform * from public.admin_attendance_monthly_summary('2026-10-12');
+  perform * from public.admin_attendance_monthly_summary('2099-01-12');
   raise exception 'Monthly attendance RPC accepted a non-first day month parameter';
  exception when invalid_parameter_value then null;
  end;
