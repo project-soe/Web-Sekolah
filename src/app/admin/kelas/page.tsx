@@ -91,15 +91,46 @@ export default async function AdminClassesPage({ searchParams }: {
       {classesError ? <p role="alert" className="text-sm text-danger">Gagal memuat kelas.</p> : !classes?.length ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada rombongan belajar.</p> : <Card><CardContent className="overflow-x-auto p-0"><table className="w-full min-w-[680px] text-left text-sm"><thead className="border-b border-border bg-muted/50"><tr><th className="px-4 py-3">Kelas</th><th className="px-4 py-3">Tingkat</th><th className="px-4 py-3">Jurusan</th><th className="px-4 py-3">Wali kelas</th><th className="px-4 py-3">Siswa</th><th className="px-4 py-3">Tahun ajaran</th></tr></thead><tbody className="divide-y divide-border">{classes.map((item) => {const department = Array.isArray(item.departments) ? item.departments[0] : item.departments; const teacher = Array.isArray(item.teachers) ? item.teachers[0] : item.teachers; const year = years?.find((entry) => entry.id === item.academic_year_id); return <tr key={item.id}><td className="px-4 py-3 font-semibold"><Link href={"/admin/kelas/" + item.id} className="text-primary hover:underline">{item.name}</Link></td><td className="px-4 py-3">{["","", "X","XI","XII"][item.grade_level]}</td><td className="px-4 py-3">{department?.name ?? "—"}</td><td className="px-4 py-3">{teacher?.full_name ?? "—"}</td><td className="px-4 py-3 tabular-nums">{can(session.access, "students:view") ? item.enrolled_count + " / " + item.capacity : "Maks. " + item.capacity}</td><td className="px-4 py-3">{year?.name ?? "—"}</td></tr>;})}</tbody></table></CardContent></Card>}
     </section>
 
-    {activeYear && canViewStudents && <section className="flex flex-col gap-3">
-      <div><h2 className="text-lg font-semibold">Penempatan siswa — {activeYear.name}</h2><p className="text-sm text-muted-foreground">Setiap siswa hanya memiliki satu kelas per tahun ajaran. Perpindahan kelas dicatat otomatis.</p></div>
-      {can(session.access, "classes:update") && can(session.access, "students:update") && <Card><CardContent><form action={assignStudentToClass} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-        <Field id="placement_student" label="Siswa"><Select id="placement_student" name="student_id" required defaultValue=""><option value="" disabled>Pilih siswa aktif</option>{(students ?? []).map((student) => <option key={student.id} value={student.id}>{student.nis} — {student.full_name}</option>)}</Select></Field>
-        <Field id="placement_class" label="Kelas"><Select id="placement_class" name="class_group_id" required defaultValue=""><option value="" disabled>Pilih kelas tahun aktif</option>{(classes ?? []).filter((item) => item.academic_year_id === activeYear.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></Field>
-        <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Tempatkan siswa</button>
-      </form></CardContent></Card>}
-      {(!can(session.access, "classes:update") || !can(session.access, "students:update")) && <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Akun memerlukan permission classes:update dan students:update untuk menempatkan atau memindahkan siswa.</p>}
-      {!placements?.length ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada siswa ditempatkan pada tahun ajaran aktif.</p> : <Card><CardContent className="overflow-x-auto p-0"><table className="w-full min-w-[560px] text-left text-sm"><thead className="border-b border-border bg-muted/50"><tr><th className="px-4 py-3">NIS</th><th className="px-4 py-3">Nama siswa</th><th className="px-4 py-3">Kelas</th></tr></thead><tbody className="divide-y divide-border">{placements.map((item) => {const student = Array.isArray(item.students) ? item.students[0] : item.students; const classGroup = Array.isArray(item.class_groups) ? item.class_groups[0] : item.class_groups; return <tr key={item.id}><td className="px-4 py-3 font-mono">{student?.nis ?? "—"}</td><td className="px-4 py-3 font-medium">{student?.full_name ?? "—"}</td><td className="px-4 py-3">{classGroup?.name ?? "—"}</td></tr>;})}</tbody></table></CardContent></Card>}
+    {activeYear && can(session.access, "classes:update") && <section className="flex flex-col gap-3">
+      <div>
+        <h2 className="text-lg font-semibold">Penempatan siswa — {activeYear.name}</h2>
+        <p className="text-sm text-muted-foreground">Tempatkan siswa aktif ke rombongan belajar tahun ajaran aktif. Perpindahan kelas dicatat otomatis.</p>
+      </div>
+      {canViewStudents && can(session.access, "students:update")
+        ? <Card><CardContent>
+            <form action={assignStudentToClass} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <Field id="placement_student" label="Siswa aktif">
+                <Select id="placement_student" name="student_id" required defaultValue="">
+                  <option value="" disabled>Pilih siswa aktif</option>
+                  {(students ?? []).map((student) => <option key={student.id} value={student.id}>{student.nis} — {student.full_name}</option>)}
+                </Select>
+              </Field>
+              <Field id="placement_class" label="Kelas tujuan">
+                <Select id="placement_class" name="class_group_id" required defaultValue="">
+                  <option value="" disabled>Pilih kelas tahun aktif</option>
+                  {(classes ?? []).filter((item) => item.academic_year_id === activeYear.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </Select>
+              </Field>
+              <button className="min-h-10 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Tempatkan siswa</button>
+            </form>
+          </CardContent></Card>
+        : <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Form memerlukan permission students:view dan students:update selain classes:update. Minta admin utama memberikan permission tersebut pada akun ini.</p>}
+      {!canViewStudents
+        ? null
+        : !placements?.length
+          ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada siswa ditempatkan pada tahun ajaran aktif.</p>
+          : <Card><CardContent className="overflow-x-auto p-0">
+              <table className="w-full min-w-[560px] text-left text-sm">
+                <thead className="border-b border-border bg-muted/50"><tr><th className="px-4 py-3">NIS</th><th className="px-4 py-3">Nama siswa</th><th className="px-4 py-3">Kelas</th></tr></thead>
+                <tbody className="divide-y divide-border">
+                  {placements.map((item) => {
+                    const student = Array.isArray(item.students) ? item.students[0] : item.students;
+                    const classGroup = Array.isArray(item.class_groups) ? item.class_groups[0] : item.class_groups;
+                    return <tr key={item.id}><td className="px-4 py-3 font-mono">{student?.nis ?? "—"}</td><td className="px-4 py-3 font-medium">{student?.full_name ?? "—"}</td><td className="px-4 py-3">{classGroup?.name ?? "—"}</td></tr>;
+                  })}
+                </tbody>
+              </table>
+            </CardContent></Card>}
     </section>}
 
     {activeYear && can(session.access, "classes:update") && can(session.access, "students:update") && <section className="flex flex-col gap-3">
