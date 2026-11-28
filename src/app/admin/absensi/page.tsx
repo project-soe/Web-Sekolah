@@ -56,6 +56,7 @@ export default async function AdminAttendancePage({
           <p className="text-sm text-muted-foreground">Hanya sesi terkirim dan terkunci yang dihitung. Persentase hadir = (Hadir + Terlambat) ÷ seluruh status tercatat.</p>
         </div>
         <form className="flex flex-wrap items-end gap-3">
+          <input type="hidden" name="date" value={date} />
           <label className="grid gap-1 text-sm">Bulan
             <input type="month" name="month" defaultValue={month.slice(0, 7)} className="min-h-10 rounded-md border border-border bg-background px-3" />
           </label>
@@ -93,6 +94,7 @@ export default async function AdminAttendancePage({
         )}
       </section>
       <form className="flex flex-wrap items-end gap-3">
+        <input type="hidden" name="month" value={month.slice(0, 7)} />
         <label className="grid gap-1 text-sm">Tanggal
           <input type="date" name="date" defaultValue={date} className="min-h-10 rounded-md border border-border bg-background px-3" />
         </label>
