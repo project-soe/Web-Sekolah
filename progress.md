@@ -2808,3 +2808,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Memastikan percobaan yang ditolak tidak menambah atau mengubah penempatan siswa pada kelas tujuan yang valid maupun target tidak valid.
 - Skenario rollback kapasitas tidak cukup dan duplikasi penempatan sudah tercakup pada test sebelumnya. Browser QA dashboard tetap menunggu.
 - Tidak ada migrasi baru atau perubahan Supabase production.
+
+
+## 2026-11-28 — Regression test kelulusan massal kelas XII
+- Memperkuat skenario kelulusan massal untuk menolak permission yang tidak lengkap, kelas non-XII, sumber dari tahun ajaran tidak aktif, dan tanggal kelulusan null.
+- Memastikan tanggal kelulusan yang melanggar constraint membatalkan seluruh perubahan, termasuk tidak membuat histori status parsial.
+- Memastikan kelulusan sukses menyimpan tanggal dan histori untuk seluruh siswa, sedangkan pemanggilan ulang tanpa siswa aktif ditolak tanpa menggandakan histori.
+- Browser QA dashboard kelulusan tetap menunggu. Tidak ada migrasi baru atau perubahan Supabase production.
