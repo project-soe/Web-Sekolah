@@ -1,3 +1,10 @@
+## 2026-11-28 — Validasi tanggal kalender modul absensi
+- Audit menemukan filter tanggal harian admin hanya memeriksa pola teks, sehingga tanggal mustahil seperti `2026-02-31` dapat diteruskan ke RPC.
+- Menambahkan helper kalender bersama yang memvalidasi tanggal nyata, menolak tahun `0000`, dan tetap menangani tahun empat digit awal seperti `0001`.
+- Halaman admin, halaman Ruang Guru, dan server action guru memakai helper yang sama; regression tests mencakup tahun kabisat, tanggal tidak valid, batas tahun, dan format malformed.
+- PR #42 sudah dikonfirmasi hijau, merged, dan uji browser login guru normal oleh pengguna. PR perbaikan tanggal absensi ini menunggu CI.
+- Tidak ada migrasi atau akses/perubahan database production. Browser QA absensi tetap terpisah dari CI.
+
 ## 2026-11-28 — Validasi tahun pada filter rekap absensi
 - Filter bulan rekap dan endpoint ekspor menolak tahun `0000`, yang lolos format kalender JavaScript tetapi tidak valid untuk tipe tanggal PostgreSQL.
 - Regression route tests mencakup `0000-01` dan `0000-12`; halaman admin memakai fallback bulan berjalan untuk parameter tidak valid.

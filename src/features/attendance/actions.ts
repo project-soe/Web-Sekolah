@@ -5,19 +5,11 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { can } from "@/lib/rbac/access";
 import { createClient } from "@/lib/supabase/server";
+import { isCalendarDate } from "@/features/attendance/date";
 
 type AttendanceEntryInput = { student_id: string; status: string; note: string | null };
 
 const attendanceStatuses = new Set(["present", "late", "sick", "excused", "absent"]);
-
-function isCalendarDate(value: string): boolean {
-  if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)) return false;
-  const [year, month, day] = value.split("-").map(Number);
-  const parsed = new Date(Date.UTC(year, month - 1, day));
-  return parsed.getUTCFullYear() === year
-    && parsed.getUTCMonth() === month - 1
-    && parsed.getUTCDate() === day;
-}
 
 async function persistAttendance(formData: FormData, submit: boolean): Promise<void> {
   const classGroupId = String(formData.get("class_group_id") ?? "");
