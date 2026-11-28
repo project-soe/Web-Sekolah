@@ -4,8 +4,10 @@
 
 ## Status saat ini
 
-- **Tanggal pembaruan:** 2026-11-28.\n- PR #17 ekspor CSV absensi bulanan sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau. Browser QA unduhan masih tertunda. Regression test database untuk lifecycle withdrawn sedang ditambahkan.
-- **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), PR #14 (idempotensi migrasi arsip siswa), PR #15 (pembaruan dokumentasi QA), dan PR #16 (rekap bulanan absensi) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
+- **Tanggal pembaruan:** 2026-11-28.
+- PR #17 ekspor CSV absensi bulanan sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau. Browser QA unduhan masih tertunda.
+- PR #18 regression test lifecycle withdrawn sudah merged (merge commit `42b884b39db0b2c4a94ccf540edd36c1f7954d9d`); CI #393 sukses. Browser QA alur withdrawn masih tertunda.
+- **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), PR #14 (idempotensi migrasi arsip siswa), PR #15 (pembaruan dokumentasi QA), dan PR #16 (rekap bulanan absensi), PR #17 (ekspor CSV), dan PR #18 (regression test lifecycle withdrawn) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
 - **CI:** PR #12 (run #367), PR #13 (termasuk run #371), dan PR #14 (run #370) dikonfirmasi pengguna seluruhnya hijau sebelum merge.
 - **Tahap fungsional:** website publik/CMS, administrasi siswa/kelas/tahun ajaran/lifecycle, onboarding Portal Siswa, dan tahap pertama Modul Absensi Siswa. Browser QA admin pada 2026-11-28 mengonfirmasi tab Absensi tampil dan rekap harian termuat; koreksi serta lock/unlock belum diuji. Pengguna mengonfirmasi PR #16 sudah merged dan migrasi rekap bulanan sudah dideploy.
 - **Portal Siswa:** pengguna mengonfirmasi simulasi pendaftaran berhasil dan akun dapat login pada 2026-11-27. Item pengujian pendaftaran Portal Siswa dihapus dari daftar deferred; cakupan konfirmasi tidak berarti seluruh edge-case sudah diuji.
@@ -1390,3 +1392,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - PR #17 sudah merged dengan merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`; pengguna mengonfirmasi CI hijau.
 - Endpoint ekspor mengambil data dari RPC rekap bulanan, menjaga konsistensi dengan dashboard, dan memerlukan `attendance:view_all`.
 - Belum ada migrasi database baru. Browser QA unduh dan validasi isi CSV masih tertunda.
+
+## 2026-11-28 — Penguatan permission penempatan siswa individual
+- Audit menemukan policy RLS INSERT/UPDATE `student_class_enrollments` hanya mewajibkan permission update, sedangkan server action penempatan individual juga mensyaratkan `classes:view` dan `students:view`. Klien PostgREST berpotensi melewati pemeriksaan view pada server action.
+- Branch `fix/student-enrollment-rbac-guards-main` menambahkan migrasi `20261128100000_student_enrollment_permission_guards.sql`: INSERT/UPDATE kini mensyaratkan `classes:view`, `students:view`, `classes:update`, dan `students:update`.
+- Database test menegaskan insert ditolak dan update tidak mengubah penempatan ketika akun tidak memiliki permission view. Browser QA UI tetap tertunda.
+- Tidak ada migrasi production yang dijalankan. CI #394 (database-tests dan check) sukses; PR #19 menunggu penyelesaian integrasi branch.
+
