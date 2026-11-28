@@ -6,7 +6,7 @@ import { can } from "@/lib/rbac/access";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { Field, Input, Select } from "@/components/ui/field";
-import { updateClassGroup } from "@/features/students/class-actions";
+import { assignStudentToClass, updateClassGroup } from "@/features/students/class-actions";
 
 export const metadata: Metadata = { title: "Detail Rombongan Belajar" };
 export const dynamic = "force-dynamic";
@@ -38,7 +38,7 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
   if (error || !classGroup) notFound();
 
   const [{ data: year }, { data: department }, { data: teacher }, { data: departments }, { data: teachers }] = await Promise.all([
-    supabase.from("academic_years").select("name, start_date, end_date, is_active")
+    supabase.from("academic_years").select("id, name, start_date, end_date, is_active")
       .eq("id", classGroup.academic_year_id).maybeSingle(),
     classGroup.department_id
       ? supabase.from("departments").select("name").eq("id", classGroup.department_id).maybeSingle()
@@ -58,6 +58,11 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
         .is("ended_at", null)
         .order("assigned_at", { ascending: true })
     : { data: null, error: null };
+
+  const canManagePlacements = can(session.access, "classes:update") && can(session.access, "students:view") && can(session.access, "students:update");
+  const { data: activeStudents, error: activeStudentsError } = canManagePlacements && year?.is_active
+    ? await supabase.from("students").select("id, nis, full_name").eq("status", "active").is("archived_at", null).order("full_name").limit(500)
+    : { data: [], error: null };
 
   const studentIds = (placements ?? []).map((item) => item.student_id);
   const { data: students, error: studentsError } = canViewStudents && studentIds.length
@@ -81,6 +86,12 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
 
     {query.error && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{query.error === "duplikat" ? "Nama kelas sudah digunakan pada tahun ajaran ini." : query.error === "validasi" ? "Data tidak valid. Periksa kembali isian." : query.error === "kapasitas" ? "Kapasitas tidak boleh lebih kecil dari jumlah siswa yang sudah ditempatkan." : "Perubahan kelas gagal disimpan."}</p>}
     {query.saved === "kelas" && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Data kelas berhasil diperbarui.</p>}
+    {query.saved === "penempatan" && <p role="status" className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">Siswa berhasil ditempatkan pada kelas ini.</p>}
+    {query.error === "penempatan_sama" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Siswa tersebut sudah berada di kelas ini.</p>}
+    {query.error === "siswa" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Siswa tidak ditemukan, tidak aktif, atau sudah diarsipkan.</p>}
+    {query.error === "tahun_ajaran" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Penempatan hanya dapat dilakukan pada tahun ajaran aktif.</p>}
+    {query.error === "akses" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Akun tidak memiliki permission untuk menempatkan siswa.</p>}
+    {query.error === "penempatan" && <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">Penempatan siswa gagal disimpan. Periksa kapasitas kelas dan data siswa.</p>}
     {can(session.access, "classes:update") && <Card><CardContent className="flex flex-col gap-4">
       <h2 className="font-semibold">Edit data kelas</h2>
       <form action={updateClassGroup} className="grid gap-3 sm:grid-cols-2">
@@ -102,6 +113,34 @@ export default async function ClassGroupDetailPage({ params, searchParams }: {
       <div><p className="text-xs text-muted-foreground">Periode</p><p className="mt-1 font-semibold">{year ? year.start_date + " – " + year.end_date : "—"}</p></div>
       <div><p className="text-xs text-muted-foreground">Kapasitas kelas</p><p className="mt-1 font-semibold">{canViewStudents ? (placementsError || studentsError ? classGroup.enrolled_count : students?.length ?? classGroup.enrolled_count) + " / " + classGroup.capacity + " siswa" : "Maksimal " + classGroup.capacity + " siswa"}</p></div>
     </CardContent></Card>
+
+    <section className="flex flex-col gap-3">
+      <div>
+        <h2 className="text-lg font-semibold">Tempatkan siswa ke kelas ini</h2>
+        <p className="text-sm text-muted-foreground">Pilih siswa berstatus aktif untuk ditempatkan pada rombongan belajar {classGroup.name}.</p>
+      </div>
+      {!canManagePlacements
+        ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Akun memerlukan permission classes:update, students:view, dan students:update untuk menempatkan siswa.</p>
+        : !year?.is_active
+          ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Penempatan hanya tersedia untuk rombongan belajar pada tahun ajaran aktif.</p>
+          : activeStudentsError
+            ? <p role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-4 text-sm text-danger">Daftar siswa aktif gagal dimuat. Periksa permission dan koneksi database.</p>
+            : !activeStudents?.length
+              ? <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Belum ada siswa aktif yang dapat ditempatkan. Tambahkan siswa aktif terlebih dahulu pada menu Data Siswa.</p>
+              : <Card><CardContent>
+                <form action={assignStudentToClass} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                  <input type="hidden" name="class_group_id" value={classGroup.id}/>
+                  <input type="hidden" name="return_to" value={"/admin/kelas/" + classGroup.id}/>
+                  <Field id="class_student_placement" label="Siswa aktif">
+                    <Select id="class_student_placement" name="student_id" required defaultValue="">
+                      <option value="" disabled>Pilih siswa aktif</option>
+                      {activeStudents.map((student) => <option key={student.id} value={student.id}>{student.nis} — {student.full_name}</option>)}
+                    </Select>
+                  </Field>
+                  <button className="min-h-10 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Tempatkan ke kelas ini</button>
+                </form>
+              </CardContent></Card>}
+    </section>
 
     <section className="flex flex-col gap-3">
       <div>
