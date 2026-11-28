@@ -2867,3 +2867,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Pengguna mengonfirmasi seluruh browser test PR #28 berhasil: form penempatan siswa aktif tersedia dari daftar Kelas dan detail rombel, serta tampilan karakter literal `\\n` sudah bersih.
 - Tidak ada migrasi database, akses/perubahan Supabase production, atau deployment database pada PR #28.
 - Tahap berikutnya memperkuat database integration tests untuk seluruh siklus RPC absensi guru/admin: roster, draft parsial, submit lengkap, koreksi dengan audit, lock/unlock, dan larangan perubahan setelah submit/lock.
+
+
+## 2026-11-28 — PR #28 merged dan browser QA penempatan siswa
+- PR #28 sudah merged ke `main` (merge commit `4dea7b4e7f7d2424b3f77c7cbdc24cf384d7ba12`).
+- Pengguna mengonfirmasi seluruh browser test PR #28 berhasil: form penempatan siswa aktif tersedia dari daftar Kelas dan detail rombel, serta tampilan karakter literal `\\n` sudah bersih.
+- Tidak ada migrasi database, akses/perubahan Supabase production, atau deployment database pada PR #28.
+- Tahap berikutnya memperkuat database integration tests untuk seluruh siklus RPC absensi guru/admin: roster, draft parsial, submit lengkap, koreksi dengan audit, lock/unlock, dan larangan perubahan setelah submit/lock.
