@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { can } from "@/lib/rbac/access";
 import { createClient } from "@/lib/supabase/server";
+import { isCalendarDate } from "@/features/attendance/date";
 
 type AttendanceEntryInput = { student_id: string; status: string; note: string | null };
 
