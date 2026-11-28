@@ -1416,7 +1416,10 @@ begin
  begin
   perform public.submit_class_attendance(v_session);
   raise exception 'Incomplete attendance draft was unexpectedly submitted';
- exception when check_violation then null;
+ exception when sqlstate 'P0001' then
+  if sqlerrm <> 'Semua siswa harus memiliki status sebelum absensi dikirim' then
+   raise;
+  end if;
  end;
 
  perform public.save_class_attendance(
