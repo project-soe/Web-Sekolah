@@ -1,3 +1,9 @@
+## 2026-11-28 — Penanganan kegagalan pemuatan riwayat absensi siswa
+- Audit menemukan halaman Portal Siswa mengubah hasil RPC `my_student_attendance()` yang gagal menjadi array kosong, sehingga gangguan database/RPC tampil seolah-olah siswa memang belum memiliki riwayat.
+- Menambahkan pemodelan hasil yang membedakan kondisi error, kosong yang sah, dan data tersedia; halaman menampilkan pesan gagal muat khusus saat RPC error.
+- Regression tests mencakup ketiga kondisi tersebut.
+- Tidak ada perubahan migrasi atau database production. CI dan browser QA menunggu.
+
 ## 2026-11-28 — Validasi tanggal kalender modul absensi
 - Audit menemukan filter tanggal harian admin hanya memeriksa pola teks, sehingga tanggal mustahil seperti `2026-02-31` dapat diteruskan ke RPC.
 - Menambahkan helper kalender bersama yang memvalidasi tanggal nyata, menolak tahun `0000`, dan tetap menangani tahun empat digit awal seperti `0001`.
