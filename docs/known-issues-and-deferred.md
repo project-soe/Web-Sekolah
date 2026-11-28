@@ -5,11 +5,18 @@
 **Terakhir diperbarui:** 2026-11-28
 
 ### Pembaruan QA menu Kelas — 2026-11-28
-- Form penempatan siswa sebelumnya hanya tersedia di bagian bawah halaman `/admin/kelas`, setelah bagian kenaikan kelas dan kelulusan; sekarang dipindahkan tepat setelah daftar kelas.
+- PR #28 sudah merged; pengguna mengonfirmasi browser QA form penempatan siswa aktif pada halaman `/admin/kelas` dan detail rombel berhasil.
 - Halaman detail rombel `/admin/kelas/[id]` sekarang menyediakan form penempatan langsung untuk siswa aktif, hanya pada tahun ajaran aktif dan dengan permission `classes:update`, `students:view`, serta `students:update`.
 - Setelah penempatan dari detail rombel, pengguna kembali ke rombel yang sama; pesan sukses dan kegagalan ditampilkan pada halaman tersebut.
 - Ditemukan dan dibersihkan literal `\\n` sebelum komponen ringkasan di halaman detail kelas. Pemeriksaan source search tidak menemukan literal serupa lain di area menu/halaman Kelas.
-- CI dan browser QA setelah perubahan masih menunggu.
+- Browser QA PR #28 berhasil menurut konfirmasi pengguna. Tidak ada migrasi atau perubahan database production.
+
+
+### Pembaruan PR #28 — 2026-11-28
+- PR #28 sudah merged ke `main` (merge commit `4dea7b4e7f7d2424b3f77c7cbdc24cf384d7ba12`).
+- Pengguna mengonfirmasi seluruh browser QA penempatan siswa aktif dan perbaikan tampilan menu Kelas berhasil.
+- Form tersedia di daftar kelas dan detail rombel; pilihan hanya siswa aktif/tidak diarsipkan, dengan validasi permission dan tahun ajaran.
+- Tidak ada migrasi atau perubahan database production.
 
 ### Temuan browser QA absensi guru — 2026-11-28
 - Pengguna berhasil masuk ke `/ruang-guru` melalui undangan admin, tetapi roster absensi kosong pada 2026-11-28.
@@ -39,7 +46,7 @@
 - [x] Uji browser perubahan status siswa menjadi transferred dilaporkan berhasil.
 - [ ] Uji alur withdrawn melalui UI dan verifikasi penutupan enrollment, pelepasan kapasitas, serta retensi histori.
 - [x] Regression test database penempatan individual: INSERT/UPDATE ditolak tanpa permission `students:view` dan `classes:view`; PR #19 menambahkan guard RLS.
-- [ ] Browser QA penempatan individual melalui dashboard, termasuk akun tanpa permission `students:view`.
+- [x] Browser QA penempatan individual melalui dashboard dan detail rombel; pengguna mengonfirmasi seluruh pengujian PR #28 berhasil.
 - [x] Regression test database kenaikan kelas massal: rollback saat kapasitas tidak cukup, penolakan tanpa permission, tingkat tujuan salah, tahun ajaran salah, dan tahun asal tidak aktif; penempatan target tidak berubah pada percobaan yang ditolak.
 - [ ] Browser QA kenaikan kelas massal melalui dashboard dengan data uji.
 - [x] Regression test database kelulusan massal kelas XII: permission, kelas non-XII, tahun ajaran tidak aktif, tanggal null/tidak valid, rollback tanpa histori parsial, kelulusan sukses, dan penolakan pengulangan.
