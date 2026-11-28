@@ -13,6 +13,7 @@
 \i supabase/migrations/20261124310000_bulk_student_graduation.sql
 \i supabase/migrations/20261124320000_student_lifecycle_column_guards.sql
 \i supabase/migrations/20261124330000_student_transfer_withdrawal.sql
+\i supabase/migrations/20261128100000_student_enrollment_permission_guards.sql
 \i supabase/migrations/20261124340000_student_portal_account_onboarding.sql
 \i supabase/migrations/20261124350000_student_portal_onboarding_account_state_guard.sql
 \i supabase/migrations/20261124360000_teacher_account_invitations.sql
@@ -304,6 +305,34 @@ begin
 end;
 $$;
 
+\echo '6b. Verify individual enrollment writes require view and update permissions'
+reset role;
+select set_config('request.jwt.claim.sub', '50000000-0000-4000-8000-000000000001', false);
+select set_config('test.permissions', 'classes:update,students:update', false);
+set role authenticated;
+do $$
+declare
+  affected_rows integer;
+begin
+  begin
+    insert into public.student_class_enrollments (student_id, academic_year_id, class_group_id)
+    values ('60000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001');
+    raise exception 'Enrollment insert unexpectedly succeeded without view permissions';
+  exception when insufficient_privilege then null;
+  end;
+  update public.student_class_enrollments set class_group_id = '20000000-0000-4000-8000-000000000001'
+  where student_id = '60000000-0000-4000-8000-000000000001' and academic_year_id = '10000000-0000-4000-8000-000000000001';
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 0 then raise exception 'Unauthorized enrollment update affected % rows', affected_rows; end if;
+end;
+$$;
+reset role;
+do $$
+begin
+  if exists (select 1 from public.student_class_enrollments where student_id = '60000000-0000-4000-8000-000000000004' and academic_year_id = '10000000-0000-4000-8000-000000000001') then raise exception 'Unauthorized insert persisted'; end if;
+  if not exists (select 1 from public.student_class_enrollments where student_id = '60000000-0000-4000-8000-000000000001' and academic_year_id = '10000000-0000-4000-8000-000000000001' and class_group_id = '20000000-0000-4000-8000-000000000002') then raise exception 'Unauthorized update changed class'; end if;
+end;
+$$;
 \echo '7. Verify atomic academic-year activation and rollback'
 do $$
 declare
