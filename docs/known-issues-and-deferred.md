@@ -1,3 +1,8 @@
+### Pembaruan regression test aksi admin absensi — 2026-11-28
+- Branch `test/attendance-admin-actions` menambahkan unit test untuk validasi input, autentikasi, permission, payload RPC, normalisasi alasan koreksi, serta lock/unlock.
+- Test ini melengkapi database lifecycle assertions yang sudah ada; tidak mengubah kode produksi atau database.
+- Hasil CI PR masih menunggu. Browser QA koreksi dan lock/unlock tetap perlu dilakukan secara terpisah.
+
 ### Pembaruan PR #32 dan hardening CSV — 2026-11-28
 - PR #32 sudah merged setelah CI #437 hijau; pengujian endpoint ekspor memeriksa BOM dari raw response bytes karena `Response.text()` menghapus BOM saat decoding.
 - Tindak lanjut regression coverage CSV pada PR #33: menguji formula prefix `=`, `+`, `-`, dan `@`, termasuk ketika didahului whitespace/control characters serta nilai numerik yang diterima sebagai string.
