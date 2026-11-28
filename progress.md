@@ -5,7 +5,7 @@
 ## Status saat ini
 
 - **Tanggal pembaruan:** 2026-11-28.
-- Browser QA happy-path undangan guru dikonfirmasi pengguna: undangan dibuat, OTP berhasil diverifikasi, dan akun berhasil masuk ke `/ruang-guru`. QA absensi guru menemukan roster kosong dan tanggal filter kembali ke 2026-11-28; PR #27 memperbaiki kontrol tanggal dan memperjelas petunjuk penugasan wali kelas. QA lanjutan menu Kelas menemukan form penempatan sulit ditemukan dan literal `\\n` pada halaman detail; PR #27 kini menempatkan form di dekat daftar kelas dan di halaman detail rombel, serta membersihkan literal tersebut.
+- Browser QA happy-path undangan guru dikonfirmasi pengguna: undangan dibuat, OTP berhasil diverifikasi, dan akun berhasil masuk ke `/ruang-guru`. PR #27 memperbaiki kontrol tanggal absensi guru dan petunjuk penugasan wali kelas. PR #28 sudah merged; pengguna mengonfirmasi seluruh browser test untuk form penempatan siswa dan tampilan menu Kelas berhasil.
 - PR #17 ekspor CSV absensi bulanan sudah merged (merge commit `081527840df3ac1229af7fdffe1b7d42e031ea5d`); pengguna mengonfirmasi CI hijau. Browser QA unduhan masih tertunda.
 - PR #18 regression test lifecycle withdrawn sudah merged (merge commit `42b884b39db0b2c4a94ccf540edd36c1f7954d9d`); CI #393 sukses. Browser QA alur withdrawn masih tertunda.
 - **Branch utama:** `main`; PR #12 (modul absensi), PR #13 (pemilihan tanggal absensi guru), PR #14 (idempotensi migrasi arsip siswa), PR #15 (pembaruan dokumentasi QA), dan PR #16 (rekap bulanan absensi), PR #17 (ekspor CSV), dan PR #18 (regression test lifecycle withdrawn) sudah merged. Merge commit PR #13: `db742ce0f6ba4b3ab546435f0826dfa40cd6c7b3`; PR #14: `01d3b0a3171c333a5c97b88cc222c6f9c511a3e5`.
@@ -2860,3 +2860,10 @@ Pengguna menjalankan `pnpm dlx supabase migration list --remote` pada proyek pro
 - Action penempatan menerima `return_to` yang dibatasi ke pola path detail kelas UUID, agar pengguna kembali ke kelas yang sedang dikelola dan menerima status berhasil/gagal di halaman yang sama.
 - Literal dua karakter `\\n` yang sebelumnya berada sebelum komponen ringkasan di `src/app/admin/kelas/[id]/page.tsx` dihapus. Menu sidebar `AdminNav` dan konfigurasi label Kelas diperiksa; tidak ditemukan literal newline pada keduanya.
 - Belum ada hasil CI atau browser QA untuk perubahan ini. Tidak ada migrasi, akses/perubahan Supabase production, atau deployment.
+
+
+## 2026-11-28 — PR #28 merged dan browser QA penempatan siswa
+- PR #28 sudah merged ke `main` (merge commit `4dea7b4e7f7d2424b3f77c7cbdc24cf384d7ba12`).
+- Pengguna mengonfirmasi seluruh browser test PR #28 berhasil: form penempatan siswa aktif tersedia dari daftar Kelas dan detail rombel, serta tampilan karakter literal `\\n` sudah bersih.
+- Tidak ada migrasi database, akses/perubahan Supabase production, atau deployment database pada PR #28.
+- Tahap berikutnya memperkuat database integration tests untuk seluruh siklus RPC absensi guru/admin: roster, draft parsial, submit lengkap, koreksi dengan audit, lock/unlock, dan larangan perubahan setelah submit/lock.
