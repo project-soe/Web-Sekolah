@@ -23,8 +23,9 @@
 \echo 'Verify archive migration is safe when archived_at already exists'
 \i supabase/migrations/20261127320000_student_archive.sql
 \i supabase/migrations/20261127330000_student_daily_attendance.sql
-\i supabase/migrations/20261128110000_harden_attendance_rpc_payload.sql
 \i supabase/migrations/20261128090000_student_attendance_monthly_summary.sql
+\i supabase/migrations/20261128100000_student_enrollment_permission_guards.sql
+\i supabase/migrations/20261128110000_harden_attendance_rpc_payload.sql
 
 \echo '3. Seed deterministic reference rows'
 insert into public.users (id) values
