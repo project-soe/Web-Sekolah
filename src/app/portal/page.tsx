@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { logout } from "@/features/auth/actions";
 import { requireStudent } from "@/lib/auth/session";
+import { resolveAttendanceHistory } from "@/features/attendance/attendance-history";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Portal Siswa" };
@@ -20,13 +21,14 @@ export default async function StudentPortalPage() {
   const { data, error } = await supabase.rpc("my_student_portal_profile");
   if (error || !data) redirect("/login");
   const profile = data as PortalProfile;
-  const { data: attendanceData } = await supabase.rpc("my_student_attendance");
-  const attendance = (attendanceData ?? []) as Array<{
+  const { data: attendanceData, error: attendanceError } = await supabase.rpc("my_student_attendance");
+  const attendanceResult = resolveAttendanceHistory(attendanceData as Array<{
     attendance_date: string;
     class_name: string;
     status: "present" | "late" | "sick" | "excused" | "absent";
     note: string | null;
-  }>;
+  }> | null, attendanceError);
+  const attendance = attendanceResult.rows;
   const attendanceLabels: Record<string, string> = {
     present: "Hadir", late: "Terlambat", sick: "Sakit", excused: "Izin", absent: "Alpa",
   };
@@ -50,7 +52,9 @@ export default async function StudentPortalPage() {
       <Card>
         <CardHeader><CardTitle>Riwayat kehadiran</CardTitle></CardHeader>
         <CardContent>
-          {attendance.length === 0 ? (
+          {attendanceResult.kind === "error" ? (
+            <p role="alert" className="text-sm text-danger">Riwayat absensi gagal dimuat. Silakan muat ulang halaman atau hubungi admin sekolah jika masalah berlanjut.</p>
+          ) : attendanceResult.kind === "empty" ? (
             <p className="text-sm text-muted-foreground">Belum ada riwayat absensi yang dikirim oleh sekolah.</p>
           ) : (
             <div className="divide-y divide-border">

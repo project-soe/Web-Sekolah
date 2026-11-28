@@ -1,3 +1,8 @@
+### Kegagalan pemuatan riwayat Portal Siswa — 2026-11-28
+- Sebelumnya, error RPC `my_student_attendance()` diperlakukan sama dengan hasil kosong sehingga gangguan teknis dapat menyesatkan siswa.
+- PR memisahkan status error, kosong, dan tersedia; error kini ditampilkan sebagai pesan gagal muat, bukan klaim tidak ada riwayat.
+- Unit tests ditambahkan untuk ketiga kondisi. CI dan browser QA menunggu; tidak ada migrasi/database production.
+
 ### Validasi tanggal kalender absensi — 2026-11-28
 - Audit menemukan filter tanggal harian admin sebelumnya hanya memeriksa pola `YYYY-MM-DD`, bukan validitas kalender.
 - Perbaikan menggunakan helper bersama untuk halaman admin, Ruang Guru, dan server action; tanggal mustahil serta tahun `0000` ditolak sebelum query/action, sementara tanggal tahun empat digit awal tetap dapat diparse.
