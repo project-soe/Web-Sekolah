@@ -8,7 +8,8 @@
 
 - [x] Uji browser perubahan status siswa menjadi transferred dilaporkan berhasil.
 - [ ] Uji alur withdrawn melalui UI dan verifikasi penutupan enrollment, pelepasan kapasitas, serta retensi histori.
-- [ ] Uji penempatan individual, termasuk akun tanpa permission students:view.
+- [x] Regression test database penempatan individual: INSERT/UPDATE ditolak tanpa permission `students:view` dan `classes:view`; PR #19 menambahkan guard RLS.
+- [ ] Browser QA penempatan individual melalui dashboard, termasuk akun tanpa permission `students:view`.
 - [ ] Uji kenaikan kelas massal pada tahun ajaran berikutnya, termasuk rollback saat kapasitas tidak cukup.
 - [ ] Uji kelulusan kelas XII, tanggal kelulusan, status akhir, dan riwayat status.
 - [ ] Verifikasi fitur arsip/pemulihan siswa setelah migrasi lengkap 20261127320000_student_archive.sql diterapkan. Kolom archived_at pernah ditambahkan manual; pastikan RPC dan trigger tersedia.
