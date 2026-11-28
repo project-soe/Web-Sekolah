@@ -38,7 +38,16 @@
 ## Batas tahap pertama dan tindak lanjut
 
 - Belum ada absensi per mata pelajaran, jadwal pelajaran, GPS/biometrik, notifikasi orang tua, kalender libur, atau ekspor.
-- Rekap saat ini per tanggal; rekap bulanan/persentase, filter periode, dan laporan unduhan menjadi tahap berikutnya.
+- Rekap harian tetap tersedia. Rekap bulanan per rombel sedang diimplementasikan pada branch `feat/attendance-monthly-summary` melalui RPC admin yang hanya menghitung sesi `submitted`/`locked`.
+- Definisi persentase pada tahap ini: `(Hadir + Terlambat) / seluruh status tercatat × 100`; status draft dikecualikan. Filter bulan tersedia pada rekap admin; ekspor laporan belum termasuk tahap ini.
 - Perlu browser QA dengan akun guru yang benar-benar terhubung ke wali kelas, admin, dan siswa.
 - Migrasi 20261127330000_student_daily_attendance.sql belum diterapkan ke Supabase production. Periksa seluruh migration list remote dan tinjau SQL sebelum deployment.
 - Database CI harus lulus sebelum merge. Jangan menjalankan migrasi production dari PR branch sebelum merge dan persetujuan deployment.
+
+
+## Rekap bulanan admin — 2026-11-28
+- RPC `admin_attendance_monthly_summary(p_month date)` memerlukan permission `attendance:view_all` dan parameter tanggal harus hari pertama bulan.
+- Hanya sesi berstatus `submitted` atau `locked` dihitung. Draft dan hari tanpa sesi tidak menjadi denominator.
+- Hasil per rombel mencakup jumlah sesi, jumlah catatan siswa-hari, hitungan Hadir/Terlambat/Sakit/Izin/Alpa, dan persentase hadir.
+- Persentase dihitung sebagai `(present + late) / seluruh entri status tercatat × 100`, dibulatkan dua desimal. Terlambat dihitung sebagai hadir.
+- Implementasi berada pada branch `feat/attendance-monthly-summary`; migration belum diterapkan pada Supabase production sampai pemeriksaan riwayat dan persetujuan deployment.
