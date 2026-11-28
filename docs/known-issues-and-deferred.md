@@ -1,3 +1,8 @@
+### Hardening validasi lock/unlock absensi — 2026-11-28
+- Server action kini menolak nilai `locked` selain literal `true`/`false`, agar input malformed tidak ditafsirkan sebagai unlock.
+- Alasan unlock wajib 5–500 karakter; alasan lock opsional dan maksimal 500 karakter.
+- Regression test ditambahkan untuk state tidak dikenal dan alasan melebihi batas. Tidak ada perubahan database atau migrasi.
+
 ### Pembaruan regression test aksi admin absensi — 2026-11-28
 - Branch `test/attendance-admin-actions` menambahkan unit test untuk validasi input, autentikasi, permission, payload RPC, normalisasi alasan koreksi, serta lock/unlock.
 - Test ini melengkapi database lifecycle assertions yang sudah ada; tidak mengubah kode produksi atau database.

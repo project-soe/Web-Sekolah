@@ -1,3 +1,9 @@
+## 2026-11-28 — Validasi input lock/unlock absensi
+- Audit menemukan server action menganggap setiap nilai `locked` selain `true` sebagai perintah unlock. Server kini hanya menerima nilai eksplisit `true` atau `false`.
+- Alasan unlock dibatasi 5–500 karakter; alasan lock opsional tetapi juga dibatasi maksimal 500 karakter.
+- Regression test menolak nilai state tidak dikenal dan alasan terlalu panjang. Perubahan kode produksi terbatas pada validasi server-side; tidak ada migrasi atau akses database production.
+- PR dan hasil CI masih menunggu.
+
 ## 2026-11-28 — Regression test aksi admin absensi
 - Menambahkan `tests/unit/attendance-admin-actions.test.ts` untuk menguji validasi UUID/status/alasan, autentikasi, permission `attendance:correct` dan `attendance:lock`, payload RPC koreksi, normalisasi note/reason, serta alur lock/unlock.
 - Perubahan hanya berupa regression tests dan dokumentasi; tidak ada perubahan kode produksi, migrasi, atau akses database production.

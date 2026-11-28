@@ -34,9 +34,15 @@ export async function correctAttendance(formData: FormData): Promise<void> {
 
 export async function setAttendanceLock(formData: FormData): Promise<void> {
   const sessionId = String(formData.get("session_id") ?? "");
-  const locked = String(formData.get("locked") ?? "") === "true";
+  const lockedValue = String(formData.get("locked") ?? "");
+  const locked = lockedValue === "true";
   const reason = String(formData.get("reason") ?? "").trim();
-  if (!/^[0-9a-f-]{36}$/i.test(sessionId) || (!locked && reason.length < 5)) {
+  if (
+    !/^[0-9a-f-]{36}$/i.test(sessionId) ||
+    (lockedValue !== "true" && lockedValue !== "false") ||
+    (!locked && (reason.length < 5 || reason.length > 500)) ||
+    (locked && reason.length > 500)
+  ) {
     redirect("/admin/absensi?error=validasi");
   }
   const session = await getSession();
