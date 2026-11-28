@@ -53,7 +53,7 @@ describe("buildMonthlyAttendanceCsv", () => {
     },
   );
 
-  it.each(["\\u00a0=1+1", "\\u3000@SUM(1,1)", "\\uFEFF+1"])(
+  it.each(["\u00a0=1+1", "\u3000@SUM(1,1)", "\uFEFF+1"])(
     "neutralizes formula prefixes after Unicode whitespace (%j)",
     (value) => {
       const csv = buildMonthlyAttendanceCsv([{
@@ -68,7 +68,7 @@ describe("buildMonthlyAttendanceCsv", () => {
         absent_count: 0,
         attendance_percentage: 100,
       }]);
-      expect(csv).toContain('"\\'" + value + '"');
+      expect(csv).toContain('"' + "'" + value.replaceAll('"', '""') + '"');
     },
   );
 
