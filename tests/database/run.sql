@@ -506,6 +506,75 @@ end;
 $$;
 
 
+-- Additional negative-path coverage for bulk promotion invariants.
+insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity)
+values
+  ('20000000-0000-4000-8000-000000000008', '10000000-0000-4000-8000-000000000003', 'XI TKJ Wrong Level', 11,
+   '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 10),
+  ('20000000-0000-4000-8000-000000000009', '10000000-0000-4000-8000-000000000002', 'XII TKJ Wrong Year', 12,
+   '30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 10);
+
+do $promotion_guards$
+declare target_count integer;
+begin
+  perform set_config('test.permissions', 'classes:view,students:view,classes:update', false);
+  begin
+    perform public.promote_class_students(
+      '20000000-0000-4000-8000-000000000004',
+      '20000000-0000-4000-8000-000000000008'
+    );
+    raise exception 'Bulk promotion unexpectedly succeeded without students:update';
+  exception when insufficient_privilege then null;
+  end;
+
+  perform set_config('test.permissions',
+    'classes:view,students:view,classes:update,students:update', false);
+
+  begin
+    perform public.promote_class_students(
+      '20000000-0000-4000-8000-000000000004',
+      '20000000-0000-4000-8000-000000000008'
+    );
+    raise exception 'Bulk promotion unexpectedly accepted a target at the same grade';
+  exception when check_violation then null;
+  end;
+
+  begin
+    perform public.promote_class_students(
+      '20000000-0000-4000-8000-000000000004',
+      '20000000-0000-4000-8000-000000000009'
+    );
+    raise exception 'Bulk promotion unexpectedly accepted a target in the same academic year';
+  exception when check_violation then null;
+  end;
+
+  begin
+    perform public.promote_class_students(
+      '20000000-0000-4000-8000-000000000001',
+      '20000000-0000-4000-8000-000000000003'
+    );
+    raise exception 'Bulk promotion unexpectedly accepted a source from an inactive academic year';
+  exception when check_violation then null;
+  end;
+
+  select count(*) into target_count
+  from public.student_class_enrollments
+  where academic_year_id = '10000000-0000-4000-8000-000000000003'
+    and class_group_id = '20000000-0000-4000-8000-000000000005';
+  if target_count <> 3 then
+    raise exception 'Rejected promotion attempts changed valid target placements: %', target_count;
+  end if;
+
+  if exists (
+    select 1 from public.student_class_enrollments
+    where academic_year_id = '10000000-0000-4000-8000-000000000003'
+      and class_group_id = '20000000-0000-4000-8000-000000000008'
+  ) then
+    raise exception 'Rejected promotion left partial placements in the invalid target class';
+  end if;
+end;
+$promotion_guards$;
+
 \echo '9. Verify atomic bulk graduation for active grade-XII classes'
 insert into public.class_groups (id, academic_year_id, name, grade_level, department_id, homeroom_teacher_id, capacity)
 values ('20000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000002', 'XII TKJ 1', 12,
